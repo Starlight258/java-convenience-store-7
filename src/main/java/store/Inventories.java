@@ -3,6 +3,7 @@ package store;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class Inventories {
@@ -20,10 +21,10 @@ public class Inventories {
         }
     }
 
-    public Inventories findProducts(final Product product) {
+    public Inventories findProducts(final String productName) {
         Inventories sameProducts = new Inventories(Collections.emptyList());
         for (Inventory inventory : inventories) {
-            if (inventory.isSameProduct(product)) {
+            if (inventory.isSameProductName(productName)) {
                 sameProducts.add(inventory);
             }
         }
@@ -32,6 +33,23 @@ public class Inventories {
 
     public void add(final Inventory inventory) {
         inventories.add(inventory);
+    }
+
+    public int getSize() {
+        return inventories.size();
+
+    }
+
+    public int getTotalStocks() {
+        int total = 0;
+        for (Inventory inventory : inventories) {
+            total += inventory.getQuantity();
+        }
+        return total;
+    }
+
+    public Set<Inventory> getInventories() {
+        return Collections.unmodifiableSet(inventories);
     }
 
     @Override

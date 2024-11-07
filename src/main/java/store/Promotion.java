@@ -23,6 +23,13 @@ public class Promotion {
         this.endDate = endDate;
     }
 
+    public boolean isPromotionPeriod(LocalDate now) {
+        if (now.isEqual(startDate) || now.isEqual(endDate)) {
+            return true;
+        }
+        return now.isAfter(startDate) && now.isBefore(endDate);
+    }
+
     private void validate(final String promotionName, final int purchaseQuantity, final int getQuantity,
                           final LocalDate startDate, final LocalDate endDate) {
         validatePromotionName(promotionName);
@@ -51,5 +58,13 @@ public class Promotion {
 
     public boolean isSameName(final String name) {
         return Objects.equals(this.promotionName, name);
+    }
+
+    public int getPurchaseQuantity() {
+        return purchaseQuantity;
+    }
+
+    public int getBonusQuantity() {
+        return bonusQuantity;
     }
 }

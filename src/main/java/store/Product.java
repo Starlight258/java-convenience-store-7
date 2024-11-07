@@ -15,6 +15,10 @@ public class Product {
         this.price = price;
     }
 
+    public boolean isSameProductName(String name){
+        return this.name.equals(name);
+    }
+
     private void validateName(final String name) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("[ERROR] 상품명은 비어있거나 null일 수 없습니다.");

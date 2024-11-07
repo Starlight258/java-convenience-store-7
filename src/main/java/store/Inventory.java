@@ -8,25 +8,25 @@ public class Inventory implements Comparable<Inventory> {
 
     private final Product product;
     private int quantity;
-    private final Promotion promotion;
+    private final String promotionName;
 
-    public Inventory(final Product product, final int quantity, final Promotion promotion) {
+    public Inventory(final Product product, final int quantity, final String promotionName) {
         validate(product, quantity);
         this.product = product;
         this.quantity = quantity;
-        this.promotion = promotion;
+        this.promotionName = promotionName;
     }
 
-    public boolean isSameProduct(Product product) {
-        return this.product.equals(product);
+    public boolean isSameProductName(String productName) {
+        return this.product.isSameProductName(productName);
     }
 
-    public boolean buy(final int purchaseQuantity) {
+    public void buy(final int purchaseQuantity) {
         if (quantity >= purchaseQuantity) {
             this.quantity -= purchaseQuantity;
-            return true;
+            return;
         }
-        return false;
+        throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
     }
 
     private void validate(final Product product, final int quantity) {
@@ -38,12 +38,20 @@ public class Inventory implements Comparable<Inventory> {
         }
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public String getPromotionName() {
+        return promotionName;
+    }
+
     @Override
-    public int compareTo(final Inventory other) {
-        if (other.promotion == null) {
-            return 1;
+    public int compareTo(final Inventory o) {
+        if (o.promotionName == null) {
+            return -1;
         }
-        return -1;
+        return 1;
     }
 
     @Override
@@ -56,11 +64,11 @@ public class Inventory implements Comparable<Inventory> {
         }
         Inventory inventory = (Inventory) o;
         return quantity == inventory.quantity && Objects.equals(product, inventory.product)
-                && Objects.equals(promotion, inventory.promotion);
+                && Objects.equals(promotionName, inventory.promotionName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(product, quantity, promotion);
+        return Objects.hash(product, quantity, promotionName);
     }
 }
