@@ -21,12 +21,11 @@ public class PaymentSystem {
         for (Inventory inventory : sameProductInventories.getInventories()) {
             String promotionName = inventory.getPromotionName();
             Optional<Promotion> optionalPromotion = promotions.find(promotionName); // 프로모션 찾기
-            Response response = buyWithNoPromotion(quantity, inventory, optionalPromotion);
-            if (response != null) {
-                return response;
+            if (optionalPromotion.isEmpty()) {
+                return buyWithNoPromotion(quantity, inventory);
             }
             // 할인 기간 판단
-            Promotion promotion = getPromotion(now, optionalPromotion);
+            Promotion promotion = getPromotion(now, optionalPromotion.get());
             if (promotion == null) {
                 continue;
             }
@@ -48,21 +47,21 @@ public class PaymentSystem {
                 return canGetBonus;
             }
             // 프로모션이 자동 적용된다.
-            Response BUY = autoPromotion(quantity, inventory, purchaseQuantity, bonusQuantity);
-            if (BUY != null) {
-                return BUY;
+            Response autoPromotion = autoPromotion(quantity, inventory, purchaseQuantity, bonusQuantity);
+            if (autoPromotion != null) {
+                return autoPromotion;
             }
         }
         throw new IllegalStateException("[ERROR] 상품을 구매할 수 없습니다.");
     }
 
     private static Response autoPromotion(final int quantity, final Inventory inventory, final int purchaseQuantity,
-                                        final int bonusQuantity) {
+                                          final int bonusQuantity) {
         if (quantity > purchaseQuantity) {
             int setSize = quantity / (purchaseQuantity + bonusQuantity);
             int totalBonusQuantity = setSize * bonusQuantity; // 보너스 수량
             inventory.buy(quantity);
-            return Response.buyWithPromotion(RESPONSE_STATUS.BUY, totalBonusQuantity);
+            return Response.buyWithPromotion(totalBonusQuantity);
         }
         return null;
     }
@@ -70,15 +69,16 @@ public class PaymentSystem {
     private static Response canGetBonus(final int quantity, final int purchaseQuantity, final int bonusQuantity) {
         if (quantity < purchaseQuantity + bonusQuantity) {
             int freeQuantity = purchaseQuantity + bonusQuantity - quantity;
-            return new Response(RESPONSE_STATUS.CAN_GET_BONUS, freeQuantity, 0);
+            return Response.canGetMoreQuantity(bonusQuantity, freeQuantity);
         }
         return null;
     }
 
-    private static Response buyWithNoPromotion(final int quantity, final Inventory inventory, final int purchaseQuantity) {
+    private static Response buyWithNoPromotion(final int quantity, final Inventory inventory,
+                                               final int purchaseQuantity) {
         if (quantity < purchaseQuantity) {
             inventory.buy(quantity);
-            return Response.buyWithNoPromotion(RESPONSE_STATUS.BUY_WITH_NO_PROMOTION);
+            return Response.buyWithNoPromotion();
         }
         return null;
     }
@@ -87,27 +87,23 @@ public class PaymentSystem {
                                        final int stock) {
         if (stock < quantity) {
             int setSize = stock / (purchaseQuantity + bonusQuantity);
+            int totalBonusQuantity = setSize * bonusQuantity;
             int noPromotionQuantity = quantity - setSize * (purchaseQuantity + bonusQuantity);
-            return Response.outOfStock(noPromotionQuantity);
+            return Response.outOfStock(totalBonusQuantity, noPromotionQuantity);
         }
         return null;
     }
 
-    private static Promotion getPromotion(final LocalDate now, final Optional<Promotion> optionalPromotion) {
-        Promotion promotion = optionalPromotion.get();
+    private static Promotion getPromotion(final LocalDate now, final Promotion promotion) {
         if (!promotion.isPromotionPeriod(now)) {
             return null;
         }
         return promotion;
     }
 
-    private static Response buyWithNoPromotion(final int quantity, final Inventory inventory,
-                                        final Optional<Promotion> optionalPromotion) {
-        if (optionalPromotion.isEmpty()) { // 프로모션 없이 구매
-            inventory.buy(quantity);
-            return Response.buyWithNoPromotion(RESPONSE_STATUS.BUY_WITH_NO_PROMOTION);
-        }
-        return null;
+    private static Response buyWithNoPromotion(final int quantity, final Inventory inventory) {
+        inventory.buy(quantity);
+        return Response.buyWithNoPromotion();
     }
 
     private static void totalOutOfStock(final int quantity, final int totalStock) {

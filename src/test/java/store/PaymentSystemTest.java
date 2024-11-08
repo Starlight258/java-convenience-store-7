@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class PaymentSystemTest {
 
     @Test
-    @DisplayName("결제 시스템 테스트")
+    @DisplayName("생성에 성공한다.")
     void 성공_생성() {
         // Given
         Product product = new Product("coke", BigDecimal.valueOf(1000));
@@ -112,7 +112,7 @@ public class PaymentSystemTest {
     }
 
     @Test
-    @DisplayName("프로모션 기간임에도 최소 수량을 만족하지 못하면 해당 프로모션을 적용하지 않고 넘어간다.")
+    @DisplayName("프로모션 기간임에도 최소 구매 수량을 만족하지 못하면 프로모션 재고만 줄인다.")
     void 성공_안내_프로모션기간임에도조건에해당X() {
         // Given
         Product product = new Product("coke", BigDecimal.valueOf(1000));
@@ -125,15 +125,15 @@ public class PaymentSystemTest {
         Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
-        LocalDate now = LocalDate.of(2025, 1, 1);
+        LocalDate now = LocalDate.of(2024, 3, 1);
 
         // When
         Response response = paymentSystem.canBuy("coke", 1, now);
 
         // Then
         assertAll(
-                () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(10),
-                () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(9)
+                () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(9),
+                () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(10)
         );
     }
 
@@ -159,6 +159,7 @@ public class PaymentSystemTest {
         // Then
         assertAll(
                 () -> assertThat(response).extracting("status").isEqualTo(RESPONSE_STATUS.OUT_OF_STOCK),
+                () -> assertThat(response.bonusQuantity()).isEqualTo(2),
                 () -> assertThat(response).extracting("noPromotionQuantity").isEqualTo(4)
         );
     }
@@ -166,7 +167,8 @@ public class PaymentSystemTest {
     @ParameterizedTest
     @MethodSource
     @DisplayName("프로모션 가능 상품에 대해 고객이 해당 수량보다 적게 가져온 경우 보너스 수량에 대해 안내한다.")
-    void 성공_안내_적게가져옴(int productBuyQuantity, int productBonusQuantity, int quantity, int bonusQuantity) {
+    void 성공_안내_적게가져옴(int productBuyQuantity, int productBonusQuantity, int quantity, int bonusQuantity,
+                     int canGetMoreQuantity) {
         // Given
         String productName = "coke";
         Product product = new Product(productName, BigDecimal.valueOf(1000));
@@ -187,16 +189,17 @@ public class PaymentSystemTest {
         // Then
         assertAll(
                 () -> assertThat(response.status()).isEqualTo(RESPONSE_STATUS.CAN_GET_BONUS),
-                () -> assertThat(response.bonusQuantity()).isEqualTo(bonusQuantity)
+                () -> assertThat(response.bonusQuantity()).isEqualTo(bonusQuantity),
+                () -> assertThat(response.canGetMoreQuantity()).isEqualTo(canGetMoreQuantity)
         );
     }
 
     // 2+1 일때 1개살경우?
     private static Stream<Arguments> 성공_안내_적게가져옴() {
         return Stream.of(
-                Arguments.of(2, 1, 2, 1),
-                Arguments.of(2, 2, 2, 2),
-                Arguments.of(2, 2, 3, 1)
+                Arguments.of(2, 1, 2, 1, 1),
+                Arguments.of(2, 2, 2, 2, 2),
+                Arguments.of(2, 2, 3, 2, 1)
         );
     }
 

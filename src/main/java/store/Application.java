@@ -27,6 +27,11 @@ public class Application {
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = DateTimes.now().toLocalDate();
         Map<String, Integer> purchasedItems = getStringIntegerMap();
+        checkPromotion(paymentSystem, now, purchasedItems);
+    }
+
+    private static void checkPromotion(final PaymentSystem paymentSystem, final LocalDate now,
+                                  final Map<String, Integer> purchasedItems) {
         Map<String, Integer> bonusItems = new HashMap<>();
         for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
@@ -48,8 +53,7 @@ public class Application {
         String input = readLine();
         input = input.replace("[", "");
         input = input.replace("]", "");
-        String[] split = input.split(",");
-        return split;
+        return input.split(",");
     }
 
     private static int checkNoPromotion(final Map<String, Integer> bonusItems, final String productName,
