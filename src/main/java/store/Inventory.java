@@ -1,5 +1,6 @@
 package store;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Inventory implements Comparable<Inventory> {
@@ -27,6 +28,15 @@ public class Inventory implements Comparable<Inventory> {
             return;
         }
         throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+    }
+
+    public BigDecimal calculatePrice(final int quantity) {
+        BigDecimal price = product.getPrice();
+        return price.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    public boolean hasPromotion() {
+        return promotionName != null;
     }
 
     private void validate(final Product product, final int quantity) {

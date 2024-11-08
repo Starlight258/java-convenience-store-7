@@ -1,5 +1,0 @@
-package store;
-
-public enum RESPONSE_STATUS {
-    BUY, CAN_GET_BONUS, BUY_WITH_NO_PROMOTION, OUT_OF_STOCK
-}

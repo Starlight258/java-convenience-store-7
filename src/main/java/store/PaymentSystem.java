@@ -1,6 +1,9 @@
 package store;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 public class PaymentSystem {
@@ -32,7 +35,8 @@ public class PaymentSystem {
             int purchaseQuantity = promotion.getPurchaseQuantity();
             int bonusQuantity = promotion.getBonusQuantity();
             int stock = inventory.getQuantity(); // 재고
-            Response noPromotionQuantity = outOfStock(quantity, purchaseQuantity, bonusQuantity, stock);
+            Response noPromotionQuantity = outOfStock(quantity, purchaseQuantity, bonusQuantity, stock,
+                    sameProductInventories);
             if (noPromotionQuantity != null) {
                 return noPromotionQuantity;
             }
@@ -53,6 +57,20 @@ public class PaymentSystem {
             }
         }
         throw new IllegalStateException("[ERROR] 상품을 구매할 수 없습니다.");
+    }
+
+    public BigDecimal checkMembership(final String line, final Map<String, BigDecimal> totalNoPromotionPrice) {
+        BigDecimal membershipPrice = BigDecimal.ZERO;
+        if (line.equals("Y")) {
+            for (Entry<String, BigDecimal> entry : totalNoPromotionPrice.entrySet()) {
+                membershipPrice = membershipPrice.add(entry.getValue());
+            }
+            membershipPrice = membershipPrice.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(30));
+        }
+        if (membershipPrice.compareTo(BigDecimal.valueOf(8000)) > 0) {
+            return BigDecimal.valueOf(8000);
+        }
+        return membershipPrice;
     }
 
     private static Response autoPromotion(final int quantity, final Inventory inventory, final int purchaseQuantity,
@@ -78,18 +96,36 @@ public class PaymentSystem {
                                                final int purchaseQuantity) {
         if (quantity < purchaseQuantity) {
             inventory.buy(quantity);
-            return Response.buyWithNoPromotion();
+            BigDecimal totalPrice = inventory.calculatePrice(quantity);
+            return Response.buyWithNoPromotion(totalPrice);
         }
         return null;
     }
 
     private static Response outOfStock(final int quantity, final int purchaseQuantity, final int bonusQuantity,
-                                       final int stock) {
+                                       final int stock, final Inventories inventories) {
         if (stock < quantity) {
-            int setSize = stock / (purchaseQuantity + bonusQuantity);
-            int totalBonusQuantity = setSize * bonusQuantity;
-            int noPromotionQuantity = quantity - setSize * (purchaseQuantity + bonusQuantity);
-            return Response.outOfStock(totalBonusQuantity, noPromotionQuantity);
+            if (purchaseQuantity + bonusQuantity < quantity) { // 일부 프로모션 적용
+                int setSize = stock / (purchaseQuantity + bonusQuantity);
+                int totalBonusQuantity = setSize * bonusQuantity;
+                int noPromotionQuantity = quantity - setSize * (purchaseQuantity + bonusQuantity);
+                return Response.outOfStock(totalBonusQuantity, noPromotionQuantity);
+            }
+            // 프로모션 적용 최소수량 만족X 프로모션 재고 초과 - > 그냥 구매
+            int totalQuantity = quantity;
+            BigDecimal totalPrice = BigDecimal.ZERO;
+            for (Inventory inventory : inventories.getInventories()) {
+                if (inventory.hasPromotion()) {
+                    int inventoryQuantity = inventory.getQuantity();
+                    totalQuantity -= inventoryQuantity;
+                    inventory.buy(inventoryQuantity); // 전체 사용
+                    totalPrice = totalPrice.add(inventory.calculatePrice(inventoryQuantity));
+                    continue;
+                }
+                inventory.buy(totalQuantity);
+                totalPrice = totalPrice.add(inventory.calculatePrice(totalQuantity));
+            }
+            return Response.buyWithNoPromotion(totalPrice);
         }
         return null;
     }
@@ -103,7 +139,8 @@ public class PaymentSystem {
 
     private static Response buyWithNoPromotion(final int quantity, final Inventory inventory) {
         inventory.buy(quantity);
-        return Response.buyWithNoPromotion();
+        BigDecimal price = inventory.calculatePrice(quantity);
+        return Response.buyWithNoPromotion(price);
     }
 
     private static void totalOutOfStock(final int quantity, final int totalStock) {

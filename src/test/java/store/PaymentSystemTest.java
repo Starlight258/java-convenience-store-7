@@ -7,13 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("결제 시스템 테스트")
 public class PaymentSystemTest {
@@ -102,12 +106,63 @@ public class PaymentSystemTest {
         LocalDate now = LocalDate.of(2025, 1, 1);
 
         // When
-        paymentSystem.canBuy("coke", 3, now);
+        Response response = paymentSystem.canBuy("coke", 3, now);
 
         // Then
         assertAll(
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
+                () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(3000)),
                 () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(10),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(7)
+        );
+    }
+
+    @Test
+    @DisplayName("프로모션이 없을 경우 프로모션을 적용하지 않는다.")
+    void 성공_안내_프로모션X() {
+        // Given
+        Product product = new Product("coke", BigDecimal.valueOf(1000));
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventories inventories = new Inventories(List.of(inventoryWithNoPromotion));
+        PaymentSystem paymentSystem = new PaymentSystem(inventories, new Promotions(Collections.emptyList()));
+        LocalDate now = LocalDate.of(2024, 3, 1);
+
+        // When
+        Response response = paymentSystem.canBuy("coke", 3, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
+                () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(3000)),
+                () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(7)
+        );
+    }
+
+    @Test
+    @DisplayName("적용가능한 프로모션의 재고가 없을 경우 일반재고에서 함께 구매한다.")
+    void 성공_안내_일반재고() {
+        // Given
+        Product product = new Product("coke", BigDecimal.valueOf(1000));
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 12, 31);
+        String promotionName = "탄산2+1";
+        Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
+        Promotions promotions = new Promotions(List.of(cokePromotion));
+        Inventory inventoryWithPromotion = new Inventory(product, 1, promotionName);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
+        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
+        LocalDate now = LocalDate.of(2024, 3, 1);
+
+        // When
+        Response response = paymentSystem.canBuy("coke", 3, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
+                () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(3000)),
+                () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(0),
+                () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(8)
         );
     }
 
@@ -132,6 +187,8 @@ public class PaymentSystemTest {
 
         // Then
         assertAll(
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
+                () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(1000)),
                 () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(9),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(10)
         );
@@ -158,7 +215,7 @@ public class PaymentSystemTest {
 
         // Then
         assertAll(
-                () -> assertThat(response).extracting("status").isEqualTo(RESPONSE_STATUS.OUT_OF_STOCK),
+                () -> assertThat(response).extracting("status").isEqualTo(ResponseStatus.OUT_OF_STOCK),
                 () -> assertThat(response.bonusQuantity()).isEqualTo(2),
                 () -> assertThat(response).extracting("noPromotionQuantity").isEqualTo(4)
         );
@@ -188,7 +245,7 @@ public class PaymentSystemTest {
 
         // Then
         assertAll(
-                () -> assertThat(response.status()).isEqualTo(RESPONSE_STATUS.CAN_GET_BONUS),
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.CAN_GET_BONUS),
                 () -> assertThat(response.bonusQuantity()).isEqualTo(bonusQuantity),
                 () -> assertThat(response.canGetMoreQuantity()).isEqualTo(canGetMoreQuantity)
         );
@@ -226,7 +283,7 @@ public class PaymentSystemTest {
 
         // Then
         assertAll(
-                () -> assertThat(response.status()).isEqualTo(RESPONSE_STATUS.BUY),
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_PROMOTION),
                 () -> assertThat(response.bonusQuantity()).isEqualTo(totalBonusQuantity)
         );
     }
@@ -237,5 +294,60 @@ public class PaymentSystemTest {
                 Arguments.of(2, 2, 4, 2),
                 Arguments.of(2, 2, 5, 2)
         );
+    }
+
+    @Test
+    @DisplayName("멤버십은 프로모션이 적용되지 않은 상품에 대해서만 적용된다.")
+    void 성공_안내_멤버십대상상품() {
+        // Given
+        Product coke = new Product("coke", BigDecimal.valueOf(1000));
+        Product juice = new Product("juice", BigDecimal.valueOf(1000));
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 12, 31);
+        String promotionName = "탄산2+1";
+        Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
+        Promotions promotions = new Promotions(List.of(cokePromotion));
+        Inventory cokeInventory = new Inventory(coke, 10, promotionName);
+        Inventory juiceInventory = new Inventory(juice, 10, null);
+        Inventories inventories = new Inventories(List.of(cokeInventory, juiceInventory));
+        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
+        LocalDate now = LocalDate.of(2024, 3, 1);
+
+        // When
+        Response response = paymentSystem.canBuy("juice", 9, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
+                () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(9000)),
+                () -> assertThat(cokeInventory).extracting("quantity").isEqualTo(10),
+                () -> assertThat(juiceInventory).extracting("quantity").isEqualTo(1)
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {240_000, 250_000})
+    @DisplayName("멤버십 할인은 최대 8000원까지 가능하다.")
+    void 성공_멤버십할인_멤버십가격계산(int price) {
+        // Given
+        Product coke = new Product("coke", BigDecimal.valueOf(1000));
+        Product juice = new Product("juice", BigDecimal.valueOf(1000));
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 12, 31);
+        String promotionName = "탄산2+1";
+        Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
+        Promotions promotions = new Promotions(List.of(cokePromotion));
+        Inventory cokeInventory = new Inventory(coke, 10, promotionName);
+        Inventory juiceInventory = new Inventory(juice, 10, null);
+        Inventories inventories = new Inventories(List.of(cokeInventory, juiceInventory));
+        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
+        LocalDate now = LocalDate.of(2024, 3, 1);
+        Map<String, BigDecimal> memberShipPrice = new HashMap<>();
+        memberShipPrice.put("juice", BigDecimal.valueOf(price));
+
+        // When
+        BigDecimal totalMembershipPrice = paymentSystem.checkMembership("Y", memberShipPrice);
+        // Then
+        assertThat(totalMembershipPrice).isEqualTo(BigDecimal.valueOf(8000));
     }
 }
