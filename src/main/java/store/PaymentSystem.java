@@ -16,7 +16,8 @@ public class PaymentSystem {
         this.promotions = promotions;
     }
 
-    public Response canBuy(final String productName, final int quantity, final LocalDate now) {
+    public Response canBuy(final String productName, final int quantity, final LocalDate now,
+                           final Map<Product, Integer> purchasedProducts) {
         Inventories sameProductInventories = inventories.findProducts(productName);
         int totalStock = sameProductInventories.getTotalStocks(); // 프로모션X + 프로모션O
         notExistProductName(sameProductInventories);
@@ -25,7 +26,7 @@ public class PaymentSystem {
             String promotionName = inventory.getPromotionName();
             Optional<Promotion> optionalPromotion = promotions.find(promotionName); // 프로모션 찾기
             if (optionalPromotion.isEmpty()) {
-                return buyWithNoPromotion(quantity, inventory);
+                return buyWithNoPromotions(quantity, inventory, purchasedProducts);
             }
             // 할인 기간 판단
             Promotion promotion = getPromotion(now, optionalPromotion.get());
@@ -35,23 +36,24 @@ public class PaymentSystem {
             int purchaseQuantity = promotion.getPurchaseQuantity();
             int bonusQuantity = promotion.getBonusQuantity();
             int stock = inventory.getQuantity(); // 재고
-            Response noPromotionQuantity = outOfStock(quantity, purchaseQuantity, bonusQuantity, stock,
-                    sameProductInventories);
+            Response noPromotionQuantity = outOfStock(inventory, quantity, purchaseQuantity, bonusQuantity, stock,
+                    sameProductInventories, purchasedProducts);
             if (noPromotionQuantity != null) {
                 return noPromotionQuantity;
             }
             // 할인 적용X
-            Response noPromotion = buyWithNoPromotion(quantity, inventory, purchaseQuantity);
+            Response noPromotion = buyWithNoPromotion(quantity, inventory, purchaseQuantity, purchasedProducts);
             if (noPromotion != null) {
                 return noPromotion;
             }
             // 프로모션 적용이 가능한 상품에 대해 고객이 해당 수량보다 적게 가져온 경우, 그 수량만큼 **추가 여부를 입력**받는다.
-            Response canGetBonus = canGetBonus(quantity, purchaseQuantity, bonusQuantity);
+            Response canGetBonus = canGetBonus(quantity, purchaseQuantity, bonusQuantity, inventory);
             if (canGetBonus != null) {
                 return canGetBonus;
             }
             // 프로모션이 자동 적용된다.
-            Response autoPromotion = autoPromotion(quantity, inventory, purchaseQuantity, bonusQuantity);
+            Response autoPromotion = autoPromotion(quantity, inventory, purchaseQuantity, bonusQuantity,
+                    purchasedProducts);
             if (autoPromotion != null) {
                 return autoPromotion;
             }
@@ -73,43 +75,61 @@ public class PaymentSystem {
         return membershipPrice;
     }
 
-    private static Response autoPromotion(final int quantity, final Inventory inventory, final int purchaseQuantity,
-                                          final int bonusQuantity) {
+    private Response buyWithNoPromotions(final int quantity, final Inventory inventory,
+                                         Map<Product, Integer> purchasedProducts) {
+        inventory.buy(quantity);
+        BigDecimal price = inventory.calculatePrice(quantity);
+        purchasedProducts.put(inventory.getProduct(),
+                purchasedProducts.getOrDefault(inventory.getProduct(), 0) + quantity);
+        return Response.buyWithNoPromotion(price, inventory);
+    }
+
+    private Response autoPromotion(final int quantity, final Inventory inventory, final int purchaseQuantity,
+                                   final int bonusQuantity, final Map<Product, Integer> purchasedProducts) {
         if (quantity > purchaseQuantity) {
             int setSize = quantity / (purchaseQuantity + bonusQuantity);
             int totalBonusQuantity = setSize * bonusQuantity; // 보너스 수량
             inventory.buy(quantity);
-            return Response.buyWithPromotion(totalBonusQuantity);
+            purchasedProducts.put(inventory.getProduct(),
+                    purchasedProducts.getOrDefault(inventory.getProduct(), 0) + quantity);
+            return Response.buyWithPromotion(totalBonusQuantity, inventory);
         }
         return null;
     }
 
-    private static Response canGetBonus(final int quantity, final int purchaseQuantity, final int bonusQuantity) {
+    private static Response canGetBonus(final int quantity, final int purchaseQuantity, final int bonusQuantity,
+                                        final Inventory inventory) {
         if (quantity < purchaseQuantity + bonusQuantity) {
             int freeQuantity = purchaseQuantity + bonusQuantity - quantity;
-            return Response.canGetMoreQuantity(bonusQuantity, freeQuantity);
+            return Response.canGetMoreQuantity(bonusQuantity, freeQuantity, inventory);
         }
         return null;
     }
 
     private static Response buyWithNoPromotion(final int quantity, final Inventory inventory,
-                                               final int purchaseQuantity) {
+                                               final int purchaseQuantity,
+                                               final Map<Product, Integer> purchasedProducts) {
         if (quantity < purchaseQuantity) {
             inventory.buy(quantity);
             BigDecimal totalPrice = inventory.calculatePrice(quantity);
-            return Response.buyWithNoPromotion(totalPrice);
+            purchasedProducts.put(inventory.getProduct(),
+                    purchasedProducts.getOrDefault(inventory.getProduct(), 0) + quantity);
+            return Response.buyWithNoPromotion(totalPrice, inventory);
         }
         return null;
     }
 
-    private static Response outOfStock(final int quantity, final int purchaseQuantity, final int bonusQuantity,
-                                       final int stock, final Inventories inventories) {
+    private static Response outOfStock(final Inventory inputInventory, final int quantity, final int purchaseQuantity,
+                                       final int bonusQuantity,
+                                       final int stock, final Inventories inventories,
+                                       final Map<Product, Integer> purchasedProducts) {
         if (stock < quantity) {
-            if (stock >= purchaseQuantity + bonusQuantity && purchaseQuantity + bonusQuantity < quantity) { // 일부 프로모션 적용
+            if (stock >= purchaseQuantity + bonusQuantity
+                    && purchaseQuantity + bonusQuantity < quantity) { // 일부 프로모션 적용
                 int setSize = stock / (purchaseQuantity + bonusQuantity);
                 int totalBonusQuantity = setSize * bonusQuantity;
                 int noPromotionQuantity = quantity - setSize * (purchaseQuantity + bonusQuantity);
-                return Response.outOfStock(totalBonusQuantity, noPromotionQuantity);
+                return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inputInventory);
             }
             // 프로모션 적용 최소수량 만족X 프로모션 재고 초과 - > 그냥 구매
             int totalQuantity = quantity;
@@ -120,12 +140,16 @@ public class PaymentSystem {
                     totalQuantity -= inventoryQuantity;
                     inventory.buy(inventoryQuantity); // 전체 사용
                     totalPrice = totalPrice.add(inventory.calculatePrice(inventoryQuantity));
+                    Product product = inventory.getProduct();
+                    purchasedProducts.put(product, purchasedProducts.getOrDefault(product, 0) + inventoryQuantity);
                     continue;
                 }
                 inventory.buy(totalQuantity);
                 totalPrice = totalPrice.add(inventory.calculatePrice(totalQuantity));
+                Product product = inventory.getProduct();
+                purchasedProducts.put(product, purchasedProducts.getOrDefault(product, 0) + totalQuantity);
             }
-            return Response.buyWithNoPromotion(totalPrice);
+            return Response.buyWithNoPromotion(totalPrice, inputInventory);
         }
         return null;
     }
@@ -135,12 +159,6 @@ public class PaymentSystem {
             return null;
         }
         return promotion;
-    }
-
-    private static Response buyWithNoPromotion(final int quantity, final Inventory inventory) {
-        inventory.buy(quantity);
-        BigDecimal price = inventory.calculatePrice(quantity);
-        return Response.buyWithNoPromotion(price);
     }
 
     private static void totalOutOfStock(final int quantity, final int totalStock) {

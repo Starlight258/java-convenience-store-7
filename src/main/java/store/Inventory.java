@@ -23,6 +23,10 @@ public class Inventory implements Comparable<Inventory> {
         return this.product.isSameProductName(productName);
     }
 
+    public boolean isSameInventory(final String productName, final String promotionName) {
+        return isSameProductName(productName) && this.promotionName.equals(promotionName);
+    }
+
     public void buy(final int purchaseQuantity) {
         if (quantity >= purchaseQuantity) {
             this.quantity -= purchaseQuantity;
@@ -34,6 +38,14 @@ public class Inventory implements Comparable<Inventory> {
     public BigDecimal calculatePrice(final int quantity) {
         BigDecimal price = product.getPrice();
         return price.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    public String getProductName() {
+        return product.getName();
+    }
+
+    public Product getProduct() {
+        return product;
     }
 
     public boolean hasPromotion() {
