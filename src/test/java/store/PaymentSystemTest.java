@@ -33,7 +33,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
 
         // When & Then
@@ -53,7 +53,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -77,7 +77,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
 
@@ -100,7 +100,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2025, 1, 1);
@@ -122,7 +122,7 @@ public class PaymentSystemTest {
     void 성공_안내_프로모션X() {
         // Given
         Product product = new Product("coke", BigDecimal.valueOf(1000));
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, new Promotions(Collections.emptyList()));
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -149,7 +149,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 1, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -177,7 +177,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -205,7 +205,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory inventoryWithPromotion = new Inventory(product, 7, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -308,7 +308,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory cokeInventory = new Inventory(coke, 10, promotionName);
-        Inventory juiceInventory = new Inventory(juice, 10, null);
+        Inventory juiceInventory = new Inventory(juice, 10, "null");
         Inventories inventories = new Inventories(List.of(cokeInventory, juiceInventory));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
@@ -338,7 +338,7 @@ public class PaymentSystemTest {
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
         Inventory cokeInventory = new Inventory(coke, 10, promotionName);
-        Inventory juiceInventory = new Inventory(juice, 10, null);
+        Inventory juiceInventory = new Inventory(juice, 10, "null");
         Inventories inventories = new Inventories(List.of(cokeInventory, juiceInventory));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);

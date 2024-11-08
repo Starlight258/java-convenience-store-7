@@ -6,6 +6,7 @@ import java.util.Objects;
 public class Inventory implements Comparable<Inventory> {
 
     public static final String ERROR = "[ERROR]";
+    public static final String NULL = "null";
 
     private final Product product;
     private int quantity;
@@ -36,7 +37,7 @@ public class Inventory implements Comparable<Inventory> {
     }
 
     public boolean hasPromotion() {
-        return promotionName != null;
+        return !NULL.equals(promotionName);
     }
 
     private void validate(final Product product, final int quantity) {

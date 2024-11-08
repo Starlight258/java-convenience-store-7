@@ -108,7 +108,7 @@ public class InventoryTest {
             Product milk = new Product("milk", BigDecimal.valueOf(1000));
             String promotionName = "탄산2+1";
             Inventory inventoryWithPromotion = new Inventory(coke, 10, promotionName);
-            Inventory inventoryWithNoPromotion = new Inventory(milk, 10, null);
+            Inventory inventoryWithNoPromotion = new Inventory(milk, 10, "null");
             Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
             // When & Then
             assertThatCode(() -> {

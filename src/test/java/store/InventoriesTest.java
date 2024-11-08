@@ -18,7 +18,7 @@ public class InventoriesTest {
         Product product = new Product("coke", BigDecimal.valueOf(1000));
         String promotionName = "탄산2+1";
         Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, null);
+        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
 
         // When & Then
         assertThatCode(() -> {
@@ -73,7 +73,7 @@ public class InventoriesTest {
 
         // When & Then
         assertThatCode(() -> {
-            new Inventory(product, 10, null);
+            new Inventory(product, 10, "null");
         }).doesNotThrowAnyException();
     }
 }
