@@ -27,12 +27,19 @@ public class Application {
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = DateTimes.now().toLocalDate();
         Map<String, Integer> purchasedItems = getStringIntegerMap();
+        Map<String, Integer> bonusItems = new HashMap<>();
         for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
             int quantity = entry.getValue();
             Response response = paymentSystem.canBuy(productName, quantity, now);
-            int bonusQuantity = canGetBonus(productName, response);
-            int noPromotionQuantity = checkNoPromotion(productName, response);
+            int canGetMoreQuantity = canGetMoreQuantity(bonusItems, productName, response);
+            if (canGetMoreQuantity > 0) {
+                purchasedItems.put(productName, quantity + canGetMoreQuantity);
+            }
+            int noPromotionQuantity = checkNoPromotion(bonusItems, productName, response);
+            if (noPromotionQuantity > 0) {
+                purchasedItems.put(productName, quantity - noPromotionQuantity);
+            }
         }
     }
 
@@ -45,31 +52,36 @@ public class Application {
         return split;
     }
 
-    private static int checkNoPromotion(final String productName, final Response response) {
+    private static int checkNoPromotion(final Map<String, Integer> bonusItems, final String productName,
+                                        final Response response) {
         if (response.status() == RESPONSE_STATUS.OUT_OF_STOCK) {
+            int totalBonusQuantity = response.bonusQuantity();
+            bonusItems.put(productName, totalBonusQuantity);
             int noPromotionQuantityOfResponse = response.noPromotionQuantity();
             System.out.printf(System.lineSeparator() + "현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)"
                             + System.lineSeparator(),
                     productName, noPromotionQuantityOfResponse);
             String intent = readLine();
-            if (Objects.equals(intent, "Y")) {
+            if (Objects.equals(intent, "N")) {
                 return noPromotionQuantityOfResponse;
             }
         }
         return 0;
     }
 
-    private static int canGetBonus(final String productName, final Response response) {
+    private static int canGetMoreQuantity(final Map<String, Integer> bonusItems, final String productName,
+                                          final Response response) {
         if (response.status() == RESPONSE_STATUS.CAN_GET_BONUS) {
-            int bonusQuantityOfResponse = response.bonusQuantity();
+            int bonusQuantity = response.bonusQuantity();
+            int canGetMoreQuantity = response.canGetMoreQuantity();
             System.out.printf(System.lineSeparator() + "현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)"
-                            + System.lineSeparator(),
-                    productName,
-                    bonusQuantityOfResponse);
+                    + System.lineSeparator(), productName, canGetMoreQuantity);
             String intent = readLine();
             if (Objects.equals(intent, "Y")) {
-                return bonusQuantityOfResponse;
+                bonusItems.put(productName, bonusQuantity);
+                return canGetMoreQuantity;
             }
+            bonusItems.put(productName, bonusQuantity - canGetMoreQuantity);
         }
         return 0;
     }
