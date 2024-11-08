@@ -105,7 +105,7 @@ public class PaymentSystem {
     private static Response outOfStock(final int quantity, final int purchaseQuantity, final int bonusQuantity,
                                        final int stock, final Inventories inventories) {
         if (stock < quantity) {
-            if (purchaseQuantity + bonusQuantity < quantity) { // 일부 프로모션 적용
+            if (stock >= purchaseQuantity + bonusQuantity && purchaseQuantity + bonusQuantity < quantity) { // 일부 프로모션 적용
                 int setSize = stock / (purchaseQuantity + bonusQuantity);
                 int totalBonusQuantity = setSize * bonusQuantity;
                 int noPromotionQuantity = quantity - setSize * (purchaseQuantity + bonusQuantity);
