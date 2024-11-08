@@ -24,10 +24,40 @@ public class Application {
     public static void main(String[] args) throws IOException {
         printStartMessage();
         Inventories inventories = addInventory();
+        showInventories(inventories);
         Promotions promotions = addPromotion();
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = DateTimes.now().toLocalDate();
         convenienceStore(inventories, paymentSystem, now);
+        while (true) {
+            System.out.println(System.lineSeparator() + "감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+            String line = readLine();
+            if (line.equals("Y")) {
+                System.out.println();
+                printStartMessage();
+                showInventories(inventories);
+                convenienceStore(inventories, paymentSystem, now);
+                continue;
+            }
+            break;
+        }
+    }
+
+    private static void showInventories(final Inventories inventories) {
+        for (Inventory inventory : inventories.getInventories()) {
+            int quantity = inventory.getQuantity();
+            String quanityText = quantity + "개 ";
+            if (quantity == 0) {
+                quanityText = "재고 없음 ";
+            }
+            String promotionName = inventory.getPromotionName();
+            String promotionNameText = promotionName;
+            if (promotionName.equals("null")) {
+                promotionNameText = "";
+            }
+            System.out.printf("- %s" + " %,.0f원 %s%s\n", inventory.getProductName(), inventory.getProductPrice(),
+                    quanityText, promotionNameText);
+        }
     }
 
     private static void convenienceStore(final Inventories inventories, final PaymentSystem paymentSystem,
@@ -38,10 +68,10 @@ public class Application {
         Map<Product, Integer> bonusItems = new HashMap<>();
         checkPromotion(paymentSystem, now, purchasedItems, totalNoPromotionPrice, bonusItems, purchasedProducts);
         BigDecimal membershipPrice = checkMemberShip(paymentSystem, totalNoPromotionPrice);
-        showResult(purchasedProducts, bonusItems, membershipPrice);
+        showResult(inventories, purchasedProducts, bonusItems, membershipPrice);
     }
 
-    private static void showResult(final Map<Product, Integer> purchasedProducts,
+    private static void showResult(final Inventories inventories, final Map<Product, Integer> purchasedProducts,
                                    final Map<Product, Integer> bonusItems, final BigDecimal membershipPrice) {
         Receipt receipt = new Receipt(purchasedProducts, bonusItems, membershipPrice);
         showResult(purchasedProducts, bonusItems, receipt);
@@ -257,7 +287,6 @@ public class Application {
                 continue;
             }
             String[] split = input.split(",", -1);
-            print(split);
             Product product = new Product(split[0], new BigDecimal(split[1]));
             Inventory inventory = new Inventory(product, Converter.convertToInteger(split[2]), split[3]);
             inventories.add(inventory);
