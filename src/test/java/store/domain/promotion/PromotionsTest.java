@@ -7,8 +7,6 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import store.domain.promotion.Promotion;
-import store.domain.promotion.Promotions;
 
 @DisplayName("프로모션 리스트 테스트")
 class PromotionsTest {
@@ -35,9 +33,10 @@ class PromotionsTest {
         Promotion cokePromotion = new Promotion("탄산2+1", 2, 1, startDate, endDate);
         Promotion mdPromotion = new Promotion("MD추천상품", 1, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion, mdPromotion));
+        LocalDate now = LocalDate.of(2024, 3, 1);
 
         // When
-        Promotion promotion = promotions.find(promotionName).get();
+        Promotion promotion = promotions.find(promotionName, now).get();
 
         // & Then
         Assertions.assertThat(promotion).isEqualTo(cokePromotion);

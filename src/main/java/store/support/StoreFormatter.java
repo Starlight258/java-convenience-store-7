@@ -30,7 +30,7 @@ public class StoreFormatter {
         if (promotionName.equals(NULL)) {
             promotionNameText = "";
         }
-        return String.format("- %s" + " %,.0f원 %s%s\n", productName, productPrice, quanityText, promotionNameText);
+        return String.format("- %s" + " %,.0f원 %s%s", productName, productPrice, quanityText, promotionNameText);
     }
 
     private int getKoreanCount(String text) {

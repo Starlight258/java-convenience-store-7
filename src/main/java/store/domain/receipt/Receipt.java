@@ -10,32 +10,18 @@ public class Receipt {
 
     private final Map<Product, Integer> purchasedProducts;
     private final Map<Product, Integer> bonusProducts;
-    private final BigDecimal memberShipDiscountPrice;
 
-    public Receipt(final Map<Product, Integer> purchasedProducts, final Map<Product, Integer> bonusProducts,
-                   final BigDecimal memberShipDiscountPrice) {
+    public Receipt(final Map<Product, Integer> purchasedProducts, final Map<Product, Integer> bonusProducts) {
         this.purchasedProducts = purchasedProducts;
         this.bonusProducts = bonusProducts;
-        this.memberShipDiscountPrice = memberShipDiscountPrice;
     }
 
-    public Map<Product, Integer> getPurchasedProducts() {
-        return Collections.unmodifiableMap(purchasedProducts);
+    public void purchaseProducts(Product product, int quantity) {
+        purchasedProducts.put(product, purchasedProducts.getOrDefault(product, 0) + quantity);
     }
 
-    public Map<Product, Integer> getBonusProducts() {
-        return Collections.unmodifiableMap(bonusProducts);
-    }
-
-
-    public Map.Entry<Integer, BigDecimal> getTotalPurchase() {
-        int totalCount = 0;
-        BigDecimal totalPrice = BigDecimal.ZERO;
-        for (Entry<Product, Integer> entry : purchasedProducts.entrySet()) {
-            totalCount += entry.getValue();
-            totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
-        }
-        return Map.entry(totalCount, totalPrice);
+    public void addBonusProducts(final Product product, final int bonusQuantity) {
+        bonusProducts.put(product, bonusQuantity);
     }
 
     public BigDecimal getPromotionDiscountPrice() {
@@ -47,14 +33,27 @@ public class Receipt {
         return promotionPrice;
     }
 
-    public BigDecimal getMemberShipDiscountPrice() {
-        return memberShipDiscountPrice;
+    public BigDecimal getPriceToPay(BigDecimal totalPrice, BigDecimal membershiptDiscountPrice) {
+        totalPrice = totalPrice.subtract(getPromotionDiscountPrice());
+        totalPrice = totalPrice.subtract(membershiptDiscountPrice);
+        return totalPrice;
     }
 
-    public BigDecimal getPriceToPay() {
-        BigDecimal price = getTotalPurchase().getValue();
-        price = price.subtract(getPromotionDiscountPrice());
-        price = price.subtract(getMemberShipDiscountPrice());
-        return price;
+    public Map.Entry<Integer, BigDecimal> getTotalPurchase() {
+        int totalCount = 0;
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (Entry<Product, Integer> entry : purchasedProducts.entrySet()) {
+            totalCount += entry.getValue();
+            totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
+        }
+        return Map.entry(totalCount, totalPrice);
+    }
+
+    public Map<Product, Integer> getPurchasedProducts() {
+        return Collections.unmodifiableMap(purchasedProducts);
+    }
+
+    public Map<Product, Integer> getBonusProducts() {
+        return Collections.unmodifiableMap(bonusProducts);
     }
 }

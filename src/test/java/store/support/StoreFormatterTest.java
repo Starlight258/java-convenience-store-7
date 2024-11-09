@@ -19,7 +19,7 @@ class StoreFormatterTest {
         String message = formatter.makeInventoryMessage(3, "탄산2+1", "콜라", BigDecimal.valueOf(1000));
 
         // Then
-        assertThat(message).isEqualTo("- 콜라 1,000원 3개 탄산2+1" + System.lineSeparator());
+        assertThat(message).isEqualTo("- 콜라 1,000원 3개 탄산2+1");
     }
 
     @Test

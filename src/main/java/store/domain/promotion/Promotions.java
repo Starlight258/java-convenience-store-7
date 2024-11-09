@@ -1,5 +1,6 @@
 package store.domain.promotion;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +19,9 @@ public class Promotions {
         }
     }
 
-    public Optional<Promotion> find(final String name) {
+    public Optional<Promotion> find(final String name, final LocalDate now) {
         for (Promotion promotion : promotions) {
-            if (promotion.isSameName(name)) {
+            if (promotion.isSameName(name) && promotion.isPromotionPeriod(now)) {
                 return Optional.of(promotion);
             }
         }
