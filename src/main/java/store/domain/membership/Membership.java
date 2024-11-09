@@ -13,15 +13,24 @@ public class Membership {
         this.noPromotionProducts = noPromotionProducts;
     }
 
-    public BigDecimal checkMembership(final Map<String, BigDecimal> totalNoPromotionPrice) {
-        BigDecimal membershipPrice = BigDecimal.ZERO;
-        for (Entry<String, BigDecimal> entry : totalNoPromotionPrice.entrySet()) {
-            membershipPrice = membershipPrice.add(entry.getValue());
-        }
+    public void addNoPromotionProduct(final Product product, final Integer quantity) {
+        noPromotionProducts.put(product, noPromotionProducts.getOrDefault(product, 0) + quantity);
+    }
+
+    public BigDecimal calculateDiscount() {
+        BigDecimal membershipPrice = getTotalNoPromotionPrice();
         membershipPrice = membershipPrice.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(30));
         if (membershipPrice.compareTo(BigDecimal.valueOf(8000)) > 0) {
             return BigDecimal.valueOf(8000);
         }
         return membershipPrice;
+    }
+
+    private BigDecimal getTotalNoPromotionPrice() {
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (Entry<Product, Integer> entry : noPromotionProducts.entrySet()) {
+            totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
+        }
+        return totalPrice;
     }
 }

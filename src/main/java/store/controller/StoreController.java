@@ -127,19 +127,17 @@ public class StoreController {
     }
 
     private void convenienceStore(final PurchaseOrderForms purchaseOrderForms, final PaymentSystem paymentSystem) {
-
         Map<String, Integer> purchasedItems = purchaseOrderForms.getProductsToBuy();
         Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
         Membership membership = new Membership(new HashMap<>());
-        Map<String, BigDecimal> totalNoPromotionPrice = new HashMap<>();
         for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
             int quantity = entry.getValue();
             LocalDate now = DateTimes.now().toLocalDate();
-            Response response = paymentSystem.canBuy(productName, quantity, receipt, now);
-            checkResponse(purchaseOrderForms, totalNoPromotionPrice, receipt, productName, quantity, response);
+            Response response = paymentSystem.canBuy(productName, quantity, receipt, now, membership);
+            checkResponse(purchaseOrderForms, receipt, productName, quantity, response, membership);
         }
-        BigDecimal membershipPrice = checkMemberShip(membership, totalNoPromotionPrice);
+        BigDecimal membershipPrice = checkMemberShip(membership);
         showResultPrice(receipt, membershipPrice);
     }
 
@@ -164,14 +162,13 @@ public class StoreController {
         showResult(receipt, membershipPrice);
     }
 
-    private BigDecimal checkMemberShip(final Membership membership,
-                                       final Map<String, BigDecimal> totalNoPromotionPrice) {
+    private BigDecimal checkMemberShip(final Membership membership) {
         outputView.showCommentOfMemberShip();
         String line = readYOrN();
         if (line.equals(NO)) {
             return BigDecimal.ZERO;
         }
-        return membership.checkMembership(totalNoPromotionPrice);
+        return membership.calculateDiscount();
     }
 
     private void showResult(final Receipt receipt, final BigDecimal membershipPrice) {
@@ -214,12 +211,10 @@ public class StoreController {
     }
 
     private void checkResponse(final PurchaseOrderForms purchaseOrderForms,
-                               final Map<String, BigDecimal> totalNoPromotionPrice,
                                final Receipt receipt, final String productName,
                                final int quantity,
-                               final Response response) {
+                               final Response response, final Membership membership) {
         if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
-            totalNoPromotionPrice.put(productName, response.totalPrice());
             return;
         }
         if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
@@ -228,8 +223,8 @@ public class StoreController {
             return;
         }
         if (response.status() == ResponseStatus.OUT_OF_STOCK) {
-            int outOfStockQuantity = outOfStock(productName, response, receipt, quantity);
-            if (outOfStockQuantity > 0) {
+            int outOfStockQuantity = outOfStock(productName, response, receipt, quantity, membership);
+            if (outOfStockQuantity > 0) { // 구매안함
                 purchaseOrderForms.put(productName, quantity - outOfStockQuantity);
             }
             return;
@@ -278,7 +273,7 @@ public class StoreController {
 
     private int outOfStock(final String productName,
                            final Response response, final Receipt receipt,
-                           final int quantity) {
+                           final int quantity, final Membership membership) {
         int totalBonusQuantity = response.bonusQuantity();
         receipt.addBonusProducts(response.inventory().getProduct(), totalBonusQuantity);
         int noPromotionQuantityOfResponse = response.noPromotionQuantity();
@@ -290,6 +285,7 @@ public class StoreController {
             return noPromotionQuantityOfResponse;
         }
         receipt.purchaseProducts(product, quantity);
+        membership.addNoPromotionProduct(product, quantity);
         return 0;
     }
 

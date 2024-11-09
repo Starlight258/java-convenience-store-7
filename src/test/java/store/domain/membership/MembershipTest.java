@@ -17,16 +17,13 @@ class MembershipTest {
         // Given
         Product coke = new Product("coke", BigDecimal.valueOf(1000));
         Map<Product, Integer> noPromotionProducts = new HashMap<>() {{
-            put(coke, 3);
+            put(coke, 265);
         }};
         Membership membership = new Membership(noPromotionProducts);
-        Map<String, BigDecimal> memberShipPrice = new HashMap<>() {{
-            put("coke", new BigDecimal(3000));
-        }};
 
         // When
-        BigDecimal totalMembershipPrice = membership.checkMembership(memberShipPrice);
+        BigDecimal totalMembershipPrice = membership.calculateDiscount();
         // Then
-        assertThat(totalMembershipPrice).isEqualTo(BigDecimal.valueOf(900));
+        assertThat(totalMembershipPrice).isEqualTo(BigDecimal.valueOf(8000));
     }
 }
