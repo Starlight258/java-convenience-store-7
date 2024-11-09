@@ -17,19 +17,21 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import store.util.Converter;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
-import store.util.Parser;
-import store.domain.system.PaymentSystem;
 import store.domain.inventory.Product;
+import store.domain.membership.Membership;
+import store.domain.player.PurchaseOrderForms;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.receipt.Receipt;
+import store.domain.system.PaymentSystem;
 import store.response.Response;
 import store.response.ResponseStatus;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
+import store.util.Converter;
+import store.util.Parser;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -71,7 +73,8 @@ public class StoreController {
                 outputView.showStartMessage();
                 showInventories(inventories);
                 Map<String, Integer> purchasedItems = getPurchasedItems(inventories);
-                convenienceStore(inventories, paymentSystem, purchasedItems);
+                PurchaseOrderForms purchaseOrderForms = new PurchaseOrderForms(purchasedItems);
+                convenienceStore(purchaseOrderForms, paymentSystem);
                 outputView.showAdditionalPurchase();
                 String line = readYOrN();
                 if (line.equals(NO)) {
@@ -123,16 +126,21 @@ public class StoreController {
         }
     }
 
-    private void convenienceStore(final Inventories inventories, final PaymentSystem paymentSystem,
-                                  final Map<String, Integer> purchasedItems) {
-        LocalDate now = DateTimes.now().toLocalDate();
+    private void convenienceStore(final PurchaseOrderForms purchaseOrderForms, final PaymentSystem paymentSystem) {
+
+        Map<String, Integer> purchasedItems = purchaseOrderForms.getProductsToBuy();
+        Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
+        Membership membership = new Membership(new HashMap<>());
         Map<String, BigDecimal> totalNoPromotionPrice = new HashMap<>();
-        Map<Product, Integer> purchasedProducts = new HashMap<>();
-        Map<Product, Integer> bonusItems = new HashMap<>();
-        checkPromotion(inventories, paymentSystem, now, purchasedItems, totalNoPromotionPrice, bonusItems,
-                purchasedProducts);
-        BigDecimal membershipPrice = checkMemberShip(paymentSystem, totalNoPromotionPrice);
-        showResult(purchasedProducts, bonusItems, membershipPrice);
+        for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
+            String productName = entry.getKey();
+            int quantity = entry.getValue();
+            LocalDate now = DateTimes.now().toLocalDate();
+            Response response = paymentSystem.canBuy(productName, quantity, receipt, now);
+            checkResponse(purchaseOrderForms, totalNoPromotionPrice, receipt, productName, quantity, response);
+        }
+        BigDecimal membershipPrice = checkMemberShip(membership, totalNoPromotionPrice);
+        showResultPrice(receipt, membershipPrice);
     }
 
     private Map<String, Integer> getPurchasedItems(final Inventories inventories) {
@@ -152,51 +160,29 @@ public class StoreController {
         }
     }
 
-    private void showResult(final Map<Product, Integer> purchasedProducts,
-                            final Map<Product, Integer> bonusItems, final BigDecimal membershipPrice) {
-        Receipt receipt = new Receipt(purchasedProducts, bonusItems, membershipPrice);
-        showResult(purchasedProducts, bonusItems, receipt);
+    private void showResultPrice(final Receipt receipt, final BigDecimal membershipPrice) {
+        showResult(receipt, membershipPrice);
     }
 
-    private BigDecimal checkMemberShip(final PaymentSystem paymentSystem,
+    private BigDecimal checkMemberShip(final Membership membership,
                                        final Map<String, BigDecimal> totalNoPromotionPrice) {
         outputView.showCommentOfMemberShip();
         String line = readYOrN();
-        return paymentSystem.checkMembership(line, totalNoPromotionPrice);
-    }
-
-    private void showResult(final Map<Product, Integer> purchasedProducts,
-                            final Map<Product, Integer> bonusItems, final Receipt receipt) {
-        showPurchasedProducts(purchasedProducts);
-        showBonus(bonusItems);
-        showReceipt(receipt);
-    }
-
-    private void showReceipt(final Receipt receipt) {
-        outputView.showReceiptStartMark();
-        Entry<Integer, BigDecimal> totalPurchase = receipt.getTotalPurchase();
-        BigDecimal priceToPay = receipt.getPriceToPay();
-        BigDecimal totalPurchaseValue = totalPurchase.getValue();
-        int blankLength = String.valueOf(totalPurchaseValue).length() - String.valueOf(priceToPay).length();
-        outputView.showTotalPrice(totalPurchase.getKey(), totalPurchaseValue);
-        outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice());
-        outputView.showMemberShipDiscountPrice(receipt.getMemberShipDiscountPrice());
-        outputView.showMoneyToPay(priceToPay, blankLength);
-    }
-
-    private void showBonus(final Map<Product, Integer> bonusItems) {
-        outputView.showBonus();
-        for (Entry<Product, Integer> entry : bonusItems.entrySet()) {
-            Product product = entry.getKey();
-            String name = product.getName();
-            int quantity = entry.getValue();
-            outputView.showBonusProduct(name, quantity);
+        if (line.equals(NO)) {
+            return BigDecimal.ZERO;
         }
+        return membership.checkMembership(totalNoPromotionPrice);
     }
 
-    private void showPurchasedProducts(final Map<Product, Integer> purchasedProducts) {
+    private void showResult(final Receipt receipt, final BigDecimal membershipPrice) {
+        showPurchasedProducts(receipt);
+        showBonus(receipt);
+        showReceipt(receipt, membershipPrice);
+    }
+
+    private void showPurchasedProducts(final Receipt receipt) {
         outputView.showCommentOfInventory();
-        for (Entry<Product, Integer> entry : purchasedProducts.entrySet()) {
+        for (Entry<Product, Integer> entry : receipt.getPurchasedProducts().entrySet()) {
             Product product = entry.getKey();
             String name = product.getName();
             int quantity = entry.getValue();
@@ -205,41 +191,56 @@ public class StoreController {
         }
     }
 
-    private void checkPromotion(final Inventories inventories, final PaymentSystem paymentSystem,
-                                final LocalDate now,
-                                final Map<String, Integer> purchasedItems,
-                                final Map<String, BigDecimal> totalNoPromotionPrice,
-                                final Map<Product, Integer> bonusItems,
-                                final Map<Product, Integer> purchasedProducts) {
-        for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
-            String productName = entry.getKey();
+    private void showReceipt(final Receipt receipt, final BigDecimal membershipPrice) {
+        outputView.showReceiptStartMark();
+        Entry<Integer, BigDecimal> totalPurchase = receipt.getTotalPurchase();
+        BigDecimal priceToPay = receipt.getPriceToPay(totalPurchase.getValue(), membershipPrice);
+        BigDecimal totalPurchaseValue = totalPurchase.getValue();
+        int blankLength = String.valueOf(totalPurchaseValue).length() - String.valueOf(priceToPay).length();
+        outputView.showTotalPrice(totalPurchase.getKey(), totalPurchaseValue);
+        outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice());
+        outputView.showMemberShipDiscountPrice(membershipPrice);
+        outputView.showMoneyToPay(priceToPay, blankLength);
+    }
+
+    private void showBonus(final Receipt receipt) {
+        outputView.showBonus();
+        for (Entry<Product, Integer> entry : receipt.getBonusProducts().entrySet()) {
+            Product product = entry.getKey();
+            String name = product.getName();
             int quantity = entry.getValue();
-            Inventories sameProductInventories = inventories.findProducts(productName);
-            Response response = paymentSystem.canBuy(sameProductInventories, quantity, now, purchasedProducts);
-            if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
-                totalNoPromotionPrice.put(productName, response.totalPrice());
-                continue;
+            outputView.showBonusProduct(name, quantity);
+        }
+    }
+
+    private void checkResponse(final PurchaseOrderForms purchaseOrderForms,
+                               final Map<String, BigDecimal> totalNoPromotionPrice,
+                               final Receipt receipt, final String productName,
+                               final int quantity,
+                               final Response response) {
+        if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
+            totalNoPromotionPrice.put(productName, response.totalPrice());
+            return;
+        }
+        if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
+            int bonusQuantity = response.bonusQuantity();
+            receipt.addBonusProducts(response.inventory().getProduct(), bonusQuantity);
+            return;
+        }
+        if (response.status() == ResponseStatus.OUT_OF_STOCK) {
+            int outOfStockQuantity = outOfStock(productName, response, receipt, quantity);
+            if (outOfStockQuantity > 0) {
+                purchaseOrderForms.put(productName, quantity - outOfStockQuantity);
             }
-            if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
-                int bonusQuantity = response.bonusQuantity();
-                bonusItems.put(response.inventory().getProduct(), bonusQuantity);
-                continue;
-            }
-            if (response.status() == ResponseStatus.OUT_OF_STOCK) {
-                int outOfStockQuantity = outOfStock(bonusItems, productName, response, purchasedProducts, quantity);
-                if (outOfStockQuantity > 0) {
-                    purchasedItems.put(productName, quantity - outOfStockQuantity);
-                }
-                continue;
-            }
-            int canGetMoreQuantity = canGetBonus(bonusItems, productName, response);
-            Product product = response.inventory().getProduct();
-            purchasedItems.put(productName, quantity);
-            purchasedProducts.put(product, purchasedProducts.getOrDefault(product, 0) + quantity);
-            if (canGetMoreQuantity > 0) {
-                purchasedItems.put(productName, quantity + canGetMoreQuantity);
-                purchasedProducts.put(product, purchasedProducts.getOrDefault(product, 0) + canGetMoreQuantity);
-            }
+            return;
+        }
+        int canGetMoreQuantity = canGetBonus(receipt, productName, response);
+        Product product = response.inventory().getProduct();
+        purchaseOrderForms.put(productName, quantity);
+        receipt.purchaseProducts(product, quantity);
+        if (canGetMoreQuantity > 0) {
+            purchaseOrderForms.put(productName, quantity + canGetMoreQuantity);
+            receipt.purchaseProducts(product, canGetMoreQuantity);
         }
     }
 
@@ -275,26 +276,24 @@ public class StoreController {
         }
     }
 
-    private int outOfStock(final Map<Product, Integer> bonusItems, final String productName,
-                           final Response response, Map<Product, Integer> purchasedProducts,
+    private int outOfStock(final String productName,
+                           final Response response, final Receipt receipt,
                            final int quantity) {
         int totalBonusQuantity = response.bonusQuantity();
-        bonusItems.put(response.inventory().getProduct(), totalBonusQuantity);
+        receipt.addBonusProducts(response.inventory().getProduct(), totalBonusQuantity);
         int noPromotionQuantityOfResponse = response.noPromotionQuantity();
         outputView.showPromotionDiscount(productName, noPromotionQuantityOfResponse);
         String intent = readYOrN();
         Product product = response.inventory().getProduct();
         if (intent.equals(NO)) {
-            purchasedProducts.put(product,
-                    purchasedProducts.getOrDefault(product, 0) + quantity - noPromotionQuantityOfResponse);
+            receipt.purchaseProducts(product, quantity - noPromotionQuantityOfResponse);
             return noPromotionQuantityOfResponse;
         }
-        purchasedProducts.put(product,
-                purchasedProducts.getOrDefault(product, 0) + quantity);
+        receipt.purchaseProducts(product, quantity);
         return 0;
     }
 
-    private int canGetBonus(final Map<Product, Integer> bonusItems, final String productName,
+    private int canGetBonus(final Receipt receipt, final String productName,
                             final Response response) {
         if (response.status() == ResponseStatus.CAN_GET_BONUS) {
             int bonusQuantity = response.bonusQuantity();
@@ -303,10 +302,10 @@ public class StoreController {
             String intent = readYOrN();
             Product product = response.inventory().getProduct();
             if (intent.equals(YES)) {
-                bonusItems.put(product, bonusQuantity);
+                receipt.addBonusProducts(product, bonusQuantity);
                 return canGetMoreQuantity;
             }
-            bonusItems.put(product, bonusQuantity - canGetMoreQuantity);
+            receipt.addBonusProducts(product, bonusQuantity - canGetMoreQuantity);
         }
         return 0;
     }

@@ -28,6 +28,16 @@ public class Inventories {
         }
     }
 
+    public void subtract(final Inventory findInventory, final int quantity) {
+        for (Inventory inventory : inventories) {
+            if (inventory.equals(findInventory)) {
+                inventory.subtract(quantity);
+                return;
+            }
+        }
+        throw new IllegalStateException("[ERROR] 해당 재고를 찾을 수 없습니다.");
+    }
+
     private void totalOutOfStock(final int quantity, final int totalStock) {
         if (totalStock < quantity) {
             throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");

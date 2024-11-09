@@ -23,7 +23,7 @@ public class Inventory implements Comparable<Inventory> {
         return this.product.isSameProductName(productName);
     }
 
-    public void buy(final int purchaseQuantity) {
+    public void subtract(final int purchaseQuantity) {
         if (quantity >= purchaseQuantity) {
             this.quantity -= purchaseQuantity;
             return;

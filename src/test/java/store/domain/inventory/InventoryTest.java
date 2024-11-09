@@ -13,9 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import store.domain.inventory.Inventories;
-import store.domain.inventory.Inventory;
-import store.domain.inventory.Product;
 
 @DisplayName("재고 테스트")
 public class InventoryTest {
@@ -82,7 +79,7 @@ public class InventoryTest {
             Inventory inventory = new Inventory(product, 10, promotionName);
 
             // When
-            inventory.buy(3);
+            inventory.subtract(3);
 
             // When & Then
             assertThat(inventory.getQuantity()).isEqualTo(7);
@@ -97,7 +94,7 @@ public class InventoryTest {
             Inventory inventory = new Inventory(product, 10, promotionName);
 
             // When & Then
-            assertThatThrownBy(() -> inventory.buy(14))
+            assertThatThrownBy(() -> inventory.subtract(14))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageStartingWith("[ERROR]")
                     .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
