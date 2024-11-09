@@ -18,12 +18,16 @@ public class InputView {
         List<String> inputs = new ArrayList<>();
         while (true) {
             String input = br.readLine();
-            if (input == null) {
+            if (isTerminated(input)) {
                 break;
             }
             inputs.add(input);
         }
         br.close();
         return inputs;
+    }
+
+    private boolean isTerminated(final String input) {
+        return input == null;
     }
 }

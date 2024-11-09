@@ -39,10 +39,8 @@ public class OutputView {
         System.out.println(System.lineSeparator() + "감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
     }
 
-    public void showProduct(final String productName, final BigDecimal productPrice, final String quanityText,
-                            final String promotionNameText) {
-        System.out.printf("- %s" + " %,.0f원 %s%s\n", productName, productPrice,
-                quanityText, promotionNameText);
+    public void showMessage(final String message) {
+        System.out.println(message);
     }
 
     public void showCommentOfPurchase() {

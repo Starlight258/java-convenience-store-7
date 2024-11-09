@@ -28,6 +28,8 @@ import store.Promotions;
 import store.Receipt;
 import store.Response;
 import store.ResponseStatus;
+import store.support.StoreFormatter;
+import store.support.StoreSplitter;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -39,48 +41,43 @@ public class StoreController {
     public static final Pattern PATTERN = Pattern.compile(REGEX);
     public static final String YES = "Y";
     public static final String NO = "N";
-    public static final String NULL = "null";
-    public static final String QUANTITY_UNIT = "개 ";
-    public static final String NO_STOCK = "재고 없음 ";
 
     private final InputView inputView;
     private final OutputView outputView;
+    private final StoreSplitter splitter;
+    private final StoreFormatter formatter;
 
-    public StoreController(final InputView inputView, final OutputView outputView) {
+    public StoreController(final InputView inputView, final OutputView outputView, final StoreSplitter splitter,
+                           final StoreFormatter formatter) {
         this.inputView = inputView;
         this.outputView = outputView;
+        this.splitter = splitter;
+        this.formatter = formatter;
     }
 
     public void process() {
         Inventories inventories = null;
-        Promotions promotions;
-        PaymentSystem paymentSystem = null;
-
+        Promotions promotions = null;
         try {
-            outputView.showStartMessage();
-            inventories = addInventory();
-            showInventories(inventories);
-            promotions = addPromotion();
-            paymentSystem = new PaymentSystem(inventories, promotions);
-        } catch (IOException ignored) {
-            outputView.showExceptionMessage(INVALID_FILE_FORMAT.getErrorMessage());
+            inventories = makeInventories();
+            promotions = makePromotions();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            outputView.showExceptionMessage(e.getMessage());
         }
-        convenienceStore(inventories, paymentSystem);
-    }
+        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
 
-    private void convenienceStore(final Inventories inventories, final PaymentSystem paymentSystem) {
         while (true) {
             try {
-                LocalDate now = DateTimes.now().toLocalDate();
-                convenienceStore(inventories, paymentSystem, now);
+                outputView.showStartMessage();
+                showInventories(inventories);
+                Map<String, Integer> purchasedItems = getPurchasedItems(inventories);
+                convenienceStore(inventories, paymentSystem, purchasedItems);
                 outputView.showAdditionalPurchase();
                 String line = readYOrN();
                 if (line.equals(NO)) {
                     return;
                 }
                 outputView.showBlankLine();
-                outputView.showStartMessage();
-                showInventories(inventories);
             } catch (NoSuchElementException e) {
                 outputView.showExceptionMessage(NO_INPUT.getErrorMessage());
                 return;
@@ -90,29 +87,48 @@ public class StoreController {
         }
     }
 
+    private Promotions makePromotions() {
+        List<String> promotionsFromSource = readPromotionFromSource();
+        Promotions promotions = addPromotion(promotionsFromSource);
+        return promotions;
+    }
+
+    private Inventories makeInventories() {
+        List<String> inventoriesFromSource = readInventoryFromSource();
+        return addInventory(inventoriesFromSource);
+    }
+
+    private List<String> readPromotionFromSource() {
+        try {
+            return inputView.readFile(PROMOTION_FILENAME);
+        } catch (IOException exception) {
+            throw new IllegalStateException(INVALID_FILE_FORMAT.getErrorMessage());
+        }
+    }
+
+    private List<String> readInventoryFromSource() {
+        try {
+            return inputView.readFile(INVENTORY_FILENAME);
+        } catch (IOException exception) {
+            throw new IllegalStateException(INVALID_FILE_FORMAT.getErrorMessage());
+        }
+    }
+
+
     private void showInventories(final Inventories inventories) {
         for (Inventory inventory : inventories.getInventories()) {
-            int quantity = inventory.getQuantity();
-            String quanityText = quantity + QUANTITY_UNIT;
-            if (quantity == 0) {
-                quanityText = NO_STOCK;
-            }
-            String promotionName = inventory.getPromotionName();
-            String promotionNameText = promotionName;
-            if (promotionName.equals(NULL)) {
-                promotionNameText = "";
-            }
-            outputView.showProduct(inventory.getProductName(), inventory.getProductPrice(), quanityText,
-                    promotionNameText);
+            String message = formatter.makeInventoryMessage(inventory.getQuantity(), inventory.getPromotionName(),
+                    inventory.getProductName(), inventory.getProductPrice());
+            outputView.showMessage(message);
         }
     }
 
     private void convenienceStore(final Inventories inventories, final PaymentSystem paymentSystem,
-                                  final LocalDate now) {
+                                  final Map<String, Integer> purchasedItems) {
+        LocalDate now = DateTimes.now().toLocalDate();
         Map<String, BigDecimal> totalNoPromotionPrice = new HashMap<>();
         Map<Product, Integer> purchasedProducts = new HashMap<>();
         Map<Product, Integer> bonusItems = new HashMap<>();
-        Map<String, Integer> purchasedItems = getPurchasedItems(inventories);
         checkPromotion(inventories, paymentSystem, now, purchasedItems, totalNoPromotionPrice, bonusItems,
                 purchasedProducts);
         BigDecimal membershipPrice = checkMemberShip(paymentSystem, totalNoPromotionPrice);
@@ -230,12 +246,12 @@ public class StoreController {
     public Map<String, Integer> promptProductNameAndQuantity() {
         Map<String, Integer> purchasedItems = new HashMap<>();
         String input = inputView.readLine();
-        String[] splittedText = input.split(",");
-        addPurchasedItems(purchasedItems, splittedText);
+        List<String> splitText = splitter.split(input);
+        addPurchasedItems(purchasedItems, splitText);
         return purchasedItems;
     }
 
-    private void addPurchasedItems(final Map<String, Integer> purchasedItems, final String[] splittedText) {
+    private void addPurchasedItems(final Map<String, Integer> purchasedItems, final List<String> splittedText) {
         for (String text : splittedText) {
             Matcher matcher = PATTERN.matcher(text);
             if (!matcher.matches()) {
@@ -295,39 +311,37 @@ public class StoreController {
         return 0;
     }
 
-    private Promotions addPromotion() throws IOException {
+    private Promotions addPromotion(List<String> promotionsFromSource) {
         List<Promotion> promotions = new ArrayList<>();
-        List<String> inputs = inputView.readFile(PROMOTION_FILENAME);
-        for (String input : inputs) {
+        for (String input : promotionsFromSource) {
             if (input.startsWith("name")) {
                 continue;
             }
-            String[] split = input.split(",", -1);
-            Promotion promotion = getPromotion(split);
+            List<String> splittedText = splitter.split(input);
+            Promotion promotion = getPromotion(splittedText);
             promotions.add(promotion);
         }
         return new Promotions(promotions);
     }
 
-    private Promotion getPromotion(final String[] split) {
-        int purchaseQuantity = Converter.convertToInteger(split[1]);
-        int bonusQuantity = Converter.convertToInteger(split[2]);
-        LocalDate startDate = Parser.parseToLocalDate(split[3]);
-        LocalDate endDate = Parser.parseToLocalDate(split[4]);
-        return new Promotion(split[0], purchaseQuantity, bonusQuantity, startDate, endDate);
+    private Promotion getPromotion(final List<String> splittedText) {
+        int purchaseQuantity = Converter.convertToInteger(splittedText.get(1));
+        int bonusQuantity = Converter.convertToInteger(splittedText.get(2));
+        LocalDate startDate = Parser.parseToLocalDate(splittedText.get(3));
+        LocalDate endDate = Parser.parseToLocalDate(splittedText.get(4));
+        return new Promotion(splittedText.get(0), purchaseQuantity, bonusQuantity, startDate, endDate);
     }
 
-    private Inventories addInventory()
-            throws IOException {
+    private Inventories addInventory(List<String> inputs) {
         List<Inventory> inventories = new ArrayList<>();
-        List<String> inputs = inputView.readFile(INVENTORY_FILENAME);
         for (String input : inputs) {
             if (input.startsWith("name")) {
                 continue;
             }
-            String[] split = input.split(",", -1);
-            Product product = new Product(split[0], new BigDecimal(split[1]));
-            Inventory inventory = new Inventory(product, Converter.convertToInteger(split[2]), split[3]);
+            List<String> splittedText = splitter.split(input);
+            Product product = new Product(splittedText.get(0), new BigDecimal(splittedText.get(1)));
+            Inventory inventory = new Inventory(product, Converter.convertToInteger(splittedText.get(2)),
+                    splittedText.get(3));
             inventories.add(inventory);
         }
         return new Inventories(inventories);
