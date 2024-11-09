@@ -146,7 +146,7 @@ public class StoreController {
         while (true) {
             try {
                 Map<String, Integer> purchasedItems = promptProductNameAndQuantity();
-                inventories.getPurchasedItems(purchasedItems, inventories);  // 구매할 상품의 이름
+                inventories.getPurchasedItems(purchasedItems);  // 구매할 상품의 이름
                 return purchasedItems;
             } catch (IllegalArgumentException exception) {
                 outputView.showExceptionMessage(exception.getMessage());

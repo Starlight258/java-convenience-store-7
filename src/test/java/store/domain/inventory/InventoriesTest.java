@@ -95,7 +95,7 @@ public class InventoriesTest {
         }};
 
         // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(purchasedItems, inventories))
+        assertThatThrownBy(() -> inventories.getPurchasedItems(purchasedItems))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("존재하지 않는 상품입니다. 다시 입력해 주세요.")
@@ -115,7 +115,7 @@ public class InventoriesTest {
         }};
 
         // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(purchasedItems, inventories))
+        assertThatThrownBy(() -> inventories.getPurchasedItems(purchasedItems))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")

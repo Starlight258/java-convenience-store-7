@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import store.domain.membership.Membership;
+import store.domain.receipt.Receipt;
 
 public class Inventories {
 
@@ -17,25 +19,28 @@ public class Inventories {
         this.inventories = new TreeSet<>(inventories);
     }
 
-    public void getPurchasedItems(final Map<String, Integer> purchasedItems, final Inventories inventories) {
+    public void getPurchasedItems(final Map<String, Integer> purchasedItems) {
         for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
             int quantity = entry.getValue();
-            Inventories sameProductInventories = inventories.findProducts(productName);
+            Inventories sameProductInventories = findProducts(productName);
             int totalStock = sameProductInventories.getTotalStocks(); // 프로모션X + 프로모션O
             notExistProductName(sameProductInventories);
             totalOutOfStock(quantity, totalStock);
         }
     }
 
-    public void subtract(final Inventory findInventory, final int quantity) {
+    public void buyProductWithoutPromotion(final int quantity, final Membership membership, final Receipt receipt) {
+        int totalQuantity = quantity;
         for (Inventory inventory : inventories) {
-            if (inventory.equals(findInventory)) {
-                inventory.subtract(quantity);
+            int subtractQuantity = inventory.subtractMaximum(totalQuantity);
+            totalQuantity -= subtractQuantity;
+            membership.addNoPromotionProduct(inventory.getProduct(), subtractQuantity);
+            receipt.purchaseProducts(inventory.getProduct(), subtractQuantity);
+            if (totalQuantity == 0) {
                 return;
             }
         }
-        throw new IllegalStateException("[ERROR] 해당 재고를 찾을 수 없습니다.");
     }
 
     private void totalOutOfStock(final int quantity, final int totalStock) {
@@ -68,11 +73,6 @@ public class Inventories {
 
     public void add(final Inventory inventory) {
         inventories.add(inventory);
-    }
-
-    public int getSize() {
-        return inventories.size();
-
     }
 
     public int getTotalStocks() {
