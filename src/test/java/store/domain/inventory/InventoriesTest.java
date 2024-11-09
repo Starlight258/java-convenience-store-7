@@ -1,4 +1,4 @@
-package store;
+package store.domain.inventory;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
+import store.domain.inventory.Product;
 
 @DisplayName("재고 집합 테스트")
 public class InventoriesTest {

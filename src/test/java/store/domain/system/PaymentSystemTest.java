@@ -1,4 +1,4 @@
-package store;
+package store.domain.system;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -18,6 +18,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
+import store.domain.system.PaymentSystem;
+import store.domain.inventory.Product;
+import store.domain.promotion.Promotion;
+import store.domain.promotion.Promotions;
+import store.response.Response;
+import store.response.ResponseStatus;
 
 @DisplayName("결제 시스템 테스트")
 public class PaymentSystemTest {

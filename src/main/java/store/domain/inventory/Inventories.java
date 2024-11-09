@@ -1,4 +1,4 @@
-package store;
+package store.domain.inventory;
 
 import java.util.Collections;
 import java.util.List;

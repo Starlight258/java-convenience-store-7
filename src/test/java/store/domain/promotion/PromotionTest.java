@@ -1,4 +1,4 @@
-package store;
+package store.domain.promotion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import store.domain.promotion.Promotion;
 
 @DisplayName("할인 정보 테스트")
 class PromotionTest {

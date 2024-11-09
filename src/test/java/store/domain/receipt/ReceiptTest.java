@@ -1,4 +1,4 @@
-package store;
+package store.domain.receipt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
+import store.domain.inventory.Product;
+import store.domain.receipt.Receipt;
 
 @DisplayName("영수증 테스트")
 public class ReceiptTest {

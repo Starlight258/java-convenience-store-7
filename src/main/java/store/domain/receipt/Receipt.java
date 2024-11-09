@@ -1,9 +1,10 @@
-package store;
+package store.domain.receipt;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import store.domain.inventory.Product;
 
 public class Receipt {
 

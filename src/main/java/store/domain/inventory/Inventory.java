@@ -1,4 +1,4 @@
-package store;
+package store.domain.inventory;
 
 import java.math.BigDecimal;
 import java.util.Objects;

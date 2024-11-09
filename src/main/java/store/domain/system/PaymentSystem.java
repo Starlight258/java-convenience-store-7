@@ -1,10 +1,16 @@
-package store;
+package store.domain.system;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
+import store.domain.inventory.Product;
+import store.domain.promotion.Promotion;
+import store.domain.promotion.Promotions;
+import store.response.Response;
 
 public class PaymentSystem {
 

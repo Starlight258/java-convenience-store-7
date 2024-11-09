@@ -1,4 +1,4 @@
-package store;
+package store.domain.promotion;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -7,6 +7,8 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.promotion.Promotion;
+import store.domain.promotion.Promotions;
 
 @DisplayName("프로모션 리스트 테스트")
 class PromotionsTest {

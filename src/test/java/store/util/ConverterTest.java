@@ -1,8 +1,9 @@
-package store;
+package store.util;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.util.Converter;
 
 public class ConverterTest {
 

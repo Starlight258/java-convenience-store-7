@@ -1,4 +1,4 @@
-package store;
+package store.domain.inventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
+import store.domain.inventory.Product;
 
 @DisplayName("재고 테스트")
 public class InventoryTest {

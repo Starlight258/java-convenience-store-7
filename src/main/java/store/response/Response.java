@@ -1,6 +1,7 @@
-package store;
+package store.response;
 
 import java.math.BigDecimal;
+import store.domain.inventory.Inventory;
 
 public record Response(ResponseStatus status, int bonusQuantity, int noPromotionQuantity, int canGetMoreQuantity,
                        BigDecimal totalPrice, Inventory inventory) {
