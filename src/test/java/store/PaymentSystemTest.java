@@ -43,53 +43,6 @@ public class PaymentSystemTest {
     }
 
     @Test
-    @DisplayName("상품이 없을 경우 예외가 발생한다")
-    void 실패_안내_상품없음() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        LocalDate startDate = LocalDate.of(2024, 1, 1);
-        LocalDate endDate = LocalDate.of(2024, 12, 31);
-        String promotionName = "탄산2+1";
-        Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
-        Promotions promotions = new Promotions(List.of(cokePromotion));
-        Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
-        Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
-        LocalDate now = LocalDate.of(2024, 3, 1);
-
-        // When & Then
-        assertThatThrownBy(() -> paymentSystem.canBuy("juice", 3, now, new HashMap<>()))
-                .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("존재하지 않는 상품입니다. 다시 입력해 주세요.")
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("재고 수량 이상으로 구매할 경우 예외가 발생한다")
-    void 실패_안내_재고없음() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        LocalDate startDate = LocalDate.of(2024, 1, 1);
-        LocalDate endDate = LocalDate.of(2024, 12, 31);
-        String promotionName = "탄산2+1";
-        Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
-        Promotions promotions = new Promotions(List.of(cokePromotion));
-        Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
-        Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
-
-        // When & Then
-        assertThatThrownBy(() -> paymentSystem.canBuy("coke", 23, LocalDate.now(), new HashMap<>()))
-                .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("프로모션 기간이 지난 경우 해당 프로모션을 적용하지 않고 넘어간다.")
     void 성공_안내_프로모션기간고려() {
         // Given
@@ -107,7 +60,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("coke", 3, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 3, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -131,7 +84,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("coke", 3, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 3, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -160,7 +113,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("coke", 3, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 3, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -190,7 +143,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("coke", 1, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 1, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -220,7 +173,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("coke", 10, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 10, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -252,7 +205,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy(productName, quantity, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, quantity, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -292,7 +245,7 @@ public class PaymentSystemTest {
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy(productName, quantity, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, quantity, now, purchasedProducts);
 
         // Then
         assertAll(
@@ -314,29 +267,26 @@ public class PaymentSystemTest {
     @DisplayName("멤버십은 프로모션이 적용되지 않은 상품에 대해서만 적용된다.")
     void 성공_안내_멤버십대상상품() {
         // Given
-        Product coke = new Product("coke", BigDecimal.valueOf(1000));
         Product juice = new Product("juice", BigDecimal.valueOf(1000));
         LocalDate startDate = LocalDate.of(2024, 1, 1);
         LocalDate endDate = LocalDate.of(2024, 12, 31);
         String promotionName = "탄산2+1";
         Promotion cokePromotion = new Promotion(promotionName, 2, 1, startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion));
-        Inventory cokeInventory = new Inventory(coke, 10, promotionName);
         Inventory juiceInventory = new Inventory(juice, 10, "null");
-        Inventories inventories = new Inventories(List.of(cokeInventory, juiceInventory));
+        Inventories inventories = new Inventories(List.of(juiceInventory));
         PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
         LocalDate now = LocalDate.of(2024, 3, 1);
         HashMap<Product, Integer> purchasedProducts = new HashMap<>();
 
         // When
-        Response response = paymentSystem.canBuy("juice", 9, now, purchasedProducts);
+        Response response = paymentSystem.canBuy(inventories, 9, now, purchasedProducts);
 
         // Then
         assertAll(
                 () -> assertThat(purchasedProducts).containsEntry(juice, 9),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
                 () -> assertThat(response.totalPrice()).isEqualTo(BigDecimal.valueOf(9000)),
-                () -> assertThat(cokeInventory).extracting("quantity").isEqualTo(10),
                 () -> assertThat(juiceInventory).extracting("quantity").isEqualTo(1)
         );
     }

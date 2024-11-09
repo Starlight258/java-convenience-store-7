@@ -16,12 +16,8 @@ public class PaymentSystem {
         this.promotions = promotions;
     }
 
-    public Response canBuy(final String productName, final int quantity, final LocalDate now,
+    public Response canBuy(final Inventories sameProductInventories, final int quantity, final LocalDate now,
                            final Map<Product, Integer> purchasedProducts) {
-        Inventories sameProductInventories = inventories.findProducts(productName);
-        int totalStock = sameProductInventories.getTotalStocks(); // 프로모션X + 프로모션O
-        notExistProductName(sameProductInventories);
-        totalOutOfStock(quantity, totalStock);
         for (Inventory inventory : sameProductInventories.getInventories()) {
             String promotionName = inventory.getPromotionName();
             Optional<Promotion> optionalPromotion = promotions.find(promotionName); // 프로모션 찾기
@@ -159,17 +155,5 @@ public class PaymentSystem {
             return null;
         }
         return promotion;
-    }
-
-    private static void totalOutOfStock(final int quantity, final int totalStock) {
-        if (totalStock < quantity) {
-            throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
-        }
-    }
-
-    private static void notExistProductName(final Inventories sameProductInventories) {
-        if (sameProductInventories.getInventories().size() == 0) {
-            throw new IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.");
-        }
     }
 }
