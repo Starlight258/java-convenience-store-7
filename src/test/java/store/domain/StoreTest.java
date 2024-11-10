@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
+import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 
 @DisplayName("가게 테스트")
@@ -24,17 +25,17 @@ class StoreTest {
         Product product = new Product("콜라", BigDecimal.valueOf(1000));
 
         // When
-        store.noteNoPromotionProduct(product, 3);
+        store.noteNoPromotionProduct(product, new Quantity(3));
 
         // Then
         assertAll(
                 () -> assertThat(store).extracting("receipt").extracting("purchasedProducts")
                         .isEqualTo(new HashMap<>() {{
-                            put(product, 3);
+                            put(product, new Quantity(3));
                         }}),
                 () -> assertThat(store).extracting("membership").extracting("noPromotionProducts")
                         .isEqualTo(new HashMap<>() {{
-                            put(product, 3);
+                            put(product, new Quantity(3));
                         }})
         );
     }
@@ -49,11 +50,11 @@ class StoreTest {
         Product product = new Product("콜라", BigDecimal.valueOf(1000));
 
         // When
-        store.notePurchaseProduct(product, 3);
+        store.notePurchaseProduct(product, new Quantity(3));
 
         // Then
         assertThat(store).extracting("receipt").extracting("purchasedProducts").isEqualTo(new HashMap<>() {{
-            put(product, 3);
+            put(product, new Quantity(3));
         }});
     }
 
@@ -67,11 +68,11 @@ class StoreTest {
         Product product = new Product("콜라", BigDecimal.valueOf(1000));
 
         // When
-        store.noteBonusProduct(product, 3);
+        store.noteBonusProduct(product, new Quantity(3));
 
         // Then
         assertThat(store).extracting("receipt").extracting("bonusProducts").isEqualTo(new HashMap<>() {{
-            put(product, 3);
+            put(product, new Quantity(3));
         }});
     }
 }

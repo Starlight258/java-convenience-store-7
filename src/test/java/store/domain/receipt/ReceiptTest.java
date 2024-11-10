@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.inventory.Product;
 import store.domain.price.Price;
+import store.domain.quantity.Quantity;
 
 @DisplayName("영수증 테스트")
 class ReceiptTest {
@@ -22,11 +23,11 @@ class ReceiptTest {
         Product coke = new Product("콜라", new BigDecimal(1000));
 
         // When
-        receipt.purchaseProducts(coke, 2);
+        receipt.purchaseProducts(coke, new Quantity(2));
 
         // Then
         assertThat(receipt).extracting("purchasedProducts").isEqualTo(new HashMap<>() {{
-            put(coke, 2);
+            put(coke, new Quantity(2));
         }});
     }
 
@@ -38,11 +39,11 @@ class ReceiptTest {
         Product coke = new Product("콜라", new BigDecimal(1000));
 
         // When
-        receipt.addBonusProducts(coke, 2);
+        receipt.addBonusProducts(coke, new Quantity(2));
 
         // Then
         assertThat(receipt).extracting("bonusProducts").isEqualTo(new HashMap<>() {{
-            put(coke, 2);
+            put(coke, new Quantity(2));
         }});
     }
 
@@ -52,7 +53,7 @@ class ReceiptTest {
         // Given
         Product coke = new Product("콜라", new BigDecimal(1000));
         Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>() {{
-            put(coke, 2);
+            put(coke, new Quantity(2));
         }});
 
         // When
@@ -68,7 +69,7 @@ class ReceiptTest {
         // Given
         Product coke = new Product("콜라", new BigDecimal(1000));
         Receipt receipt = new Receipt(new HashMap<>() {{
-            put(coke, 2);
+            put(coke, new Quantity(2));
         }}, new HashMap<>());
 
         // When
@@ -84,15 +85,15 @@ class ReceiptTest {
         // Given
         Product coke = new Product("콜라", new BigDecimal(1000));
         Receipt receipt = new Receipt(new HashMap<>() {{
-            put(coke, 2);
+            put(coke, new Quantity(2));
         }}, new HashMap<>());
 
         // When
-        Entry<Integer, Price> totalPurchase = receipt.getTotalPurchase();
+        Entry<Quantity, Price> totalPurchase = receipt.getTotalPurchase();
 
         // Then
         assertAll(
-                () -> assertThat(totalPurchase.getKey()).isEqualTo(2),
+                () -> assertThat(totalPurchase.getKey()).isEqualTo(new Quantity(2)),
                 () -> assertThat(totalPurchase.getValue()).isEqualTo(new Price(new BigDecimal(2000)))
         );
     }

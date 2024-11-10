@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
+import store.domain.quantity.Quantity;
 
 @DisplayName("재고 집합 테스트")
 public class InventoriesTest {
@@ -67,7 +68,7 @@ public class InventoriesTest {
         assertThatThrownBy(() -> new Inventory(product, -1, promotionName))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 개수는 음수일 수 없습니다.");
+                .hasMessageContaining("[ERROR] 수량은 음수일 수 없습니다.");
     }
 
     @Test
@@ -90,8 +91,8 @@ public class InventoriesTest {
         Inventory inventoryWithPromotion = new Inventory(product, 10, "탄산2+1");
         Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        Map<String, Integer> purchasedItems = new HashMap<>() {{
-            put("cococo", 3);
+        Map<String, Quantity> purchasedItems = new HashMap<>() {{
+            put("cococo", new Quantity(3));
         }};
 
         // When & Then
@@ -110,8 +111,8 @@ public class InventoriesTest {
         Inventory inventoryWithPromotion = new Inventory(product, 10, "탄산2+1");
         Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
         Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        Map<String, Integer> purchasedItems = new HashMap<>() {{
-            put("coke", 33);
+        Map<String, Quantity> purchasedItems = new HashMap<>() {{
+            put("coke", new Quantity(33));
         }};
 
         // When & Then

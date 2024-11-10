@@ -7,6 +7,7 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.quantity.Quantity;
 
 @DisplayName("프로모션 리스트 테스트")
 class PromotionsTest {
@@ -30,8 +31,8 @@ class PromotionsTest {
         String promotionName = "탄산2+1";
         LocalDate startDate = LocalDate.of(2024, 1, 1);
         LocalDate endDate = LocalDate.of(2024, 12, 31);
-        Promotion cokePromotion = new Promotion("탄산2+1", 2, 1, startDate, endDate);
-        Promotion mdPromotion = new Promotion("MD추천상품", 1, 1, startDate, endDate);
+        Promotion cokePromotion = new Promotion("탄산2+1", new Quantity(2), new Quantity(1), startDate, endDate);
+        Promotion mdPromotion = new Promotion("MD추천상품", new Quantity(1), new Quantity(1), startDate, endDate);
         Promotions promotions = new Promotions(List.of(cokePromotion, mdPromotion));
         LocalDate now = LocalDate.of(2024, 3, 1);
 

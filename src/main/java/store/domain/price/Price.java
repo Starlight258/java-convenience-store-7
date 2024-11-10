@@ -60,8 +60,8 @@ public class Price {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Price price1 = (Price) o;
-        return Objects.equals(price, price1.price);
+        Price other = (Price) o;
+        return Objects.equals(price, other.price);
     }
 
     @Override

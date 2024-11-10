@@ -2,18 +2,19 @@ package store.domain.promotion;
 
 import java.time.LocalDate;
 import java.util.Objects;
+import store.domain.quantity.Quantity;
 
 public class Promotion {
 
     public static final String ERROR = "[ERROR] ";
 
     private final String promotionName;
-    private final int purchaseQuantity;
-    private final int bonusQuantity;
+    private final Quantity purchaseQuantity;
+    private final Quantity bonusQuantity;
     private final LocalDate startDate;
     private final LocalDate endDate;
 
-    public Promotion(final String promotionName, final int purchaseQuantity, final int bonusQuantity,
+    public Promotion(final String promotionName, final Quantity purchaseQuantity, final Quantity bonusQuantity,
                      final LocalDate startDate, final LocalDate endDate) {
         validate(promotionName, purchaseQuantity, bonusQuantity, startDate, endDate);
         this.promotionName = promotionName;
@@ -30,11 +31,9 @@ public class Promotion {
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
 
-    private void validate(final String promotionName, final int purchaseQuantity, final int getQuantity,
+    private void validate(final String promotionName, final Quantity purchaseQuantity, final Quantity getQuantity,
                           final LocalDate startDate, final LocalDate endDate) {
         validatePromotionName(promotionName);
-        validateQuantity(purchaseQuantity);
-        validateQuantity(getQuantity);
         validateDate(startDate, endDate);
     }
 
@@ -50,21 +49,15 @@ public class Promotion {
         }
     }
 
-    private void validateQuantity(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException(ERROR + "구매 수량이 0 또는 음수일 수 없습니다.");
-        }
-    }
-
     public boolean isSameName(final String name) {
         return Objects.equals(this.promotionName, name);
     }
 
-    public int getPurchaseQuantity() {
+    public Quantity getPurchaseQuantity() {
         return purchaseQuantity;
     }
 
-    public int getBonusQuantity() {
+    public Quantity getBonusQuantity() {
         return bonusQuantity;
     }
 }

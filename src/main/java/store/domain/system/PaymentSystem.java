@@ -8,6 +8,7 @@ import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
+import store.domain.quantity.Quantity;
 import store.response.Response;
 
 public class PaymentSystem {
@@ -22,7 +23,7 @@ public class PaymentSystem {
         this.promotions = promotions;
     }
 
-    public Response canBuy(final String productName, final int quantity,
+    public Response canBuy(final String productName, final Quantity quantity,
                            final Store store, final LocalDate now) {
         Inventories sameProductInventories = inventories.findProducts(productName);
 
@@ -39,18 +40,18 @@ public class PaymentSystem {
             }
             Promotion promotion = optionalPromotion.get();
 
-            int stock = inventory.getQuantity();
-            int purchaseQuantity = promotion.getPurchaseQuantity();
-            int bonusQuantity = promotion.getBonusQuantity();
-            int promotionQuantity = purchaseQuantity + bonusQuantity;
+            Quantity stock = inventory.getQuantity();
+            Quantity purchaseQuantity = promotion.getPurchaseQuantity();
+            Quantity bonusQuantity = promotion.getBonusQuantity();
+            Quantity promotionQuantity = purchaseQuantity.add(bonusQuantity);
 
             // 재고 이상으로 구매하려고할 때
-            if (stock < quantity) {
+            if (stock.isLessThan(quantity)) {
                 // 일부 프로모션만 적용될 경우
-                if (promotionQuantity <= stock) {
-                    int setSize = stock / (promotionQuantity);
-                    int totalBonusQuantity = setSize * bonusQuantity;
-                    int noPromotionQuantity = quantity - setSize * (promotionQuantity);
+                if (stock.isMoreThanEqual(promotionQuantity)) {
+                    Quantity setSize = stock.divide(promotionQuantity);
+                    Quantity totalBonusQuantity = setSize.multiply(bonusQuantity);
+                    Quantity noPromotionQuantity = quantity.subtract(setSize.multiply(promotionQuantity));
                     return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory);
                 }
 
@@ -60,21 +61,21 @@ public class PaymentSystem {
             }
 
             // 할인 적용X
-            if (quantity < purchaseQuantity) {
+            if (quantity.isLessThan(purchaseQuantity)) {
                 purchaseWithoutPromotion(store, quantity, inventory);
                 return Response.buyWithNoPromotion(inventory);
             }
 
             // 프로모션 적용이 가능한 상품에 대해 고객이 해당 수량보다 적게 가져온 경우, 그 수량만큼 **추가 여부를 입력**받는다.
             // 최소 구매 수량보다는 크고 purchaseQuantity + bonusQuantity이하로 가져온 경우
-            if (quantity < promotionQuantity) {
-                int freeQuantity = purchaseQuantity + bonusQuantity - quantity;
+            if (quantity.isLessThan(promotionQuantity)) {
+                Quantity freeQuantity = purchaseQuantity.add(bonusQuantity).subtract(quantity);
                 return Response.canGetMoreQuantity(bonusQuantity, freeQuantity, inventory);
             }
 
             // 프로모션이 자동 적용된다.
-            int setSize = quantity / (promotionQuantity);
-            int totalBonusQuantity = setSize * bonusQuantity; // 보너스 수량
+            Quantity setSize = quantity.divide(promotionQuantity);
+            Quantity totalBonusQuantity = setSize.multiply(bonusQuantity); // 보너스 수량
             inventory.subtract(quantity);
             store.notePurchaseProduct(inventory.getProduct(), quantity);
             return Response.buyWithPromotion(totalBonusQuantity, inventory);
@@ -82,7 +83,7 @@ public class PaymentSystem {
         throw new IllegalStateException("[ERROR] 상품을 구매할 수 없습니다.");
     }
 
-    private void purchaseWithoutPromotion(final Store store, final int totalQuantity,
+    private void purchaseWithoutPromotion(final Store store, final Quantity totalQuantity,
                                           final Inventory inventory) {
         inventory.subtract(totalQuantity);
         Product product = inventory.getProduct();

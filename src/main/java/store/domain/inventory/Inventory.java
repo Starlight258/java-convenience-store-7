@@ -2,20 +2,20 @@ package store.domain.inventory;
 
 import java.util.Objects;
 import store.domain.price.Price;
+import store.domain.quantity.Quantity;
 
 public class Inventory implements Comparable<Inventory> {
 
     public static final String ERROR = "[ERROR]";
-    public static final String NULL = "null";
 
     private final Product product;
-    private int quantity;
+    private Quantity quantity;
     private final String promotionName;
 
     public Inventory(final Product product, final int quantity, final String promotionName) {
-        validate(product, quantity);
+        validate(product);
         this.product = product;
-        this.quantity = quantity;
+        this.quantity = new Quantity(quantity);
         this.promotionName = promotionName;
     }
 
@@ -23,21 +23,21 @@ public class Inventory implements Comparable<Inventory> {
         return this.product.isSameProductName(productName);
     }
 
-    public void subtract(final int purchaseQuantity) {
-        if (quantity >= purchaseQuantity) {
-            this.quantity -= purchaseQuantity;
+    public void subtract(final Quantity purchaseQuantity) {
+        if (quantity.isMoreThanEqual(purchaseQuantity)) {
+            quantity = quantity.subtract(purchaseQuantity);
             return;
         }
         throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
     }
 
-    public int subtractMaximum(final int purchaseQuantity) {
-        if (quantity >= purchaseQuantity) {
-            this.quantity -= purchaseQuantity;
+    public Quantity subtractMaximum(final Quantity purchaseQuantity) {
+        if (quantity.isMoreThanEqual(purchaseQuantity)) {
+            quantity = quantity.subtract(purchaseQuantity);
             return purchaseQuantity;
         }
-        int totalQuantity = this.quantity;
-        this.quantity = 0;
+        Quantity totalQuantity = this.quantity;
+        this.quantity = Quantity.zero();
         return totalQuantity;
     }
 
@@ -49,20 +49,13 @@ public class Inventory implements Comparable<Inventory> {
         return product;
     }
 
-    public boolean hasPromotion() {
-        return !NULL.equals(promotionName);
-    }
-
-    private void validate(final Product product, final int quantity) {
+    private void validate(final Product product) {
         if (product == null) {
             throw new IllegalArgumentException(ERROR + " 상품은 null일 수 없습니다.");
         }
-        if (quantity < 0) {
-            throw new IllegalArgumentException(ERROR + " 개수는 음수일 수 없습니다.");
-        }
     }
 
-    public int getQuantity() {
+    public Quantity getQuantity() {
         return quantity;
     }
 

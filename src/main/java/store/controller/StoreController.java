@@ -26,6 +26,7 @@ import store.domain.player.PurchaseOrderForms;
 import store.domain.price.Price;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
+import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
 import store.response.Response;
@@ -74,7 +75,7 @@ public class StoreController {
             try {
                 outputView.showStartMessage();
                 showInventories(inventories);
-                Map<String, Integer> purchasedItems = getPurchasedItems(inventories);
+                Map<String, Quantity> purchasedItems = getPurchasedItems(inventories);
                 PurchaseOrderForms purchaseOrderForms = new PurchaseOrderForms(purchasedItems);
                 convenienceStore(purchaseOrderForms, paymentSystem);
                 outputView.showAdditionalPurchase();
@@ -121,20 +122,21 @@ public class StoreController {
 
     private void showInventories(final Inventories inventories) {
         for (Inventory inventory : inventories.getInventories()) {
-            String message = formatter.makeInventoryMessage(inventory.getQuantity(), inventory.getPromotionName(),
+            String message = formatter.makeInventoryMessage(inventory.getQuantity().getQuantity(),
+                    inventory.getPromotionName(),
                     inventory.getProductName(), inventory.getProductPrice().getPrice());
             outputView.showMessage(message);
         }
     }
 
     private void convenienceStore(final PurchaseOrderForms purchaseOrderForms, final PaymentSystem paymentSystem) {
-        Map<String, Integer> purchasedItems = purchaseOrderForms.getProductsToBuy();
+        Map<String, Quantity> purchasedItems = purchaseOrderForms.getProductsToBuy();
         Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
         Membership membership = new Membership(new HashMap<>());
         Store store = new Store(receipt, membership);
-        for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
+        for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
-            int quantity = entry.getValue();
+            Quantity quantity = entry.getValue();
             LocalDate now = DateTimes.now().toLocalDate();
             Response response = paymentSystem.canBuy(productName, quantity, store, now);
             checkResponse(purchaseOrderForms, store, productName, quantity, response);
@@ -143,11 +145,11 @@ public class StoreController {
         showResultPrice(receipt, membershipPrice);
     }
 
-    private Map<String, Integer> getPurchasedItems(final Inventories inventories) {
+    private Map<String, Quantity> getPurchasedItems(final Inventories inventories) {
         outputView.showCommentOfPurchase();
         while (true) {
             try {
-                Map<String, Integer> purchasedItems = promptProductNameAndQuantity();
+                Map<String, Quantity> purchasedItems = promptProductNameAndQuantity();
                 inventories.getPurchasedItems(purchasedItems);  // 구매할 상품의 이름
                 return purchasedItems;
             } catch (IllegalArgumentException exception) {
@@ -181,22 +183,22 @@ public class StoreController {
 
     private void showPurchasedProducts(final Receipt receipt) {
         outputView.showCommentOfInventory();
-        for (Entry<Product, Integer> entry : receipt.getPurchasedProducts().entrySet()) {
+        for (Entry<Product, Quantity> entry : receipt.getPurchasedProducts().entrySet()) {
             Product product = entry.getKey();
             String name = product.getName();
-            int quantity = entry.getValue();
-            Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity));
-            outputView.showInventory(name, quantity, totalPrice.getPrice());
+            Quantity quantity = entry.getValue();
+            Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity.getQuantity()));
+            outputView.showInventory(name, quantity.getQuantity(), totalPrice.getPrice());
         }
     }
 
     private void showReceipt(final Receipt receipt, final Price membershipPrice) {
         outputView.showReceiptStartMark();
-        Entry<Integer, Price> totalPurchases = receipt.getTotalPurchase();
+        Entry<Quantity, Price> totalPurchases = receipt.getTotalPurchase();
         Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
         Price totalPurchasePrice = totalPurchases.getValue();
         int blankLength = String.valueOf(totalPurchasePrice).length() - String.valueOf(priceToPay).length();
-        outputView.showTotalPrice(totalPurchases.getKey(), totalPurchasePrice.getPrice());
+        outputView.showTotalPrice(totalPurchases.getKey().getQuantity(), totalPurchasePrice.getPrice());
         outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice().getPrice());
         outputView.showMemberShipDiscountPrice(membershipPrice.getPrice());
         outputView.showMoneyToPay(priceToPay.getPrice(), blankLength);
@@ -204,58 +206,59 @@ public class StoreController {
 
     private void showBonus(final Receipt receipt) {
         outputView.showBonus();
-        for (Entry<Product, Integer> entry : receipt.getBonusProducts().entrySet()) {
+        for (Entry<Product, Quantity> entry : receipt.getBonusProducts().entrySet()) {
             Product product = entry.getKey();
             String name = product.getName();
-            int quantity = entry.getValue();
+            int quantity = entry.getValue().getQuantity();
             outputView.showBonusProduct(name, quantity);
         }
     }
 
     private void checkResponse(final PurchaseOrderForms purchaseOrderForms,
                                final Store store, final String productName,
-                               final int quantity,
+                               final Quantity quantity,
                                final Response response) {
         if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
             return;
         }
         if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
-            int bonusQuantity = response.bonusQuantity();
+            Quantity bonusQuantity = response.bonusQuantity();
             store.noteBonusProduct(response.inventory().getProduct(), bonusQuantity);
             return;
         }
         if (response.status() == ResponseStatus.OUT_OF_STOCK) {
-            int outOfStockQuantity = outOfStock(productName, response, store, quantity);
-            if (outOfStockQuantity > 0) { // 구매안함
-                purchaseOrderForms.put(productName, quantity - outOfStockQuantity);
+            Quantity outOfStockQuantity = outOfStock(productName, response, store, quantity);
+            if (outOfStockQuantity.isMoreThan(Quantity.zero())) { // 구매안함
+                purchaseOrderForms.put(productName, quantity.subtract(outOfStockQuantity));
             }
             return;
         }
-        int canGetMoreQuantity = canGetBonus(store, productName, response);
+        Quantity canGetMoreQuantity = canGetBonus(store, productName, response);
         Product product = response.inventory().getProduct();
         purchaseOrderForms.put(productName, quantity);
         store.notePurchaseProduct(product, quantity);
-        if (canGetMoreQuantity > 0) {
-            purchaseOrderForms.put(productName, quantity + canGetMoreQuantity);
+        if (canGetMoreQuantity.isMoreThan(Quantity.zero())) {
+            purchaseOrderForms.put(productName, quantity.add(canGetMoreQuantity));
             store.notePurchaseProduct(product, canGetMoreQuantity);
         }
     }
 
-    public Map<String, Integer> promptProductNameAndQuantity() {
-        Map<String, Integer> purchasedItems = new HashMap<>();
+    public Map<String, Quantity> promptProductNameAndQuantity() {
+        Map<String, Quantity> purchasedItems = new HashMap<>();
         String input = inputView.readLine();
         List<String> splitText = splitter.split(input);
         addPurchasedItems(purchasedItems, splitText);
         return purchasedItems;
     }
 
-    private void addPurchasedItems(final Map<String, Integer> purchasedItems, final List<String> splittedText) {
+    private void addPurchasedItems(final Map<String, Quantity> purchasedItems, final List<String> splittedText) {
         for (String text : splittedText) {
             Matcher matcher = PATTERN.matcher(text);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
             }
-            purchasedItems.put(matcher.group(2), Converter.convertToInteger((matcher.group(3))));
+            int quantityValue = Converter.convertToInteger((matcher.group(3)));
+            purchasedItems.put(matcher.group(2), new Quantity(quantityValue));
         }
     }
 
@@ -273,37 +276,37 @@ public class StoreController {
         }
     }
 
-    private int outOfStock(final String productName,
-                           final Response response, final Store store,
-                           final int quantity) {
-        int totalBonusQuantity = response.bonusQuantity();
+    private Quantity outOfStock(final String productName,
+                                final Response response, final Store store,
+                                final Quantity quantity) {
+        Quantity totalBonusQuantity = response.bonusQuantity();
         store.noteBonusProduct(response.inventory().getProduct(), totalBonusQuantity);
-        int noPromotionQuantityOfResponse = response.noPromotionQuantity();
-        outputView.showPromotionDiscount(productName, noPromotionQuantityOfResponse);
+        Quantity noPromotionQuantityOfResponse = response.noPromotionQuantity();
+        outputView.showPromotionDiscount(productName, noPromotionQuantityOfResponse.getQuantity());
         String intent = readYOrN();
         Product product = response.inventory().getProduct();
         if (intent.equals(NO)) {
-            store.notePurchaseProduct(product, quantity - noPromotionQuantityOfResponse);
+            store.notePurchaseProduct(product, quantity.subtract(noPromotionQuantityOfResponse));
             return noPromotionQuantityOfResponse;
         }
         store.noteNoPromotionProduct(product, quantity);
-        return 0;
+        return Quantity.zero();
     }
 
-    private int canGetBonus(final Store store, final String productName, final Response response) {
+    private Quantity canGetBonus(final Store store, final String productName, final Response response) {
         if (response.status() == ResponseStatus.CAN_GET_BONUS) {
-            int bonusQuantity = response.bonusQuantity();
-            int canGetMoreQuantity = response.canGetMoreQuantity();
-            outputView.showFreeQuantity(productName, canGetMoreQuantity);
+            Quantity bonusQuantity = response.bonusQuantity();
+            Quantity canGetMoreQuantity = response.canGetMoreQuantity();
+            outputView.showFreeQuantity(productName, canGetMoreQuantity.getQuantity());
             String intent = readYOrN();
             Product product = response.inventory().getProduct();
             if (intent.equals(YES)) {
                 store.noteBonusProduct(product, bonusQuantity);
                 return canGetMoreQuantity;
             }
-            store.noteBonusProduct(product, bonusQuantity - canGetMoreQuantity);
+            store.noteBonusProduct(product, bonusQuantity.subtract(canGetMoreQuantity));
         }
-        return 0;
+        return Quantity.zero();
     }
 
     private Promotions addPromotion(List<String> promotionsFromSource) {
@@ -320,8 +323,8 @@ public class StoreController {
     }
 
     private Promotion getPromotion(final List<String> splittedText) {
-        int purchaseQuantity = Converter.convertToInteger(splittedText.get(1));
-        int bonusQuantity = Converter.convertToInteger(splittedText.get(2));
+        Quantity purchaseQuantity = new Quantity(Converter.convertToInteger(splittedText.get(1)));
+        Quantity bonusQuantity = new Quantity(Converter.convertToInteger(splittedText.get(2)));
         LocalDate startDate = Parser.parseToLocalDate(splittedText.get(3));
         LocalDate endDate = Parser.parseToLocalDate(splittedText.get(4));
         return new Promotion(splittedText.get(0), purchaseQuantity, bonusQuantity, startDate, endDate);

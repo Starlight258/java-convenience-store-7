@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import store.domain.quantity.Quantity;
 
 @DisplayName("재고 테스트")
 public class InventoryTest {
@@ -31,7 +32,8 @@ public class InventoryTest {
         assertAll(
                 () -> assertThat(inventory).extracting("product")
                         .isEqualTo(new Product("coke", BigDecimal.valueOf(1000))),
-                () -> assertThat(inventory).extracting("quantity", "promotionName").contains(10, promotionName)
+                () -> assertThat(inventory).extracting("quantity", "promotionName")
+                        .contains(new Quantity(10), promotionName)
         );
     }
 
@@ -48,7 +50,7 @@ public class InventoryTest {
 
         // Then
         assertThat(inventory).extracting("product").isEqualTo(new Product("coke", BigDecimal.valueOf(1000)));
-        assertThat(inventory).extracting("quantity").isEqualTo(10);
+        assertThat(inventory).extracting("quantity").isEqualTo(new Quantity(10));
         assertThat(inventory).extracting("promotionName").isEqualTo(input);
     }
 
@@ -63,7 +65,7 @@ public class InventoryTest {
         assertThatThrownBy(() -> new Inventory(product, -1, promotionName))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 개수는 음수일 수 없습니다.");
+                .hasMessageContaining("[ERROR] 수량은 음수일 수 없습니다.");
     }
 
     @Nested
@@ -79,10 +81,10 @@ public class InventoryTest {
             Inventory inventory = new Inventory(product, 10, promotionName);
 
             // When
-            inventory.subtract(3);
+            inventory.subtract(new Quantity(3));
 
             // When & Then
-            assertThat(inventory.getQuantity()).isEqualTo(7);
+            assertThat(inventory.getQuantity()).isEqualTo(new Quantity(7));
         }
 
         @Test
@@ -94,7 +96,7 @@ public class InventoryTest {
             Inventory inventory = new Inventory(product, 10, promotionName);
 
             // When & Then
-            assertThatThrownBy(() -> inventory.subtract(14))
+            assertThatThrownBy(() -> inventory.subtract(new Quantity(14)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageStartingWith("[ERROR]")
                     .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");

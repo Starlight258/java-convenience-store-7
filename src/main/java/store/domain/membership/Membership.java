@@ -5,20 +5,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import store.domain.inventory.Product;
 import store.domain.price.Price;
+import store.domain.quantity.Quantity;
 
 public class Membership {
 
-    public static final int MAX_MEMBERSHIP_PRICE = 8000;
-    public static final int PERCENT_TOTAL = 100;
-    public static final int MEMBERSHIP_RATE = 30;
-    private final Map<Product, Integer> noPromotionProducts;
+    private static final int MAX_MEMBERSHIP_PRICE = 8000;
+    private static final int PERCENT_TOTAL = 100;
+    private static final int MEMBERSHIP_RATE = 30;
 
-    public Membership(final Map<Product, Integer> noPromotionProducts) {
+    private final Map<Product, Quantity> noPromotionProducts;
+
+    public Membership(final Map<Product, Quantity> noPromotionProducts) {
         this.noPromotionProducts = noPromotionProducts;
     }
 
-    public void addNoPromotionProduct(final Product product, final Integer quantity) {
-        noPromotionProducts.put(product, noPromotionProducts.getOrDefault(product, 0) + quantity);
+    public void addNoPromotionProduct(final Product product, final Quantity quantity) {
+        noPromotionProducts.put(product, noPromotionProducts.getOrDefault(product, Quantity.zero()).add(quantity));
     }
 
     public Price calculateDiscount() {
@@ -33,8 +35,9 @@ public class Membership {
 
     private Price getTotalNoPromotionPrice() {
         Price totalPrice = Price.zero();
-        for (Entry<Product, Integer> entry : noPromotionProducts.entrySet()) {
-            totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
+        for (Entry<Product, Quantity> entry : noPromotionProducts.entrySet()) {
+            totalPrice = totalPrice.add(
+                    entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue().getQuantity())));
         }
         return totalPrice;
     }

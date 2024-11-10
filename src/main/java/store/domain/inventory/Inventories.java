@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import store.domain.Store;
+import store.domain.quantity.Quantity;
 
 public class Inventories {
 
@@ -18,31 +19,31 @@ public class Inventories {
         this.inventories = new TreeSet<>(inventories);
     }
 
-    public void getPurchasedItems(final Map<String, Integer> purchasedItems) {
-        for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
+    public void getPurchasedItems(final Map<String, Quantity> purchasedItems) {
+        for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
-            int quantity = entry.getValue();
+            Quantity quantity = entry.getValue();
             Inventories sameProductInventories = findProducts(productName);
-            int totalStock = sameProductInventories.getTotalStocks(); // 프로모션X + 프로모션O
+            Quantity totalStock = sameProductInventories.getTotalStocks(); // 프로모션X + 프로모션O
             notExistProductName(sameProductInventories);
             totalOutOfStock(quantity, totalStock);
         }
     }
 
-    public void buyProductWithoutPromotion(final int quantity, final Store store) {
-        int totalQuantity = quantity;
+    public void buyProductWithoutPromotion(final Quantity quantity, final Store store) {
+        Quantity totalQuantity = quantity;
         for (Inventory inventory : inventories) {
-            int subtractQuantity = inventory.subtractMaximum(totalQuantity);
-            totalQuantity -= subtractQuantity;
+            Quantity subtractQuantity = inventory.subtractMaximum(totalQuantity);
+            totalQuantity = totalQuantity.subtract(subtractQuantity);
             store.noteNoPromotionProduct(inventory.getProduct(), subtractQuantity);
-            if (totalQuantity == 0) {
+            if (totalQuantity.hasZeroValue()) {
                 return;
             }
         }
     }
 
-    private void totalOutOfStock(final int quantity, final int totalStock) {
-        if (totalStock < quantity) {
+    private void totalOutOfStock(final Quantity quantity, final Quantity totalStock) {
+        if (totalStock.isLessThan(quantity)) {
             throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
     }
@@ -73,10 +74,10 @@ public class Inventories {
         inventories.add(inventory);
     }
 
-    public int getTotalStocks() {
-        int total = 0;
+    public Quantity getTotalStocks() {
+        Quantity total = Quantity.zero();
         for (Inventory inventory : inventories) {
-            total += inventory.getQuantity();
+            total = total.add(inventory.getQuantity());
         }
         return total;
     }
