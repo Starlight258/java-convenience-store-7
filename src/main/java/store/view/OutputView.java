@@ -1,10 +1,14 @@
 package store.view;
 
 import java.math.BigDecimal;
+import store.support.StoreFormatter;
 
 public class OutputView {
 
-    public OutputView() {
+    private final StoreFormatter storeFormatter;
+
+    public OutputView(final StoreFormatter storeFormatter) {
+        this.storeFormatter = storeFormatter;
     }
 
     public void showStartMessage() {
@@ -51,32 +55,8 @@ public class OutputView {
         System.out.println("====================================");
     }
 
-    public void showTotalPrice(final Integer key, final BigDecimal totalPurchaseValue) {
-        System.out.printf("%s\t\t%d\t%,.0f%n",
-                "총구매액", key, totalPurchaseValue);
-    }
-
-    public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
-        System.out.printf("%s\t\t\t-%,.0f%n",
-                "행사할인", promotionDiscountPrice);
-    }
-
-    public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
-        System.out.printf("%s\t\t\t-%,.0f%n",
-                "멤버십할인", memberShipDiscountPrice);
-    }
-
-    public void showMoneyToPay(final BigDecimal priceToPay) {
-        System.out.printf("%s\t\t\t %,.0f%n",
-                "내실돈", priceToPay);
-    }
-
     public void showBonus() {
         System.out.println("=============증\t정===============");
-    }
-
-    public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf("%s\t\t%d%n", name, quantity);
     }
 
     public void showCommentOfInventory() {
@@ -84,8 +64,33 @@ public class OutputView {
         System.out.println("상품명\t\t수량\t금액");
     }
 
+    public void showTotalPrice(final Integer key, final BigDecimal totalPurchaseValue) {
+        System.out.printf(
+                storeFormatter.format("총구매액") + "\t%d\t%,.0f"  // 공백을 탭으로 변경
+                        + System.lineSeparator(),
+                key, totalPurchaseValue);
+    }
+
+    public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
+        System.out.printf(storeFormatter.format("행사할인") + "\t\t-%,.0f\n",  // 탭 2개로 통일
+                promotionDiscountPrice);
+    }
+
+    public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
+        System.out.printf(storeFormatter.format("멤버십할인") + "\t\t-%,.0f\n",  // 탭 2개로 통일
+                memberShipDiscountPrice);
+    }
+
+    public void showMoneyToPay(final BigDecimal priceToPay) {
+        System.out.printf(storeFormatter.format("내실돈") + "\t\t %,.0f\n", priceToPay);  // 탭 2개로 통일
+    }
+
+    public void showBonusProduct(final String name, final int quantity) {
+        System.out.printf(storeFormatter.format(name) + "\t%d\n", quantity);  // 마지막 탭 제거
+    }
+
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf("%s\t\t%d\t%,.0f%n",
-                name, quantity, totalPrice);
+        System.out.printf(storeFormatter.format(name) + "\t%d\t%,.0f"  // 공백을 탭으로 변경
+                + System.lineSeparator(), quantity, totalPrice);
     }
 }

@@ -16,7 +16,7 @@ public class StoreConfig {
     public StoreController createController() {
         InputView inputView = new InputView();
         StoreFormatter formatter = new StoreFormatter(FORMAT_SIZE);
-        OutputView outputView = new OutputView();
+        OutputView outputView = new OutputView(formatter);
         StoreSplitter splitter = new StoreSplitter(DELIMITER);
         ExceptionHandler exceptionHandler = new ExceptionHandler(outputView);
         InteractionView interactionView = new InteractionView(inputView, outputView, exceptionHandler);
