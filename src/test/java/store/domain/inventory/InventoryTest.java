@@ -2,120 +2,89 @@ package store.domain.inventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static store.util.CustomExceptionAssertions.assertCustomIllegalArgumentException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import store.domain.quantity.Quantity;
 
 @DisplayName("재고 테스트")
 public class InventoryTest {
 
+    private Product product;
+    private String promotionName;
+    private Inventory inventory;
+
+    @BeforeEach
+    void setUp() {
+        product = new Product("coke", BigDecimal.valueOf(1000));
+        promotionName = "탄산2+1";
+        inventory = new Inventory(product, 10, promotionName);
+    }
+
     @Test
     @DisplayName("상품의 재고에는 상품명, 가격, 수량, 프로모션 이름을 가진다")
     void 성공_생성() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        String promotionName = "탄산2+1";
+        assertThat(inventory)
+                .extracting("product", "quantity", "promotionName")
+                .containsExactly(product, new Quantity(10), promotionName);
+    }
 
-        // When
-        Inventory inventory = new Inventory(product, 10, promotionName);
-
-        // Then
-        assertAll(
-                () -> assertThat(inventory).extracting("product")
-                        .isEqualTo(new Product("coke", BigDecimal.valueOf(1000))),
-                () -> assertThat(inventory).extracting("quantity", "promotionName")
-                        .contains(new Quantity(10), promotionName)
-        );
+    @Test
+    @DisplayName("프로모션 이름은 문자열 null이 가능하다.")
+    void 성공_생성_null() {
+        assertThatCode(() -> {
+            new Inventory(product, 10, "null");
+        }).doesNotThrowAnyException();
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" "})
-    @DisplayName("프로모션은 비어있거나 null일 수 있다.")
-    void 성공_생성_프로모션비어있거나null(String input) {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-
-        // When
-        Inventory inventory = new Inventory(product, 10, input);
-
-        // Then
-        assertThat(inventory).extracting("product").isEqualTo(new Product("coke", BigDecimal.valueOf(1000)));
-        assertThat(inventory).extracting("quantity").isEqualTo(new Quantity(10));
-        assertThat(inventory).extracting("promotionName").isEqualTo(input);
+    @ValueSource(strings = {"", " "})
+    @DisplayName("프로모션명은 비어있거나 공백일 수 없다.")
+    void createInventoryWithEmptyPromotion(String input) {
+        assertCustomIllegalArgumentException(() -> new Inventory(product, 10, input))
+                .hasMessageContaining("인자 값은 비어있거나 공백일 수 없습니다.");
     }
 
     @Test
     @DisplayName("개수는 음수일 수 없습니다.")
     void 실패_생성_개수음수() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        String promotionName = "탄산2+1";
-
-        // When & Then
-        assertThatThrownBy(() -> new Inventory(product, -1, promotionName))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 수량은 음수일 수 없습니다.");
+        assertCustomIllegalArgumentException(() -> new Inventory(product, -1, promotionName))
+                .hasMessageContaining("수량은 음수일 수 없습니다.");
     }
 
     @Nested
-    @DisplayName("구매")
-    class buyTest {
-
+    @DisplayName("구매 테스")
+    class Purchase {
         @Test
         @DisplayName("성공적으로 구매한다.")
         void 성공_구매() {
-            // Given
-            Product product = new Product("coke", BigDecimal.valueOf(1000));
-            String promotionName = "탄산2+1";
-            Inventory inventory = new Inventory(product, 10, promotionName);
-
-            // When
             inventory.subtract(new Quantity(3));
-
-            // When & Then
             assertThat(inventory.getQuantity()).isEqualTo(new Quantity(7));
         }
 
         @Test
         @DisplayName("재고가 부족한 경우 예외가 발생한다.")
         void 실패_구매_재고부족() {
-            // Given
-            Product product = new Product("coke", BigDecimal.valueOf(1000));
-            String promotionName = "탄산2+1";
-            Inventory inventory = new Inventory(product, 10, promotionName);
-
-            // When & Then
-            assertThatThrownBy(() -> inventory.subtract(new Quantity(14)))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageStartingWith("[ERROR]")
-                    .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+            assertCustomIllegalArgumentException(() -> inventory.subtract(new Quantity(14)))
+                    .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다.");
         }
 
         @Test
         @DisplayName("프로모션 가능한 상품들을 반환한다.")
         void 성공_프로모션상품반환() {
-            // Given
-            Product coke = new Product("coke", BigDecimal.valueOf(1000));
-            Product milk = new Product("milk", BigDecimal.valueOf(1000));
-            String promotionName = "탄산2+1";
-            Inventory inventoryWithPromotion = new Inventory(coke, 10, promotionName);
-            Inventory inventoryWithNoPromotion = new Inventory(milk, 10, "null");
-            Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-            // When & Then
-            assertThatCode(() -> {
-                inventories.findProducts("coke");
-            }).doesNotThrowAnyException();
+            Inventories inventories = new Inventories(List.of(
+                    inventory,
+                    new Inventory(new Product("milk", BigDecimal.valueOf(1000)), 10, "null")
+            ));
+            assertThatCode(() -> inventories.findProducts("coke"))
+                    .doesNotThrowAnyException();
         }
     }
 }

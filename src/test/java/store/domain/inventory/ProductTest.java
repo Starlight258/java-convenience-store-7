@@ -1,7 +1,7 @@
 package store.domain.inventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static store.util.CustomExceptionAssertions.assertCustomIllegalArgumentException;
 
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +14,17 @@ import store.domain.price.Price;
 @DisplayName("상품 테스트")
 public class ProductTest {
 
+    private static final String PRODUCT_NAME = "콜라";
+    private static final BigDecimal PRODUCT_PRICE = BigDecimal.valueOf(1000);
+
     @Test
     @DisplayName("상품은 상품명과 가격을 가진다.")
-    void 성공_상품() {
-        // Given
+    void createProduct() {
+        Product product = new Product(PRODUCT_NAME, PRODUCT_PRICE);
 
-        // When &
-        Product coke = new Product("콜라", BigDecimal.valueOf(1000));
-
-        // Then
-        assertThat(coke).extracting("name", "price").contains("콜라", new Price(BigDecimal.valueOf(1000)));
+        assertThat(product)
+                .extracting("name", "price")
+                .contains(PRODUCT_NAME, new Price(PRODUCT_PRICE));
     }
 
     @ParameterizedTest
@@ -31,24 +32,14 @@ public class ProductTest {
     @ValueSource(strings = " ")
     @DisplayName("상품명은 비어있거나 null일 수 없다.")
     void 실패_상품_상품명비어있거나null(String input) {
-        // Given
-
-        // When & Then
-        assertThatThrownBy(() -> new Product(input, BigDecimal.valueOf(1000)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
+        assertCustomIllegalArgumentException(() -> new Product(input, PRODUCT_PRICE))
                 .hasMessageContaining("상품명은 비어있거나 null일 수 없습니다.");
     }
 
     @Test
     @DisplayName("가격은 null일 수 없다.")
     void 실패_상품_가격null() {
-        // Given
-
-        // When & Then
-        assertThatThrownBy(() -> new Product("콜라", null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 인자 값은 null일 수 없습니다.");
+        assertCustomIllegalArgumentException(() -> new Product(PRODUCT_NAME, null))
+                .hasMessageContaining("인자 값은 null일 수 없습니다.");
     }
 }

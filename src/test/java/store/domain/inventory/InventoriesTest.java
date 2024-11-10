@@ -1,12 +1,12 @@
 package store.domain.inventory;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static store.util.CustomExceptionAssertions.assertCustomIllegalArgumentException;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.player.Orders;
@@ -15,109 +15,59 @@ import store.domain.quantity.Quantity;
 @DisplayName("재고 집합 테스트")
 public class InventoriesTest {
 
+    private Product product;
+    private Inventories inventories;
+
+    @BeforeEach
+    void setUp() {
+        product = new Product("coke", BigDecimal.valueOf(1000));
+        Inventory withPromotion = new Inventory(product, 10, "탄산2+1");
+        Inventory withoutPromotion = new Inventory(product, 10, "null");
+        inventories = new Inventories(List.of(withPromotion, withoutPromotion));
+    }
+
     @Test
     @DisplayName("인벤토리 집합을 생성한다.")
     void 성공_생성() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        String promotionName = "탄산2+1";
-        Inventory inventoryWithPromotion = new Inventory(product, 10, promotionName);
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
-
-        // When & Then
-        assertThatCode(() -> {
-            new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        }).doesNotThrowAnyException();
+        assertThatCode(() -> new Inventories(List.of(
+                new Inventory(product, 10, "탄산2+1"))))
+                .doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("인벤토리 집합이 null이면 예외가 발생한다.")
     void 성공_실패_null() {
-        // Given
-
-        // When & Then
-        assertThatThrownBy(() -> new Inventories(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
+        assertCustomIllegalArgumentException(() -> new Inventories(null))
                 .hasMessageContaining("인자 값은 null일 수 없습니다.");
     }
 
     @Test
     @DisplayName("상품은 null일 수 없다.")
     void 실패_생성_상품null() {
-        // Given
-        String promotionName = "탄산2+1";
-
-        // When & Then
-        assertThatThrownBy(() -> new Inventory(null, 10, promotionName))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 인자 값은 null일 수 없습니다.");
+        assertCustomIllegalArgumentException(() -> new Inventory(null, 10, "탄산2+1"))
+                .hasMessageContaining("인자 값은 null일 수 없습니다.");
     }
 
     @Test
-    @DisplayName("개수는 음수일 수 없습니다.")
-    void 실패_생성_개수음수() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        String promotionName = "탄산2+1";
-
-        // When & Then
-        assertThatThrownBy(() -> new Inventory(product, -1, promotionName))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 수량은 음수일 수 없습니다.");
-    }
-
-    @Test
-    @DisplayName("프로모션이 null일 수 있다.")
-    void 성공_생성_프로모션null() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-
-        // When & Then
-        assertThatCode(() -> {
-            new Inventory(product, 10, "null");
-        }).doesNotThrowAnyException();
+    @DisplayName("수량은 음수일 수 없습니다.")
+    void 실패_생성_수량음수() {
+        assertCustomIllegalArgumentException(() -> new Inventory(product, -1, "탄산2+1"))
+                .hasMessageContaining("수량은 음수일 수 없습니다.");
     }
 
     @Test
     @DisplayName("상품이 없을 경우 예외가 발생한다")
     void 실패_안내_상품없음() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        Inventory inventoryWithPromotion = new Inventory(product, 10, "탄산2+1");
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
-        Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        Map<String, Quantity> purchasedItems = new HashMap<>() {{
-            put("cococo", new Quantity(3));
-        }};
-
-        // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(new Orders(purchasedItems)))
-                .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("존재하지 않는 상품입니다. 다시 입력해 주세요.")
-                .isInstanceOf(IllegalArgumentException.class);
+        Map<String, Quantity> items = Map.of("invalid", new Quantity(3));
+        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new Orders(items)))
+                .hasMessageContaining("존재하지 않는 상품입니다.");
     }
 
     @Test
     @DisplayName("재고 수량 이상으로 구매할 경우 예외가 발생한다")
     void 실패_안내_재고없음() {
-        // Given
-        Product product = new Product("coke", BigDecimal.valueOf(1000));
-        Inventory inventoryWithPromotion = new Inventory(product, 10, "탄산2+1");
-        Inventory inventoryWithNoPromotion = new Inventory(product, 10, "null");
-        Inventories inventories = new Inventories(List.of(inventoryWithPromotion, inventoryWithNoPromotion));
-        Map<String, Quantity> purchasedItems = new HashMap<>() {{
-            put("coke", new Quantity(33));
-        }};
-
-        // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(new Orders(purchasedItems)))
-                .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
-                .isInstanceOf(IllegalArgumentException.class);
+        Map<String, Quantity> items = Map.of("coke", new Quantity(33));
+        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new Orders(items)))
+                .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다.");
     }
 }
