@@ -2,6 +2,8 @@ package store.view;
 
 import static store.exception.ExceptionMessages.WRONG_INPUT;
 
+import store.exception.ExceptionHandler;
+
 public class InteractionView {
 
     private static final String YES = "Y";
@@ -9,32 +11,31 @@ public class InteractionView {
 
     private final InputView inputView;
     private final OutputView outputView;
+    private final ExceptionHandler exceptionHandler;
 
-    public InteractionView(final InputView inputView, final OutputView outputView) {
+    public InteractionView(final InputView inputView, final OutputView outputView,
+                           final ExceptionHandler exceptionHandler) {
         this.inputView = inputView;
         this.outputView = outputView;
+        this.exceptionHandler = exceptionHandler;
     }
 
     public boolean askForBonus(String productName, int quantity) {
         outputView.showFreeQuantity(productName, quantity);
-        return readYOrN().equals(YES);
+        return readYOrN();
     }
 
-    public boolean askForNoPromotion(String productName, int quantity){
+    public boolean askForNoPromotion(String productName, int quantity) {
         outputView.showPromotionDiscount(productName, quantity);
-        return readYOrN().equals(YES);
+        return readYOrN();
     }
 
-    private String readYOrN() {
-        while (true) {
-            try {
-                String answer = inputView.readLine();
-                validateAnswer(answer);
-                return answer;
-            } catch (IllegalArgumentException exception) {
-                outputView.showExceptionMessage(exception.getMessage());
-            }
-        }
+    public boolean readYOrN() {
+        return exceptionHandler.retryWithReturn(() -> {
+            String answer = inputView.readLine();
+            validateAnswer(answer);
+            return answer.equals(YES);
+        });
     }
 
     private void validateAnswer(String input) {

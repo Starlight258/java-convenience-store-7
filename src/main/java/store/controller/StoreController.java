@@ -2,7 +2,6 @@ package store.controller;
 
 import static store.exception.ExceptionMessages.INVALID_FILE_FORMAT;
 import static store.exception.ExceptionMessages.INVALID_FORMAT;
-import static store.exception.ExceptionMessages.NO_INPUT;
 import static store.exception.ExceptionMessages.WRONG_INPUT;
 
 import camp.nextstep.edu.missionutils.DateTimes;
@@ -14,7 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import store.domain.Store;
@@ -29,8 +27,9 @@ import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
-import store.response.ResponseHandler;
+import store.exception.ExceptionHandler;
 import store.response.Response;
+import store.response.ResponseHandler;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
 import store.util.Converter;
@@ -45,23 +44,23 @@ public class StoreController {
     public static final String PROMOTION_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/promotions.md";
     public static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
     public static final Pattern PATTERN = Pattern.compile(REGEX);
-    public static final String YES = "Y";
-    public static final String NO = "N";
 
     private final InputView inputView;
     private final OutputView outputView;
     private final StoreSplitter splitter;
     private final StoreFormatter formatter;
     private final InteractionView interactionView;
+    private final ExceptionHandler exceptionHandler;
 
     public StoreController(final InputView inputView, final OutputView outputView, final StoreSplitter splitter,
                            final StoreFormatter formatter,
-                           final InteractionView interactionView) {
+                           final InteractionView interactionView, final ExceptionHandler exceptionHandler) {
         this.inputView = inputView;
         this.outputView = outputView;
         this.splitter = splitter;
         this.formatter = formatter;
         this.interactionView = interactionView;
+        this.exceptionHandler = exceptionHandler;
     }
 
     public void process() {
@@ -70,28 +69,16 @@ public class StoreController {
     }
 
     private void processTransactions(final PaymentSystem paymentSystem) {
-        while (true) {
-            try {
-                if (processTransaction(paymentSystem)) {
-                    return;
-                }
-                outputView.showBlankLine();
-            } catch (NoSuchElementException e) {
-                outputView.showExceptionMessage(NO_INPUT.getErrorMessage());
+        exceptionHandler.retryWithNoReturn(() -> {
+            if (processTransaction(paymentSystem)) {
                 return;
-            } catch (IllegalArgumentException | IllegalStateException exception) {
-                outputView.showExceptionMessage(exception.getMessage());
             }
-        }
+            outputView.showBlankLine();
+        });
     }
 
     private PaymentSystem initializePaymentSystem() {
-        try {
-            return new PaymentSystem(makeInventories(), makePromotions());
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            outputView.showExceptionMessage(e.getMessage());
-            throw e;
-        }
+        return exceptionHandler.actionOfFileRead(() -> new PaymentSystem(makeInventories(), makePromotions()));
     }
 
     private boolean processTransaction(final PaymentSystem paymentSystem) {
@@ -104,7 +91,7 @@ public class StoreController {
 
     private boolean continueTransaction() {
         outputView.showAdditionalPurchase();
-        return readYOrN().equals(YES);
+        return interactionView.readYOrN();
     }
 
     private void showWelcomeMessage(final Inventories inventories) {
@@ -178,19 +165,11 @@ public class StoreController {
 
     private Orders getPurchasedItems(final Inventories inventories) {
         outputView.showCommentOfPurchase();
-        while (true) {
-            try {
-                Orders purchasedItems = promptProductNameAndQuantity();
-                inventories.getPurchasedItems(purchasedItems);  // 구매할 상품의 이름
-                return purchasedItems;
-            } catch (IllegalArgumentException exception) {
-                outputView.showExceptionMessage(exception.getMessage());
-            } catch (IllegalStateException exception) {
-                outputView.showExceptionMessage(INVALID_FORMAT.getErrorMessage());
-            } catch (OutOfMemoryError exception) {
-                outputView.showExceptionMessage(WRONG_INPUT.getErrorMessage());
-            }
-        }
+        return exceptionHandler.retryWithReturn(() -> {
+            Orders purchasedItems = promptProductNameAndQuantity();
+            inventories.getPurchasedItems(purchasedItems);
+            return purchasedItems;
+        });
     }
 
     private void showResultPrice(final Receipt receipt, final Price membershipPrice) {
@@ -199,8 +178,7 @@ public class StoreController {
 
     private Price checkMemberShip(final Membership membership) {
         outputView.showCommentOfMemberShip();
-        String line = readYOrN();
-        if (line.equals(NO)) {
+        if (!interactionView.readYOrN()) {
             return Price.zero();
         }
         return membership.calculateDiscount();
@@ -273,21 +251,6 @@ public class StoreController {
         }
         return orders;
     }
-
-    private String readYOrN() {
-        while (true) {
-            try {
-                String intent = inputView.readLine();
-                if (intent.equals(YES) || intent.equals(NO)) {
-                    return intent;
-                }
-                throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
-            } catch (IllegalArgumentException exception) {
-                outputView.showExceptionMessage(exception.getMessage());
-            }
-        }
-    }
-
 
     private Promotions addPromotion(List<String> promotionsFromSource) {
         List<Promotion> promotions = new ArrayList<>();

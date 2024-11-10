@@ -1,7 +1,9 @@
 package store;
 
 import camp.nextstep.edu.missionutils.Console;
+import java.util.NoSuchElementException;
 import store.controller.StoreController;
+import store.exception.ExceptionHandler;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
 import store.view.InputView;
@@ -18,9 +20,15 @@ public class Application {
         StoreFormatter formatter = new StoreFormatter(FORMAT_SIZE);
         OutputView outputView = new OutputView(formatter);
         StoreSplitter splitter = new StoreSplitter(DELIMITER);
-        InteractionView interactionView = new InteractionView(inputView, outputView);
-        StoreController controller = new StoreController(inputView, outputView, splitter, formatter, interactionView);
-        controller.process();
-        Console.close();
+        ExceptionHandler exceptionHandler = new ExceptionHandler(outputView);
+        InteractionView interactionView = new InteractionView(inputView, outputView, exceptionHandler);
+        StoreController controller = new StoreController(inputView, outputView, splitter, formatter, interactionView,
+                exceptionHandler);
+        try {
+            controller.process();
+        } catch (NoSuchElementException ignored) {
+        } finally {
+            Console.close();
+        }
     }
 }
