@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 public class StoreFormatter {
 
-    public static final String BLANK = " ";
     public static final String NULL = "null";
     public static final String QUANTITY_UNIT = "개 ";
     public static final String NO_STOCK = "재고 없음 ";

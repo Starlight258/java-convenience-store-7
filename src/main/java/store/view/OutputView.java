@@ -1,14 +1,10 @@
 package store.view;
 
 import java.math.BigDecimal;
-import store.support.StoreFormatter;
 
 public class OutputView {
 
-    private final StoreFormatter storeFormatter;
-
-    public OutputView(final StoreFormatter storeFormatter) {
-        this.storeFormatter = storeFormatter;
+    public OutputView() {
     }
 
     public void showStartMessage() {
@@ -56,24 +52,23 @@ public class OutputView {
     }
 
     public void showTotalPrice(final Integer key, final BigDecimal totalPurchaseValue) {
-        System.out.printf(
-                storeFormatter.format("총구매액") + " \t%d \t%,.0f"
-                        + System.lineSeparator(),
-                key, totalPurchaseValue);
+        System.out.printf("%s\t\t%d\t%,.0f%n",
+                "총구매액", key, totalPurchaseValue);
     }
 
     public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
-        System.out.printf(storeFormatter.format("행사할인") + " \t\t-%,.0f\n",
-                promotionDiscountPrice);
+        System.out.printf("%s\t\t\t-%,.0f%n",
+                "행사할인", promotionDiscountPrice);
     }
 
     public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
-        System.out.printf(storeFormatter.format("멤버십할인") + " \t\t-%,.0f\n",
-                memberShipDiscountPrice);
+        System.out.printf("%s\t\t\t-%,.0f%n",
+                "멤버십할인", memberShipDiscountPrice);
     }
 
     public void showMoneyToPay(final BigDecimal priceToPay) {
-        System.out.printf(storeFormatter.format("내실돈") + " \t\t %,.0f\n", priceToPay);
+        System.out.printf("%s\t\t\t %,.0f%n",
+                "내실돈", priceToPay);
     }
 
     public void showBonus() {
@@ -81,16 +76,16 @@ public class OutputView {
     }
 
     public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf(storeFormatter.format(name) + "\t%d \t" + System.lineSeparator(), quantity);
+        System.out.printf("%s\t\t%d%n", name, quantity);
     }
 
     public void showCommentOfInventory() {
-        System.out.println(System.lineSeparator() + "==============W 편의점================\n"
-                + "상품명\t\t수량\t금액");
+        System.out.println(System.lineSeparator() + "==============W 편의점================");
+        System.out.println("상품명\t\t수량\t금액");
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf(storeFormatter.format(name) + "\t%d \t%,.0f"
-                + System.lineSeparator(), quantity, totalPrice);
+        System.out.printf("%s\t\t%d\t%,.0f%n",
+                name, quantity, totalPrice);
     }
 }
