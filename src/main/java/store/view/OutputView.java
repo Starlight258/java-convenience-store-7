@@ -72,9 +72,8 @@ public class OutputView {
                 memberShipDiscountPrice);
     }
 
-    public void showMoneyToPay(final BigDecimal priceToPay, final int blankLength) {
-        System.out.printf(storeFormatter.format("내실돈") + " \t\t" + storeFormatter.getBlank(blankLength) + "%,.0f\n",
-                priceToPay);
+    public void showMoneyToPay(final BigDecimal priceToPay) {
+        System.out.printf(storeFormatter.format("내실돈") + " \t\t %,.0f\n", priceToPay);
     }
 
     public void showBonus() {

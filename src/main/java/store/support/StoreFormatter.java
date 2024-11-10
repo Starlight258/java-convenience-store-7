@@ -42,8 +42,4 @@ public class StoreFormatter {
         }
         return cnt;
     }
-
-    public String getBlank(int length) {
-        return BLANK.repeat(Math.max(0, length));
-    }
 }

@@ -196,12 +196,10 @@ public class StoreController {
         Entry<Quantity, Price> totalPurchases = receipt.getTotalPurchase();
         Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
         Price totalPurchasePrice = totalPurchases.getValue();
-        int blankLength =
-                String.valueOf(totalPurchasePrice.getPrice()).length() - String.valueOf(priceToPay.getPrice()).length();
         outputView.showTotalPrice(totalPurchases.getKey().getQuantity(), totalPurchasePrice.getPrice());
         outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice().getPrice());
         outputView.showMemberShipDiscountPrice(membershipPrice.getPrice());
-        outputView.showMoneyToPay(priceToPay.getPrice(), blankLength);
+        outputView.showMoneyToPay(priceToPay.getPrice());
     }
 
     private void showBonus(final Receipt receipt) {

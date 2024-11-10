@@ -21,17 +21,4 @@ class StoreFormatterTest {
         // Then
         assertThat(message).isEqualTo("- 콜라 1,000원 3개 탄산2+1");
     }
-
-    @Test
-    @DisplayName("주어진 길이만큼 공백을 만든다.")
-    void 성공_공백생성() {
-        // Given
-        StoreFormatter formatter = new StoreFormatter(12);
-
-        // When
-        String blank = formatter.getBlank(3);
-
-        // Then
-        assertThat(blank).isEqualTo("   ");
-    }
 }
