@@ -34,6 +34,12 @@ public class Store {
         notePurchaseProduct(product, canGetMoreQuantity);
     }
 
+    public void noteWithNoPromotion(final Product product, final Quantity quantity,
+                                    final Quantity noPromotionQuantity) {
+        receipt.purchaseProducts(product, quantity);
+        membership.addNoPromotionProduct(product, noPromotionQuantity);
+    }
+
     public Receipt getReceipt() {
         return receipt;
     }

@@ -67,7 +67,7 @@ public class ResponseHandler {
 
     private void purchaseWithNoPromotionProduct(final Response response, final Product product,
                                                 final Inventory noPromotionInventory) {
-        store.noteNoPromotionProduct(product, quantity);
+        store.noteWithNoPromotion(product, quantity, response.noPromotionQuantity());
         Inventory inventory = response.inventory();
         Quantity quantityOfInventory = inventory.getQuantity();
         noPromotionInventory.subtract(quantity.subtract(quantityOfInventory));
