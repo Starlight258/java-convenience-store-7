@@ -17,7 +17,7 @@ public class Inventory implements Comparable<Inventory> {
     private final String promotionName;
 
     public Inventory(final Product product, final int quantity, final String promotionName) {
-        validate(product);
+        validate(product, promotionName);
         this.product = product;
         this.quantity = new Quantity(quantity);
         this.promotionName = promotionName;
@@ -45,15 +45,6 @@ public class Inventory implements Comparable<Inventory> {
         return totalQuantity;
     }
 
-    public Response processNormalPurchase(final Quantity quantity, final Store store) {
-        if (this.quantity.isLessThan(quantity)) {
-            throw new IllegalStateException(OUT_OF_STOCK.getMessage());
-        }
-        subtract(quantity);
-        store.noteNoPromotionProduct(product, quantity);
-        return Response.buyWithNoPromotion(this);
-    }
-
     public String getProductName() {
         return product.getName();
     }
@@ -62,9 +53,12 @@ public class Inventory implements Comparable<Inventory> {
         return product;
     }
 
-    private void validate(final Product product) {
+    private void validate(final Product product, final String promotionName) {
         if (product == null) {
             throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
+        }
+        if (promotionName.isBlank()) {
+            throw new IllegalArgumentException(ExceptionMessages.NOT_BLANK.getErrorMessage());
         }
     }
 
