@@ -113,7 +113,7 @@ public class StoreController {
         try {
             return inputView.readFile(PROMOTION_FILENAME);
         } catch (IOException exception) {
-            throw new IllegalStateException(INVALID_FILE_FORMAT.getErrorMessage());
+            throw new IllegalStateException(INVALID_FILE_FORMAT.getMessageWithPrefix());
         }
     }
 
@@ -121,7 +121,7 @@ public class StoreController {
         try {
             return inputView.readFile(INVENTORY_FILENAME);
         } catch (IOException exception) {
-            throw new IllegalStateException(INVALID_FILE_FORMAT.getErrorMessage());
+            throw new IllegalStateException(INVALID_FILE_FORMAT.getMessageWithPrefix());
         }
     }
 
@@ -247,7 +247,7 @@ public class StoreController {
     private Matcher validateFormat(final String text) {
         Matcher matcher = PATTERN.matcher(text);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
+            throw new IllegalArgumentException(INVALID_FORMAT.getMessageWithPrefix());
         }
         return matcher;
     }
@@ -256,7 +256,7 @@ public class StoreController {
         String productValue = matcher.group(2);
         int quantityValue = Converter.convertToInteger((matcher.group(3)));
         if (quantityValue == 0) {
-            throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
+            throw new IllegalArgumentException(WRONG_INPUT.getMessageWithPrefix());
         }
         orders.put(productValue, new Quantity(quantityValue));
     }

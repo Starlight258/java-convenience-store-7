@@ -22,8 +22,8 @@ public class Receipt {
         purchasedProducts.put(product, purchasedProducts.getOrDefault(product, Quantity.zero()).add(quantity));
     }
 
-    public void addBonusProducts(final Product product) {
-        bonusProducts.put(product, bonusProducts.getOrDefault(product, Quantity.zero()).add(Quantity.one()));
+    public void addBonusProducts(final Product product, final Quantity bonusQuantity) {
+        bonusProducts.put(product, bonusProducts.getOrDefault(product, Quantity.zero()).add(bonusQuantity));
     }
 
     public Price getPromotionDiscountPrice() {

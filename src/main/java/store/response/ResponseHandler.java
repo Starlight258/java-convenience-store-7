@@ -3,6 +3,8 @@ package store.response;
 import java.util.Map;
 import java.util.function.Consumer;
 import store.domain.Store;
+import store.domain.inventory.Inventories;
+import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
@@ -43,29 +45,47 @@ public class ResponseHandler {
     }
 
     private void processWithPromotion(final Response response) {
-        store.noteBonusProduct(response.inventory().getProduct());
+        store.noteBonusProduct(response.inventory().getProduct(), response.bonusQuantity());
     }
 
     private void processOutOfStock(final Response response) {
         Product product = response.inventory().getProduct();
-        store.noteBonusProduct(product);
+        store.noteBonusProduct(product, response.bonusQuantity());
         askNoPromotion(response, product);
     }
 
     private void askNoPromotion(final Response response, final Product product) {
-        store.noteBonusProduct(product);
         Quantity noPromotionQuantity = response.noPromotionQuantity();
+        Inventories inventories = response.sameProductInventories();
+        Inventory noPromotionInventory = inventories.findNoPromotionInventory();
         if (interactionView.askForNoPromotion(productName, noPromotionQuantity.getQuantity())) {
-            store.notePurchaseProduct(product, quantity.subtract(noPromotionQuantity));
-            orders.put(productName, this.quantity.subtract(noPromotionQuantity));
+            purchaseWithNoPromotionProduct(response, product, noPromotionInventory);
+            return;
         }
+        purchaseOnlyPromotionProduct(response, product, noPromotionQuantity);
+    }
+
+    private void purchaseWithNoPromotionProduct(final Response response, final Product product,
+                                                final Inventory noPromotionInventory) {
         store.noteNoPromotionProduct(product, quantity);
+        Inventory inventory = response.inventory();
+        Quantity quantityOfInventory = inventory.getQuantity();
+        noPromotionInventory.subtract(quantity.subtract(quantityOfInventory));
+        inventory.subtract(quantityOfInventory);
+    }
+
+    private void purchaseOnlyPromotionProduct(final Response response, final Product product,
+                                              final Quantity noPromotionQuantity) {
+        Quantity subtractedQuantity = quantity.subtract(noPromotionQuantity);
+        store.notePurchaseProduct(product, subtractedQuantity);
+        orders.put(productName, subtractedQuantity);
+        response.inventory().subtract(quantity.subtract(noPromotionQuantity));
     }
 
     private void processCanGetBonus(final Response response) {
         Product product = response.inventory().getProduct();
         processInitialOrder(product);
-        processBonusQuantity(product);
+        processBonusQuantity(response, product);
     }
 
     private void processInitialOrder(final Product product) {
@@ -73,10 +93,13 @@ public class ResponseHandler {
         store.notePurchaseProduct(product, quantity);
     }
 
-    private void processBonusQuantity(final Product product) {
-        if (interactionView.askForBonus(productName)) {
-            store.noteAddingMoreQuantity(product);
-            orders.put(productName, quantity.add(Quantity.one()));
+    private void processBonusQuantity(final Response response, final Product product) {
+        Quantity bonusQuantity = response.bonusQuantity();
+        Quantity canGetMoreQuantity = response.canGetMoreQuantity();
+        if (interactionView.askForBonus(productName, canGetMoreQuantity)) {
+            store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
+            orders.put(productName, quantity.add(canGetMoreQuantity));
         }
+        store.noteBonusProduct(product, bonusQuantity.subtract(canGetMoreQuantity));
     }
 }

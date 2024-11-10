@@ -16,7 +16,7 @@ public class Promotions {
 
     private void validatePromotions(final List<Promotion> promotions) {
         if (promotions == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
         }
     }
 

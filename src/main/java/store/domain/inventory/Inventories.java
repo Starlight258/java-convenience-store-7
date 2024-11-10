@@ -16,6 +16,7 @@ public class Inventories {
 
     private static final ExceptionMessage NOT_EXIST_PRODUCT = new ExceptionMessage("존재하지 않는 상품입니다. 다시 입력해 주세요.");
     private static final ExceptionMessage OUT_OF_STOCK = new ExceptionMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+    private static final ExceptionMessage NO_PROMOTION_PRODUCT = new ExceptionMessage("프로모션이 없는 상품을 찾을 수 없습니다.");
 
     private final TreeSet<Inventory> inventories;
 
@@ -45,6 +46,15 @@ public class Inventories {
         }
     }
 
+    public Inventory findNoPromotionInventory() {
+        for (Inventory inventory : inventories) {
+            if (inventory.hasNoPromotion()) {
+                return inventory;
+            }
+        }
+        throw new IllegalStateException(NO_PROMOTION_PRODUCT.getMessage());
+    }
+
     private Quantity processQuantity(final Store store, Quantity totalQuantity, final Inventory inventory) {
         Quantity subtractQuantity = inventory.subtractMaximum(totalQuantity);
         totalQuantity = totalQuantity.subtract(subtractQuantity);
@@ -69,7 +79,7 @@ public class Inventories {
 
     private void validateInventories(final List<Inventory> inventories) {
         if (inventories == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
         }
     }
 

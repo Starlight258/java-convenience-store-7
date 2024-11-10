@@ -21,8 +21,8 @@ public class InteractionView {
         this.exceptionHandler = exceptionHandler;
     }
 
-    public boolean askForBonus(String productName) {
-        outputView.showFreeQuantity(productName, Quantity.one().getQuantity());
+    public boolean askForBonus(String productName, Quantity quantity) {
+        outputView.showFreeQuantity(productName, quantity.getQuantity());
         return readYOrN();
     }
 
@@ -43,6 +43,6 @@ public class InteractionView {
         if (input.equals(YES) || input.equals(NO)) {
             return;
         }
-        throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
+        throw new IllegalArgumentException(WRONG_INPUT.getMessageWithPrefix());
     }
 }

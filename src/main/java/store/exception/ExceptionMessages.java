@@ -17,7 +17,11 @@ public enum ExceptionMessages {
         this.content = content;
     }
 
-    public String getErrorMessage() {
+    public String getMessageWithPrefix() {
         return ERROR_PREFIX.content + this.content;
+    }
+
+    public String getMessage() {
+        return content;
     }
 }

@@ -9,6 +9,6 @@ public class ExceptionMessage {
     }
 
     public String getMessage() {
-        return ExceptionMessages.ERROR_PREFIX.getErrorMessage() + message;
+        return ExceptionMessages.ERROR_PREFIX.getMessage() + message;
     }
 }

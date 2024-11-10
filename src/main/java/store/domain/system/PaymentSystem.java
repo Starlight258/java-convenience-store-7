@@ -73,7 +73,7 @@ public class PaymentSystem {
         }
 
         if (canGetAdditionalItems(quantity, promotionQuantities)) {
-            return createAdditionalItemsResponse(inventory);
+            return createAdditionalItemsResponse(quantity, promotionQuantities, inventory);
         }
         return processPromotionPurchase(quantity, promotionQuantities, inventory, store);
     }
@@ -103,7 +103,7 @@ public class PaymentSystem {
                                               PromotionQuantities promotionQuantities,
                                               Store store, Inventories sameProductInventories) {
         if (canApplyPartialPromotion(inventory.getQuantity(), promotionQuantities)) {
-            return createPartialPromotionResponse(inventory, quantity, promotionQuantities);
+            return createPartialPromotionResponse(inventory, quantity, promotionQuantities, sameProductInventories);
         }
         return processNormalOutOfStockPurchase(inventory, quantity, store, sameProductInventories);
     }
@@ -113,11 +113,12 @@ public class PaymentSystem {
     }
 
     private Response createPartialPromotionResponse(Inventory inventory, Quantity quantity,
-                                                    PromotionQuantities promotionQuantities) {
+                                                    PromotionQuantities promotionQuantities,
+                                                    final Inventories sameProductInventories) {
         Quantity setSize = calculateSetSize(inventory.getQuantity(), promotionQuantities);
         Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
-        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory);
+        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);
     }
 
     private Quantity calculateSetSize(Quantity stock, PromotionQuantities promotionQuantities) {
@@ -144,35 +145,37 @@ public class PaymentSystem {
     }
 
     private boolean canGetAdditionalItems(Quantity quantity, PromotionQuantities promotionQuantities) {
-        int purchaseUnit = promotionQuantities.purchaseQuantity().getQuantity(); // 1 또는 2
-        int totalUnit = promotionQuantities.totalQuantity().getQuantity();       // 2 또는 3
-        if (quantity.getQuantity() < purchaseUnit || quantity.getQuantity() % totalUnit == 0) {
-            return false;
-        }
-        return true;
+        int purchaseUnit = promotionQuantities.purchaseQuantity().getQuantity();
+        return quantity.getQuantity() == purchaseUnit;
     }
 
-    private Response createAdditionalItemsResponse(Inventory inventory) {
-        return Response.canGetMoreQuantity(inventory);
+    private Response createAdditionalItemsResponse(final Quantity quantity,
+                                                   final PromotionQuantities promotionQuantities, Inventory inventory) {
+        Quantity freeQuantity = calculateFreeQuantity(quantity, promotionQuantities);
+        return Response.canGetMoreQuantity(promotionQuantities.bonusQuantity(), freeQuantity, inventory);
+    }
+
+    private Quantity calculateFreeQuantity(Quantity quantity, PromotionQuantities promotionQuantities) {
+        return promotionQuantities.totalQuantity().subtract(quantity);
     }
 
     private Response processPromotionPurchase(Quantity quantity,
                                               PromotionQuantities promotionQuantities,
                                               Inventory inventory, Store store) {
         Quantity setSize = calculateSetSize(quantity, promotionQuantities);
-        Quantity totalBonusQuantity = new Quantity(1);
+        Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         completePurchase(quantity, inventory, store);
         return Response.buyWithPromotion(totalBonusQuantity, inventory);
     }
 
     private void completePurchase(Quantity quantity, Inventory inventory, Store store) {
-        inventory.subtract(quantity);
+        Quantity subtractedQuantity = inventory.subtract(quantity);
         store.notePurchaseProduct(inventory.getProduct(), quantity);
     }
 
     private void purchaseWithoutPromotion(final Store store, final Quantity totalQuantity,
                                           final Inventory inventory) {
-        inventory.subtract(totalQuantity);
+        Quantity subtracted = inventory.subtract(totalQuantity);
         Product product = inventory.getProduct();
         store.noteNoPromotionProduct(product, totalQuantity);
     }

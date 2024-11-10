@@ -24,13 +24,14 @@ public class Store {
         receipt.purchaseProducts(product, quantity);
     }
 
-    public void noteBonusProduct(final Product product) {
-        receipt.addBonusProducts(product);
+    public void noteBonusProduct(final Product product, final Quantity bonusQuantity) {
+        receipt.addBonusProducts(product, bonusQuantity);
     }
 
-    public void noteAddingMoreQuantity(final Product product) {
-        noteBonusProduct(product);
-        notePurchaseProduct(product, Quantity.one());
+    public void noteAddingMoreQuantity(final Product product, final Quantity bonusQuantity,
+                                       final Quantity canGetMoreQuantity) {
+        noteBonusProduct(product, bonusQuantity);
+        notePurchaseProduct(product, canGetMoreQuantity);
     }
 
     public Receipt getReceipt() {

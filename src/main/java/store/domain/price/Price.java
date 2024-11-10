@@ -58,7 +58,7 @@ public class Price {
 
     private void validateIsNull(final BigDecimal price) {
         if (price == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
         }
     }
 

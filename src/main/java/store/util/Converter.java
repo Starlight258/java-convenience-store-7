@@ -18,7 +18,7 @@ public class Converter {
 
     private static void validateNotNullOrBlank(final String input) {
         if (input == null || input.isBlank()) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_BLANK.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_BLANK.getMessageWithPrefix());
         }
     }
 }

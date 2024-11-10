@@ -65,8 +65,8 @@ public class InventoryTest {
         @Test
         @DisplayName("성공적으로 구매한다.")
         void 성공_구매() {
-            inventory.subtract(new Quantity(3));
-            assertThat(inventory.getQuantity()).isEqualTo(new Quantity(7));
+            Quantity subtractedQuantity = inventory.subtract(new Quantity(3));
+            assertThat(subtractedQuantity).isEqualTo(new Quantity(7));
         }
 
         @Test

@@ -4,22 +4,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.ThrowableAssert;
+import store.exception.ExceptionMessages;
 
 public class CustomExceptionAssertions {
-
-    private static final String ERROR_PREFIX = "[ERROR] ";
 
     public static AbstractThrowableAssert<?, ? extends Throwable> assertCustomIllegalArgumentException(
             ThrowableAssert.ThrowingCallable throwingCallable) {
         return assertThatThrownBy(throwingCallable)
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith(ERROR_PREFIX);
+                .hasMessageStartingWith(ExceptionMessages.ERROR_PREFIX.getMessage());
     }
 
     public static AbstractThrowableAssert<?, ? extends Throwable> assertCustomIllegalStateException(
             ThrowableAssert.ThrowingCallable throwingCallable) {
         return assertThatThrownBy(throwingCallable)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageStartingWith(ERROR_PREFIX);
+                .hasMessageStartingWith(ExceptionMessages.ERROR_PREFIX.getMessage());
     }
 }

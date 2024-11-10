@@ -9,6 +9,7 @@ import store.exception.ExceptionMessages;
 public class Inventory implements Comparable<Inventory> {
 
     private static final ExceptionMessage OUT_OF_STOCK = new ExceptionMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+    private static final String NULL = "null";
 
     private final Product product;
     private Quantity quantity;
@@ -25,10 +26,10 @@ public class Inventory implements Comparable<Inventory> {
         return this.product.isSameProductName(productName);
     }
 
-    public void subtract(final Quantity purchaseQuantity) {
+    public Quantity subtract(final Quantity purchaseQuantity) {
         if (quantity.isMoreThanEqual(purchaseQuantity)) {
             quantity = quantity.subtract(purchaseQuantity);
-            return;
+            return quantity;
         }
         throw new IllegalArgumentException(OUT_OF_STOCK.getMessage());
     }
@@ -43,6 +44,10 @@ public class Inventory implements Comparable<Inventory> {
         return totalQuantity;
     }
 
+    public boolean hasNoPromotion() {
+        return NULL.equals(promotionName);
+    }
+
     public String getProductName() {
         return product.getName();
     }
@@ -53,10 +58,10 @@ public class Inventory implements Comparable<Inventory> {
 
     private void validate(final Product product, final String promotionName) {
         if (product == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
         }
         if (promotionName.isBlank()) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_BLANK.getErrorMessage());
+            throw new IllegalArgumentException(ExceptionMessages.NOT_BLANK.getMessageWithPrefix());
         }
     }
 

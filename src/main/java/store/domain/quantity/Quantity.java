@@ -7,7 +7,7 @@ public class Quantity {
 
     public static final ExceptionMessage EXCEPTION_CANNOT_MINUS = new ExceptionMessage("수량은 음수일 수 없습니다.");
 
-    private int quantity;
+    private final int quantity;
 
     public Quantity(final int quantity) {
         validate(quantity);
