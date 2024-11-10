@@ -33,9 +33,9 @@ public class Promotion {
     }
 
     public boolean isValid(final String promotionName, final LocalDate now) {
-        return this.promotionName.equals(promotionName) &&
-                (now.isEqual(startDate) || now.isAfter(startDate)) &&
-                (now.isEqual(endDate) || now.isBefore(endDate));
+        return this.promotionName.equals(promotionName)
+                && (now.isEqual(startDate) || now.isAfter(startDate))
+                && (now.isEqual(endDate) || now.isBefore(endDate));
     }
 
     private void validate(final String promotionName, final LocalDate startDate, final LocalDate endDate) {

@@ -1,12 +1,10 @@
 package store.domain.inventory;
 
 import java.util.Objects;
-import store.domain.Store;
 import store.domain.price.Price;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessage;
 import store.exception.ExceptionMessages;
-import store.response.Response;
 
 public class Inventory implements Comparable<Inventory> {
 
