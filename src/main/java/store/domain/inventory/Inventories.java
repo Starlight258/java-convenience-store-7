@@ -38,13 +38,21 @@ public class Inventories {
     public void buyProductWithoutPromotion(final Quantity quantity, final Store store) {
         Quantity totalQuantity = quantity;
         for (Inventory inventory : inventories) {
-            Quantity subtractQuantity = inventory.subtractMaximum(totalQuantity);
-            totalQuantity = totalQuantity.subtract(subtractQuantity);
-            store.noteNoPromotionProduct(inventory.getProduct(), subtractQuantity);
-            if (totalQuantity.hasZeroValue()) {
+            totalQuantity = processQuantity(store, totalQuantity, inventory);
+            if (totalQuantity == null) {
                 return;
             }
         }
+    }
+
+    private Quantity processQuantity(final Store store, Quantity totalQuantity, final Inventory inventory) {
+        Quantity subtractQuantity = inventory.subtractMaximum(totalQuantity);
+        totalQuantity = totalQuantity.subtract(subtractQuantity);
+        store.noteNoPromotionProduct(inventory.getProduct(), subtractQuantity);
+        if (totalQuantity.hasZeroValue()) {
+            return null;
+        }
+        return totalQuantity;
     }
 
     private void totalOutOfStock(final Quantity quantity, final Quantity totalStock) {

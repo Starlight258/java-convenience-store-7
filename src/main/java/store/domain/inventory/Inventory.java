@@ -1,10 +1,12 @@
 package store.domain.inventory;
 
 import java.util.Objects;
+import store.domain.Store;
 import store.domain.price.Price;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessage;
 import store.exception.ExceptionMessages;
+import store.response.Response;
 
 public class Inventory implements Comparable<Inventory> {
 
@@ -41,6 +43,15 @@ public class Inventory implements Comparable<Inventory> {
         Quantity totalQuantity = this.quantity;
         this.quantity = Quantity.zero();
         return totalQuantity;
+    }
+
+    public Response processNormalPurchase(final Quantity quantity, final Store store) {
+        if (this.quantity.isLessThan(quantity)) {
+            throw new IllegalStateException(OUT_OF_STOCK.getMessage());
+        }
+        subtract(quantity);
+        store.noteNoPromotionProduct(product, quantity);
+        return Response.buyWithNoPromotion(this);
     }
 
     public String getProductName() {
@@ -86,6 +97,10 @@ public class Inventory implements Comparable<Inventory> {
             return false;
         }
         Inventory inventory = (Inventory) o;
+        return IsEqual(inventory);
+    }
+
+    private boolean IsEqual(final Inventory inventory) {
         return quantity == inventory.quantity && Objects.equals(product, inventory.product)
                 && Objects.equals(promotionName, inventory.promotionName);
     }

@@ -8,13 +8,13 @@ import camp.nextstep.edu.missionutils.DateTimes;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
@@ -238,31 +238,36 @@ public class StoreController {
     private Orders addPurchasedItems(final Orders orders,
                                      final List<String> splittedText) {
         for (String text : splittedText) {
-            Matcher matcher = PATTERN.matcher(text);
-            if (!matcher.matches()) {
-                throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
-            }
-            String productValue = matcher.group(2);
-            int quantityValue = Converter.convertToInteger((matcher.group(3)));
-            if (quantityValue == 0) {
-                throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
-            }
-            orders.put(productValue, new Quantity(quantityValue));
+            Matcher matcher = validateFormat(text);
+            addOrder(orders, matcher);
         }
         return orders;
     }
 
-    private Promotions addPromotion(List<String> promotionsFromSource) {
-        List<Promotion> promotions = new ArrayList<>();
-        for (String input : promotionsFromSource) {
-            if (input.startsWith("name")) {
-                continue;
-            }
-            List<String> splittedText = splitter.split(input);
-            Promotion promotion = getPromotion(splittedText);
-            promotions.add(promotion);
+    private Matcher validateFormat(final String text) {
+        Matcher matcher = PATTERN.matcher(text);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
         }
-        return new Promotions(promotions);
+        return matcher;
+    }
+
+    private void addOrder(final Orders orders, final Matcher matcher) {
+        String productValue = matcher.group(2);
+        int quantityValue = Converter.convertToInteger((matcher.group(3)));
+        if (quantityValue == 0) {
+            throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
+        }
+        orders.put(productValue, new Quantity(quantityValue));
+    }
+
+
+    private Promotions addPromotion(final List<String> promotionsFromSource) {
+        return new Promotions(promotionsFromSource.stream()
+                .filter(input -> !input.startsWith("name"))
+                .map(splitter::split)
+                .map(this::getPromotion)
+                .toList());
     }
 
     private Promotion getPromotion(final List<String> splittedText) {
@@ -273,18 +278,18 @@ public class StoreController {
         return new Promotion(splittedText.get(0), purchaseQuantity, bonusQuantity, startDate, endDate);
     }
 
-    private Inventories addInventory(List<String> inputs) {
-        List<Inventory> inventories = new ArrayList<>();
-        for (String input : inputs) {
-            if (input.startsWith("name")) {
-                continue;
-            }
-            List<String> splittedText = splitter.split(input);
-            Product product = new Product(splittedText.get(0), new BigDecimal(splittedText.get(1)));
-            Inventory inventory = new Inventory(product, Converter.convertToInteger(splittedText.get(2)),
-                    splittedText.get(3));
-            inventories.add(inventory);
-        }
-        return new Inventories(inventories);
+    private Inventories addInventory(final List<String> inputs) {
+        return new Inventories(inputs.stream()
+                .filter(input -> !input.startsWith("name"))
+                .map(splitter::split)
+                .map(this::createInventory)
+                .collect(Collectors.toList()));
+    }
+
+    private Inventory createInventory(final List<String> splittedText) {
+        Product product = new Product(splittedText.get(0), new BigDecimal(splittedText.get(1)));
+        return new Inventory(product,
+                Converter.convertToInteger(splittedText.get(2)),
+                splittedText.get(3));
     }
 }

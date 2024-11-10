@@ -20,12 +20,9 @@ public class Promotions {
         }
     }
 
-    public Optional<Promotion> find(final String name, final LocalDate now) {
-        for (Promotion promotion : promotions) {
-            if (promotion.isSameName(name) && promotion.isPromotionPeriod(now)) {
-                return Optional.of(promotion);
-            }
-        }
-        return Optional.empty();
+    public Optional<Promotion> find(final String promotionName, final LocalDate now) {
+        return promotions.stream()
+                .filter(promotion -> promotion.isValid(promotionName, now))
+                .findFirst();
     }
 }

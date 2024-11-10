@@ -6,8 +6,6 @@ import store.domain.Store;
 import store.domain.inventory.Product;
 import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
-import store.response.Response;
-import store.response.ResponseStatus;
 import store.view.InteractionView;
 
 public class ResponseHandler {

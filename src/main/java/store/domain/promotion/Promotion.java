@@ -1,7 +1,6 @@
 package store.domain.promotion;
 
 import java.time.LocalDate;
-import java.util.Objects;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessage;
 
@@ -33,6 +32,12 @@ public class Promotion {
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
 
+    public boolean isValid(final String promotionName, final LocalDate now) {
+        return this.promotionName.equals(promotionName) &&
+                (now.isEqual(startDate) || now.isAfter(startDate)) &&
+                (now.isEqual(endDate) || now.isBefore(endDate));
+    }
+
     private void validate(final String promotionName, final LocalDate startDate, final LocalDate endDate) {
         validatePromotionName(promotionName);
         validateDate(startDate, endDate);
@@ -48,10 +53,6 @@ public class Promotion {
         if (promotionName == null || promotionName.isBlank()) {
             throw new IllegalArgumentException(INVALID_NULL_EMPTY.getMessage());
         }
-    }
-
-    public boolean isSameName(final String name) {
-        return Objects.equals(this.promotionName, name);
     }
 
     public Quantity getPurchaseQuantity() {

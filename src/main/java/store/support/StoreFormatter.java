@@ -20,17 +20,20 @@ public class StoreFormatter {
         return String.format(formatter, word);
     }
 
-    public String makeInventoryMessage(final int quantity, final String promotionName, final String productName,
-                                       final BigDecimal productPrice) {
-        String quanityText = quantity + QUANTITY_UNIT;
-        if (quantity == 0) {
-            quanityText = NO_STOCK;
-        }
-        String promotionNameText = promotionName;
-        if (promotionName.equals(NULL)) {
-            promotionNameText = "";
-        }
-        return String.format("- %s" + " %,.0f원 %s%s", productName, productPrice, quanityText, promotionNameText);
+    public String makeInventoryMessage(final int quantity, final String promotionName,
+                                       final String productName, final BigDecimal productPrice) {
+        String quantityText = makeQuantityText(quantity);
+        String promotionText = makePromotionText(promotionName);
+        return String.format("- %s %,.0f원 %s%s",
+                productName, productPrice, quantityText, promotionText);
+    }
+
+    private String makeQuantityText(final int quantity) {
+        return quantity == 0 ? NO_STOCK : quantity + QUANTITY_UNIT;
+    }
+
+    private String makePromotionText(final String promotionName) {
+        return promotionName.equals(NULL) ? "" : promotionName;
     }
 
     private int getKoreanCount(String text) {

@@ -43,14 +43,22 @@ public class Price {
     }
 
     private void validate(final BigDecimal price) {
-        if (price == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
-        }
+        validateIsNull(price);
+        validateNumber(price);
+    }
+
+    private void validateNumber(final BigDecimal price) {
         if (price.stripTrailingZeros().scale() > 0) {
             throw new IllegalArgumentException(INVALID_PRICE_CONTAINS_NOT_NUMBER.getMessage());
         }
         if (price.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(INVALID_PRICE_NOT_MINUS.getMessage());
+        }
+    }
+
+    private void validateIsNull(final BigDecimal price) {
+        if (price == null) {
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
         }
     }
 
