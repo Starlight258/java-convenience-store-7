@@ -40,10 +40,11 @@ import store.view.OutputView;
 
 public class StoreController {
 
-    public static final String INVENTORY_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/products.md";
-    public static final String PROMOTION_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/promotions.md";
-    public static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
-    public static final Pattern PATTERN = Pattern.compile(REGEX);
+    private static final String INVENTORY_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/products.md";
+    private static final String PROMOTION_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/promotions.md";
+    private static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
+    private static final Pattern PATTERN = Pattern.compile(REGEX);
+    private static final String NULL = "null";
 
     private final InputView inputView;
     private final OutputView outputView;
@@ -127,12 +128,37 @@ public class StoreController {
 
 
     private void showInventories(final Inventories inventories) {
-        for (Inventory inventory : inventories.getInventories()) {
-            String message = formatter.makeInventoryMessage(inventory.getQuantity().getQuantity(),
-                    inventory.getPromotionName(),
-                    inventory.getProductName(), inventory.getProductPrice().getPrice());
-            outputView.showMessage(message);
-        }
+        Map<String, List<Inventory>> groups = inventories.getInventories().stream()
+                .collect(Collectors.groupingBy(Inventory::getProductName));
+        groups.values().forEach(this::showProductInventories);
+    }
+
+    private void showProductInventories(List<Inventory> inventories) {
+        showPromotionInventory(inventories);
+        showNormalInventory(inventories);
+    }
+
+    private void showPromotionInventory(List<Inventory> inventories) {
+        inventories.stream()
+                .filter(inventory -> !inventory.getPromotionName().equals(NULL))
+                .forEach(this::showInventory);
+    }
+
+    private void showNormalInventory(List<Inventory> inventories) {
+        inventories.stream()
+                .filter(inventory -> inventory.getPromotionName().equals(NULL))
+                .findFirst()
+                .ifPresentOrElse(this::showInventory,
+                        () -> showInventory(createNoStockInventory(inventories.get(0))));
+    }
+
+    private void showInventory(Inventory inventory) {
+        outputView.showMessage(formatter.makeInventoryMessage(inventory.getQuantity().getQuantity(),
+                inventory.getPromotionName(), inventory.getProductName(), inventory.getProductPrice().getPrice()));
+    }
+
+    private Inventory createNoStockInventory(Inventory original) {
+        return new Inventory(original.getProduct(), 0, "null");
     }
 
     private void convenienceStore(final Orders orders, final PaymentSystem paymentSystem) {
