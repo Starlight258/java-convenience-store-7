@@ -96,10 +96,26 @@ public class ResponseHandler {
     private void processBonusQuantity(final Response response, final Product product) {
         Quantity bonusQuantity = response.bonusQuantity();
         Quantity canGetMoreQuantity = response.canGetMoreQuantity();
+        Inventory inventory = response.inventory();
         if (interactionView.askForBonus(productName, canGetMoreQuantity)) {
-            store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
-            orders.put(productName, quantity.add(canGetMoreQuantity));
+            processAdditionalPurchase(product, bonusQuantity, canGetMoreQuantity, inventory);
+            return;
         }
+        keepOriginalPurchase(product, bonusQuantity, canGetMoreQuantity, inventory);
+    }
+
+    private void processAdditionalPurchase(final Product product, final Quantity bonusQuantity,
+                                           final Quantity canGetMoreQuantity,
+                                           final Inventory inventory) {
+        store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
+        orders.put(productName, quantity.add(canGetMoreQuantity));
+        inventory.subtract(quantity.add(canGetMoreQuantity));
+    }
+
+    private void keepOriginalPurchase(final Product product, final Quantity bonusQuantity,
+                                      final Quantity canGetMoreQuantity,
+                                      final Inventory inventory) {
         store.noteBonusProduct(product, bonusQuantity.subtract(canGetMoreQuantity));
+        inventory.subtract(quantity);
     }
 }
