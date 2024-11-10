@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import store.domain.inventory.Product;
+import store.domain.price.Price;
 
 public class Receipt {
 
@@ -24,8 +25,8 @@ public class Receipt {
         bonusProducts.put(product, bonusQuantity);
     }
 
-    public BigDecimal getPromotionDiscountPrice() {
-        BigDecimal promotionPrice = BigDecimal.ZERO;
+    public Price getPromotionDiscountPrice() {
+        Price promotionPrice = Price.zero();
         for (Entry<Product, Integer> entry : bonusProducts.entrySet()) {
             promotionPrice = promotionPrice.add(
                     entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
@@ -33,15 +34,15 @@ public class Receipt {
         return promotionPrice;
     }
 
-    public BigDecimal getPriceToPay(BigDecimal totalPrice, BigDecimal membershiptDiscountPrice) {
+    public Price getPriceToPay(Price totalPrice, Price membershipDiscountPrice) {
         totalPrice = totalPrice.subtract(getPromotionDiscountPrice());
-        totalPrice = totalPrice.subtract(membershiptDiscountPrice);
+        totalPrice = totalPrice.subtract(membershipDiscountPrice);
         return totalPrice;
     }
 
-    public Map.Entry<Integer, BigDecimal> getTotalPurchase() {
+    public Map.Entry<Integer, Price> getTotalPurchase() {
         int totalCount = 0;
-        BigDecimal totalPrice = BigDecimal.ZERO;
+        Price totalPrice = Price.zero();
         for (Entry<Product, Integer> entry : purchasedProducts.entrySet()) {
             totalCount += entry.getValue();
             totalPrice = totalPrice.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));

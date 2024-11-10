@@ -21,6 +21,7 @@ import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
+import store.domain.price.Price;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.receipt.Receipt;
@@ -77,7 +78,7 @@ public class PaymentSystemTest {
                 () -> assertThat(membership).extracting("noPromotionProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.valueOf(900)),
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(new Price(BigDecimal.valueOf(900))),
                 () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(10),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(7)
         );
@@ -104,7 +105,7 @@ public class PaymentSystemTest {
                 () -> assertThat(membership).extracting("noPromotionProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.valueOf(900)),
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(new Price(BigDecimal.valueOf(900))),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(7)
         );
     }
@@ -136,7 +137,7 @@ public class PaymentSystemTest {
                 () -> assertThat(membership).extracting("noPromotionProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(product, 3)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.valueOf(900)),
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(new Price(BigDecimal.valueOf(900))),
                 () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(0),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(8)
         );
@@ -169,7 +170,7 @@ public class PaymentSystemTest {
                 () -> assertThat(membership).extracting("noPromotionProducts").isEqualTo(Map.of(product, 1)),
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(product, 1)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.valueOf(300)),
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(new Price(BigDecimal.valueOf(300))),
                 () -> assertThat(inventoryWithPromotion).extracting("quantity").isEqualTo(9),
                 () -> assertThat(inventoryWithNoPromotion).extracting("quantity").isEqualTo(10)
         );
@@ -281,7 +282,7 @@ public class PaymentSystemTest {
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(product, quantity)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_PROMOTION),
                 () -> assertThat(response.bonusQuantity()).isEqualTo(totalBonusQuantity),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.ZERO)
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(Price.zero())
         );
     }
 
@@ -319,7 +320,7 @@ public class PaymentSystemTest {
                 () -> assertThat(membership).extracting("noPromotionProducts").isEqualTo(Map.of(juice, 9)),
                 () -> assertThat(receipt).extracting("purchasedProducts").isEqualTo(Map.of(juice, 9)),
                 () -> assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION),
-                () -> assertThat(membership.calculateDiscount()).isEqualTo(BigDecimal.valueOf(2700)),
+                () -> assertThat(membership.calculateDiscount()).isEqualTo(new Price(BigDecimal.valueOf(2700))),
                 () -> assertThat(juiceInventory).extracting("quantity").isEqualTo(1)
         );
     }

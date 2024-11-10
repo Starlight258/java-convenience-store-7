@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.inventory.Product;
+import store.domain.price.Price;
 
 @DisplayName("영수증 테스트")
 class ReceiptTest {
@@ -55,10 +56,10 @@ class ReceiptTest {
         }});
 
         // When
-        BigDecimal price = receipt.getPromotionDiscountPrice();
+        Price price = receipt.getPromotionDiscountPrice();
 
         // Then
-        assertThat(price).isEqualTo(new BigDecimal(2000));
+        assertThat(price.getPrice()).isEqualTo(new BigDecimal(2000));
     }
 
     @Test
@@ -71,10 +72,10 @@ class ReceiptTest {
         }}, new HashMap<>());
 
         // When
-        BigDecimal price = receipt.getPriceToPay(new BigDecimal(2000), BigDecimal.ZERO);
+        Price price = receipt.getPriceToPay(new Price(new BigDecimal(2000)), Price.zero());
 
         // Then
-        assertThat(price).isEqualTo(new BigDecimal(2000));
+        assertThat(price.getPrice()).isEqualTo(new BigDecimal(2000));
     }
 
     @Test
@@ -87,12 +88,12 @@ class ReceiptTest {
         }}, new HashMap<>());
 
         // When
-        Entry<Integer, BigDecimal> totalPurchase = receipt.getTotalPurchase();
+        Entry<Integer, Price> totalPurchase = receipt.getTotalPurchase();
 
         // Then
         assertAll(
                 () -> assertThat(totalPurchase.getKey()).isEqualTo(2),
-                () -> assertThat(totalPurchase.getValue()).isEqualTo(new BigDecimal(2000))
+                () -> assertThat(totalPurchase.getValue()).isEqualTo(new Price(new BigDecimal(2000)))
         );
     }
 }

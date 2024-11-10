@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.inventory.Product;
+import store.domain.price.Price;
 
 class MembershipTest {
 
@@ -22,8 +23,9 @@ class MembershipTest {
         Membership membership = new Membership(noPromotionProducts);
 
         // When
-        BigDecimal totalMembershipPrice = membership.calculateDiscount();
+        Price totalMembershipPrice = membership.calculateDiscount();
+
         // Then
-        assertThat(totalMembershipPrice).isEqualTo(BigDecimal.valueOf(8000));
+        assertThat(totalMembershipPrice).isEqualTo(new Price(BigDecimal.valueOf(8000)));
     }
 }

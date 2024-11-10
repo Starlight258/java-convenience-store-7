@@ -23,6 +23,7 @@ import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
 import store.domain.player.PurchaseOrderForms;
+import store.domain.price.Price;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.receipt.Receipt;
@@ -93,8 +94,7 @@ public class StoreController {
 
     private Promotions makePromotions() {
         List<String> promotionsFromSource = readPromotionFromSource();
-        Promotions promotions = addPromotion(promotionsFromSource);
-        return promotions;
+        return addPromotion(promotionsFromSource);
     }
 
     private Inventories makeInventories() {
@@ -122,7 +122,7 @@ public class StoreController {
     private void showInventories(final Inventories inventories) {
         for (Inventory inventory : inventories.getInventories()) {
             String message = formatter.makeInventoryMessage(inventory.getQuantity(), inventory.getPromotionName(),
-                    inventory.getProductName(), inventory.getProductPrice());
+                    inventory.getProductName(), inventory.getProductPrice().getPrice());
             outputView.showMessage(message);
         }
     }
@@ -139,7 +139,7 @@ public class StoreController {
             Response response = paymentSystem.canBuy(productName, quantity, store, now);
             checkResponse(purchaseOrderForms, store, productName, quantity, response);
         }
-        BigDecimal membershipPrice = checkMemberShip(membership);
+        Price membershipPrice = checkMemberShip(membership);
         showResultPrice(receipt, membershipPrice);
     }
 
@@ -160,20 +160,20 @@ public class StoreController {
         }
     }
 
-    private void showResultPrice(final Receipt receipt, final BigDecimal membershipPrice) {
+    private void showResultPrice(final Receipt receipt, final Price membershipPrice) {
         showResult(receipt, membershipPrice);
     }
 
-    private BigDecimal checkMemberShip(final Membership membership) {
+    private Price checkMemberShip(final Membership membership) {
         outputView.showCommentOfMemberShip();
         String line = readYOrN();
         if (line.equals(NO)) {
-            return BigDecimal.ZERO;
+            return Price.zero();
         }
         return membership.calculateDiscount();
     }
 
-    private void showResult(final Receipt receipt, final BigDecimal membershipPrice) {
+    private void showResult(final Receipt receipt, final Price membershipPrice) {
         showPurchasedProducts(receipt);
         showBonus(receipt);
         showReceipt(receipt, membershipPrice);
@@ -185,21 +185,21 @@ public class StoreController {
             Product product = entry.getKey();
             String name = product.getName();
             int quantity = entry.getValue();
-            BigDecimal totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity));
-            outputView.showInventory(name, quantity, totalPrice);
+            Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity));
+            outputView.showInventory(name, quantity, totalPrice.getPrice());
         }
     }
 
-    private void showReceipt(final Receipt receipt, final BigDecimal membershipPrice) {
+    private void showReceipt(final Receipt receipt, final Price membershipPrice) {
         outputView.showReceiptStartMark();
-        Entry<Integer, BigDecimal> totalPurchase = receipt.getTotalPurchase();
-        BigDecimal priceToPay = receipt.getPriceToPay(totalPurchase.getValue(), membershipPrice);
-        BigDecimal totalPurchaseValue = totalPurchase.getValue();
-        int blankLength = String.valueOf(totalPurchaseValue).length() - String.valueOf(priceToPay).length();
-        outputView.showTotalPrice(totalPurchase.getKey(), totalPurchaseValue);
-        outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice());
-        outputView.showMemberShipDiscountPrice(membershipPrice);
-        outputView.showMoneyToPay(priceToPay, blankLength);
+        Entry<Integer, Price> totalPurchases = receipt.getTotalPurchase();
+        Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
+        Price totalPurchasePrice = totalPurchases.getValue();
+        int blankLength = String.valueOf(totalPurchasePrice).length() - String.valueOf(priceToPay).length();
+        outputView.showTotalPrice(totalPurchases.getKey(), totalPurchasePrice.getPrice());
+        outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice().getPrice());
+        outputView.showMemberShipDiscountPrice(membershipPrice.getPrice());
+        outputView.showMoneyToPay(priceToPay.getPrice(), blankLength);
     }
 
     private void showBonus(final Receipt receipt) {

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import store.domain.inventory.Product;
+import store.domain.price.Price;
 
 @DisplayName("상품 테스트")
 public class ProductTest {
@@ -23,7 +23,7 @@ public class ProductTest {
         Product coke = new Product("콜라", BigDecimal.valueOf(1000));
 
         // Then
-        assertThat(coke).extracting("name", "price").contains("콜라", BigDecimal.valueOf(1000));
+        assertThat(coke).extracting("name", "price").contains("콜라", new Price(BigDecimal.valueOf(1000)));
     }
 
     @ParameterizedTest

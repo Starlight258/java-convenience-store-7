@@ -2,20 +2,20 @@ package store.domain.inventory;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import store.domain.price.Price;
 
 public class Product {
 
     private final String name;
-    private final BigDecimal price;
+    private final Price price;
 
     public Product(final String name, final BigDecimal price) {
         validateName(name);
-        validatePrice(price);
         this.name = name;
-        this.price = price;
+        this.price = new Price(price);
     }
 
-    public boolean isSameProductName(String name){
+    public boolean isSameProductName(String name) {
         return this.name.equals(name);
     }
 
@@ -25,13 +25,7 @@ public class Product {
         }
     }
 
-    private void validatePrice(final BigDecimal price) {
-        if (price == null) {
-            throw new IllegalArgumentException("[ERROR] 가격은 null일 수 없습니다.");
-        }
-    }
-
-    public BigDecimal getPrice() {
+    public Price getPrice() {
         return price;
     }
 

@@ -1,7 +1,7 @@
 package store.domain.inventory;
 
-import java.math.BigDecimal;
 import java.util.Objects;
+import store.domain.price.Price;
 
 public class Inventory implements Comparable<Inventory> {
 
@@ -78,7 +78,7 @@ public class Inventory implements Comparable<Inventory> {
         return 1;
     }
 
-    public BigDecimal getProductPrice() {
+    public Price getProductPrice() {
         return product.getPrice();
     }
 
