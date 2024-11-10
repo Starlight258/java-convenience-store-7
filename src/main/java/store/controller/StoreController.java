@@ -239,6 +239,13 @@ public class StoreController {
     }
 
     private void showBonus(final Receipt receipt) {
+        if (receipt.getBonusProducts().size() == 0) {
+            return;
+        }
+        showBonusProducts(receipt);
+    }
+
+    private void showBonusProducts(final Receipt receipt) {
         outputView.showBonus();
         for (Entry<Product, Quantity> entry : receipt.getBonusProducts().entrySet()) {
             Product product = entry.getKey();
