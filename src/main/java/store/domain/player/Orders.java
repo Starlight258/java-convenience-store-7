@@ -4,11 +4,11 @@ import java.util.Collections;
 import java.util.Map;
 import store.domain.quantity.Quantity;
 
-public class PurchaseOrderForms {
+public class Orders {
 
     private final Map<String, Quantity> productsToBuy;
 
-    public PurchaseOrderForms(final Map<String, Quantity> productsToBuy) {
+    public Orders(final Map<String, Quantity> productsToBuy) {
         this.productsToBuy = productsToBuy;
     }
 

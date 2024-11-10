@@ -27,4 +27,18 @@ public class Store {
     public void noteBonusProduct(final Product product, final Quantity bonusQuantity) {
         receipt.addBonusProducts(product, bonusQuantity);
     }
+
+    public void noteAddingMoreQuantity(final Product product, final Quantity bonusQuantity,
+                                       final Quantity canGetMoreQuantity) {
+        noteBonusProduct(product, bonusQuantity);
+        notePurchaseProduct(product, canGetMoreQuantity);
+    }
+
+    public Receipt getReceipt() {
+        return receipt;
+    }
+
+    public Membership getMembership() {
+        return membership;
+    }
 }

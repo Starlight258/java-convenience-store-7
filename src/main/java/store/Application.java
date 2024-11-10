@@ -5,6 +5,7 @@ import store.controller.StoreController;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
 import store.view.InputView;
+import store.view.InteractionView;
 import store.view.OutputView;
 
 public class Application {
@@ -17,7 +18,8 @@ public class Application {
         StoreFormatter formatter = new StoreFormatter(FORMAT_SIZE);
         OutputView outputView = new OutputView(formatter);
         StoreSplitter splitter = new StoreSplitter(DELIMITER);
-        StoreController controller = new StoreController(inputView, outputView, splitter, formatter);
+        InteractionView interactionView = new InteractionView(inputView, outputView);
+        StoreController controller = new StoreController(inputView, outputView, splitter, formatter, interactionView);
         controller.process();
         Console.close();
     }

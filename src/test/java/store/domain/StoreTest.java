@@ -75,4 +75,25 @@ class StoreTest {
             put(product, new Quantity(3));
         }});
     }
+
+    @Test
+    @DisplayName("추가 증정 상품을 기록한다.")
+    void 성공_추가증정상품() {
+        // Given
+        Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
+        Membership membership = new Membership(new HashMap<>());
+        Store store = new Store(receipt, membership);
+        Product product = new Product("콜라", BigDecimal.valueOf(1000));
+
+        // When
+        store.noteAddingMoreQuantity(product, new Quantity(2), new Quantity(1));
+
+        // Then
+        assertThat(store).extracting("receipt").extracting("bonusProducts").isEqualTo(new HashMap<>() {{
+            put(product, new Quantity(2));
+        }});
+        assertThat(store).extracting("receipt").extracting("purchasedProducts").isEqualTo(new HashMap<>() {{
+            put(product, new Quantity(1));
+        }});
+    }
 }

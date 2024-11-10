@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import store.domain.player.PurchaseOrderForms;
+import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
 
 @DisplayName("재고 집합 테스트")
@@ -94,7 +94,7 @@ public class InventoriesTest {
         }};
 
         // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(new PurchaseOrderForms(purchasedItems)))
+        assertThatThrownBy(() -> inventories.getPurchasedItems(new Orders(purchasedItems)))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("존재하지 않는 상품입니다. 다시 입력해 주세요.")
@@ -114,7 +114,7 @@ public class InventoriesTest {
         }};
 
         // When & Then
-        assertThatThrownBy(() -> inventories.getPurchasedItems(new PurchaseOrderForms(purchasedItems)))
+        assertThatThrownBy(() -> inventories.getPurchasedItems(new Orders(purchasedItems)))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")

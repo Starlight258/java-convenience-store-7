@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import store.domain.Store;
-import store.domain.player.PurchaseOrderForms;
+import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessage;
 import store.exception.ExceptionMessages;
@@ -24,7 +24,7 @@ public class Inventories {
         this.inventories = new TreeSet<>(inventories);
     }
 
-    public void getPurchasedItems(final PurchaseOrderForms purchasedItems) {
+    public void getPurchasedItems(final Orders purchasedItems) {
         for (Entry<String, Quantity> entry : purchasedItems.getProductsToBuy().entrySet()) {
             String productName = entry.getKey();
             Quantity quantity = entry.getValue();

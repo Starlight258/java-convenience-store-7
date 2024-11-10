@@ -16,6 +16,12 @@ public class InputView {
     public List<String> readFile(String fileName) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fileName));
         List<String> inputs = new ArrayList<>();
+        makeInput(br, inputs);
+        br.close();
+        return inputs;
+    }
+
+    private void makeInput(final BufferedReader br, final List<String> inputs) throws IOException {
         while (true) {
             String input = br.readLine();
             if (isTerminated(input)) {
@@ -23,8 +29,6 @@ public class InputView {
             }
             inputs.add(input);
         }
-        br.close();
-        return inputs;
     }
 
     private boolean isTerminated(final String input) {

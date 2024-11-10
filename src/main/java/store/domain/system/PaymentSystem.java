@@ -91,4 +91,8 @@ public class PaymentSystem {
         Product product = inventory.getProduct();
         store.noteNoPromotionProduct(product, totalQuantity);
     }
+
+    public Inventories getInventories() {
+        return inventories;
+    }
 }

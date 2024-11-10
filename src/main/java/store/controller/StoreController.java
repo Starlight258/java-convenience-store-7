@@ -22,20 +22,21 @@ import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
-import store.domain.player.PurchaseOrderForms;
+import store.domain.player.Orders;
 import store.domain.price.Price;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
+import store.handler.ResponseHandler;
 import store.response.Response;
-import store.response.ResponseStatus;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
 import store.util.Converter;
 import store.util.Parser;
 import store.view.InputView;
+import store.view.InteractionView;
 import store.view.OutputView;
 
 public class StoreController {
@@ -51,35 +52,27 @@ public class StoreController {
     private final OutputView outputView;
     private final StoreSplitter splitter;
     private final StoreFormatter formatter;
+    private final InteractionView interactionView;
 
     public StoreController(final InputView inputView, final OutputView outputView, final StoreSplitter splitter,
-                           final StoreFormatter formatter) {
+                           final StoreFormatter formatter,
+                           final InteractionView interactionView) {
         this.inputView = inputView;
         this.outputView = outputView;
         this.splitter = splitter;
         this.formatter = formatter;
+        this.interactionView = interactionView;
     }
 
     public void process() {
-        Inventories inventories = null;
-        Promotions promotions = null;
-        try {
-            inventories = makeInventories();
-            promotions = makePromotions();
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            outputView.showExceptionMessage(e.getMessage());
-        }
-        PaymentSystem paymentSystem = new PaymentSystem(inventories, promotions);
+        PaymentSystem paymentSystem = initializePaymentSystem();
+        processTransactions(paymentSystem);
+    }
 
+    private void processTransactions(final PaymentSystem paymentSystem) {
         while (true) {
             try {
-                outputView.showStartMessage();
-                showInventories(inventories);
-                PurchaseOrderForms purchaseOrderForms = getPurchasedItems(inventories);
-                convenienceStore(purchaseOrderForms, paymentSystem);
-                outputView.showAdditionalPurchase();
-                String line = readYOrN();
-                if (line.equals(NO)) {
+                if (processTransaction(paymentSystem)) {
                     return;
                 }
                 outputView.showBlankLine();
@@ -90,6 +83,33 @@ public class StoreController {
                 outputView.showExceptionMessage(exception.getMessage());
             }
         }
+    }
+
+    private PaymentSystem initializePaymentSystem() {
+        try {
+            return new PaymentSystem(makeInventories(), makePromotions());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            outputView.showExceptionMessage(e.getMessage());
+            throw e;
+        }
+    }
+
+    private boolean processTransaction(final PaymentSystem paymentSystem) {
+        Inventories inventories = paymentSystem.getInventories();
+        showWelcomeMessage(inventories);
+        Orders orders = getPurchasedItems(inventories);
+        convenienceStore(orders, paymentSystem);
+        return !continueTransaction();
+    }
+
+    private boolean continueTransaction() {
+        outputView.showAdditionalPurchase();
+        return readYOrN().equals(YES);
+    }
+
+    private void showWelcomeMessage(final Inventories inventories) {
+        outputView.showStartMessage();
+        showInventories(inventories);
     }
 
     private Promotions makePromotions() {
@@ -128,27 +148,39 @@ public class StoreController {
         }
     }
 
-    private void convenienceStore(final PurchaseOrderForms purchaseOrderForms, final PaymentSystem paymentSystem) {
-        Map<String, Quantity> purchasedItems = purchaseOrderForms.getProductsToBuy();
-        Receipt receipt = new Receipt(new LinkedHashMap<>(), new LinkedHashMap<>());
-        Membership membership = new Membership(new LinkedHashMap<>());
-        Store store = new Store(receipt, membership);
+    private void convenienceStore(final Orders orders, final PaymentSystem paymentSystem) {
+        Store store = initializeStore();
+        purchase(orders, paymentSystem, store);
+        Price membershipPrice = checkMemberShip(store.getMembership());
+        showResultPrice(store.getReceipt(), membershipPrice);
+    }
+
+    private void purchase(final Orders orders, final PaymentSystem paymentSystem, final Store store) {
+        Map<String, Quantity> purchasedItems = orders.getProductsToBuy();
         for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
             Quantity quantity = entry.getValue();
-            LocalDate now = DateTimes.now().toLocalDate();
-            Response response = paymentSystem.canBuy(productName, quantity, store, now);
-            checkResponse(purchaseOrderForms, store, productName, quantity, response);
+            purchaseEachProduct(orders, paymentSystem, store, productName, quantity);
         }
-        Price membershipPrice = checkMemberShip(membership);
-        showResultPrice(receipt, membershipPrice);
     }
 
-    private PurchaseOrderForms getPurchasedItems(final Inventories inventories) {
+    private void purchaseEachProduct(final Orders orders, final PaymentSystem paymentSystem, final Store store,
+                                     final String productName, final Quantity quantity) {
+        LocalDate now = DateTimes.now().toLocalDate();
+        Response response = paymentSystem.canBuy(productName, quantity, store, now);
+        checkResponse(orders, store, productName, quantity, response);
+    }
+
+    private Store initializeStore() {
+        return new Store(new Receipt(new LinkedHashMap<>(), new LinkedHashMap<>()),
+                new Membership(new LinkedHashMap<>()));
+    }
+
+    private Orders getPurchasedItems(final Inventories inventories) {
         outputView.showCommentOfPurchase();
         while (true) {
             try {
-                PurchaseOrderForms purchasedItems = promptProductNameAndQuantity();
+                Orders purchasedItems = promptProductNameAndQuantity();
                 inventories.getPurchasedItems(purchasedItems);  // 구매할 상품의 이름
                 return purchasedItems;
             } catch (IllegalArgumentException exception) {
@@ -212,44 +244,23 @@ public class StoreController {
         }
     }
 
-    private void checkResponse(final PurchaseOrderForms purchaseOrderForms,
+    private void checkResponse(final Orders orders,
                                final Store store, final String productName,
                                final Quantity quantity,
                                final Response response) {
-        if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
-            return;
-        }
-        if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
-            Quantity bonusQuantity = response.bonusQuantity();
-            store.noteBonusProduct(response.inventory().getProduct(), bonusQuantity);
-            return;
-        }
-        if (response.status() == ResponseStatus.OUT_OF_STOCK) {
-            Quantity outOfStockQuantity = outOfStock(productName, response, store, quantity);
-            if (outOfStockQuantity.isMoreThan(Quantity.zero())) { // 구매안함
-                purchaseOrderForms.put(productName, quantity.subtract(outOfStockQuantity));
-            }
-            return;
-        }
-        Quantity canGetMoreQuantity = canGetBonus(store, productName, response);
-        Product product = response.inventory().getProduct();
-        purchaseOrderForms.put(productName, quantity);
-        store.notePurchaseProduct(product, quantity);
-        if (canGetMoreQuantity.isMoreThan(Quantity.zero())) {
-            purchaseOrderForms.put(productName, quantity.add(canGetMoreQuantity));
-            store.notePurchaseProduct(product, canGetMoreQuantity);
-        }
+        ResponseHandler handler = new ResponseHandler(orders, store, productName, quantity, interactionView);
+        handler.handle(response);
     }
 
-    public PurchaseOrderForms promptProductNameAndQuantity() {
-        PurchaseOrderForms purchasedItems = new PurchaseOrderForms(new LinkedHashMap<>());
+    public Orders promptProductNameAndQuantity() {
+        Orders purchasedItems = new Orders(new LinkedHashMap<>());
         String input = inputView.readLine();
         List<String> splitText = splitter.split(input);
         return addPurchasedItems(purchasedItems, splitText);
     }
 
-    private PurchaseOrderForms addPurchasedItems(final PurchaseOrderForms purchaseOrderForms,
-                                                 final List<String> splittedText) {
+    private Orders addPurchasedItems(final Orders orders,
+                                     final List<String> splittedText) {
         for (String text : splittedText) {
             Matcher matcher = PATTERN.matcher(text);
             if (!matcher.matches()) {
@@ -260,9 +271,9 @@ public class StoreController {
             if (quantityValue == 0) {
                 throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
             }
-            purchaseOrderForms.put(productValue, new Quantity(quantityValue));
+            orders.put(productValue, new Quantity(quantityValue));
         }
-        return purchaseOrderForms;
+        return orders;
     }
 
     private String readYOrN() {
@@ -279,38 +290,6 @@ public class StoreController {
         }
     }
 
-    private Quantity outOfStock(final String productName,
-                                final Response response, final Store store,
-                                final Quantity quantity) {
-        Quantity totalBonusQuantity = response.bonusQuantity();
-        store.noteBonusProduct(response.inventory().getProduct(), totalBonusQuantity);
-        Quantity noPromotionQuantityOfResponse = response.noPromotionQuantity();
-        outputView.showPromotionDiscount(productName, noPromotionQuantityOfResponse.getQuantity());
-        String intent = readYOrN();
-        Product product = response.inventory().getProduct();
-        if (intent.equals(NO)) {
-            store.notePurchaseProduct(product, quantity.subtract(noPromotionQuantityOfResponse));
-            return noPromotionQuantityOfResponse;
-        }
-        store.noteNoPromotionProduct(product, quantity);
-        return Quantity.zero();
-    }
-
-    private Quantity canGetBonus(final Store store, final String productName, final Response response) {
-        if (response.status() == ResponseStatus.CAN_GET_BONUS) {
-            Quantity bonusQuantity = response.bonusQuantity();
-            Quantity canGetMoreQuantity = response.canGetMoreQuantity();
-            outputView.showFreeQuantity(productName, canGetMoreQuantity.getQuantity());
-            String intent = readYOrN();
-            Product product = response.inventory().getProduct();
-            if (intent.equals(YES)) {
-                store.noteBonusProduct(product, bonusQuantity);
-                return canGetMoreQuantity;
-            }
-            store.noteBonusProduct(product, bonusQuantity.subtract(canGetMoreQuantity));
-        }
-        return Quantity.zero();
-    }
 
     private Promotions addPromotion(List<String> promotionsFromSource) {
         List<Promotion> promotions = new ArrayList<>();
