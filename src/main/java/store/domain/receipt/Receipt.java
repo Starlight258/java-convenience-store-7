@@ -23,7 +23,7 @@ public class Receipt {
     }
 
     public void addBonusProducts(final Product product, final Quantity bonusQuantity) {
-        bonusProducts.put(product, bonusQuantity);
+        bonusProducts.put(product, bonusProducts.getOrDefault(product, bonusQuantity));
     }
 
     public Price getPromotionDiscountPrice() {

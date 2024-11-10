@@ -13,7 +13,7 @@ public class PurchaseOrderForms {
     }
 
     public void put(final String productName, final Quantity quantity) {
-        productsToBuy.put(productName, quantity);
+        productsToBuy.put(productName, productsToBuy.getOrDefault(productName, Quantity.zero()).add(quantity));
     }
 
     public Map<String, Quantity> getProductsToBuy() {

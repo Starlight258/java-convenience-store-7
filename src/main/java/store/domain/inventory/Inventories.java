@@ -2,12 +2,12 @@ package store.domain.inventory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import store.domain.Store;
+import store.domain.player.PurchaseOrderForms;
 import store.domain.quantity.Quantity;
 
 public class Inventories {
@@ -19,8 +19,8 @@ public class Inventories {
         this.inventories = new TreeSet<>(inventories);
     }
 
-    public void getPurchasedItems(final Map<String, Quantity> purchasedItems) {
-        for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
+    public void getPurchasedItems(final PurchaseOrderForms purchasedItems) {
+        for (Entry<String, Quantity> entry : purchasedItems.getProductsToBuy().entrySet()) {
             String productName = entry.getKey();
             Quantity quantity = entry.getValue();
             Inventories sameProductInventories = findProducts(productName);

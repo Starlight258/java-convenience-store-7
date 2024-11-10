@@ -75,8 +75,7 @@ public class StoreController {
             try {
                 outputView.showStartMessage();
                 showInventories(inventories);
-                Map<String, Quantity> purchasedItems = getPurchasedItems(inventories);
-                PurchaseOrderForms purchaseOrderForms = new PurchaseOrderForms(purchasedItems);
+                PurchaseOrderForms purchaseOrderForms = getPurchasedItems(inventories);
                 convenienceStore(purchaseOrderForms, paymentSystem);
                 outputView.showAdditionalPurchase();
                 String line = readYOrN();
@@ -145,11 +144,11 @@ public class StoreController {
         showResultPrice(receipt, membershipPrice);
     }
 
-    private Map<String, Quantity> getPurchasedItems(final Inventories inventories) {
+    private PurchaseOrderForms getPurchasedItems(final Inventories inventories) {
         outputView.showCommentOfPurchase();
         while (true) {
             try {
-                Map<String, Quantity> purchasedItems = promptProductNameAndQuantity();
+                PurchaseOrderForms purchasedItems = promptProductNameAndQuantity();
                 inventories.getPurchasedItems(purchasedItems);  // 구매할 상품의 이름
                 return purchasedItems;
             } catch (IllegalArgumentException exception) {
@@ -244,23 +243,24 @@ public class StoreController {
         }
     }
 
-    public Map<String, Quantity> promptProductNameAndQuantity() {
-        Map<String, Quantity> purchasedItems = new LinkedHashMap<>();
+    public PurchaseOrderForms promptProductNameAndQuantity() {
+        PurchaseOrderForms purchasedItems = new PurchaseOrderForms(new LinkedHashMap<>());
         String input = inputView.readLine();
         List<String> splitText = splitter.split(input);
-        addPurchasedItems(purchasedItems, splitText);
-        return purchasedItems;
+        return addPurchasedItems(purchasedItems, splitText);
     }
 
-    private void addPurchasedItems(final Map<String, Quantity> purchasedItems, final List<String> splittedText) {
+    private PurchaseOrderForms addPurchasedItems(final PurchaseOrderForms purchaseOrderForms, final List<String> splittedText) {
         for (String text : splittedText) {
             Matcher matcher = PATTERN.matcher(text);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
             }
             int quantityValue = Converter.convertToInteger((matcher.group(3)));
-            purchasedItems.put(matcher.group(2), new Quantity(quantityValue));
+            String productValue = matcher.group(2);
+            purchaseOrderForms.put(productValue, new Quantity(quantityValue));
         }
+        return purchaseOrderForms;
     }
 
     private String readYOrN() {
