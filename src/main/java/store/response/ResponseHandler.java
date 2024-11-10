@@ -1,4 +1,4 @@
-package store.handler;
+package store.response;
 
 import java.util.Map;
 import java.util.function.Consumer;

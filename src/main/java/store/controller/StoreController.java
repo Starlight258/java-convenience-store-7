@@ -29,7 +29,7 @@ import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
-import store.handler.ResponseHandler;
+import store.response.ResponseHandler;
 import store.response.Response;
 import store.support.StoreFormatter;
 import store.support.StoreSplitter;
@@ -244,10 +244,8 @@ public class StoreController {
         }
     }
 
-    private void checkResponse(final Orders orders,
-                               final Store store, final String productName,
-                               final Quantity quantity,
-                               final Response response) {
+    private void checkResponse(final Orders orders, final Store store, final String productName,
+                               final Quantity quantity, final Response response) {
         ResponseHandler handler = new ResponseHandler(orders, store, productName, quantity, interactionView);
         handler.handle(response);
     }
