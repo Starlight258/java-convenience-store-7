@@ -2,13 +2,12 @@ package store.domain.system;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
-import store.domain.membership.Membership;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
-import store.domain.receipt.Receipt;
 import store.response.Response;
 
 public class PaymentSystem {
@@ -24,14 +23,14 @@ public class PaymentSystem {
     }
 
     public Response canBuy(final String productName, final int quantity,
-                           final Receipt receipt, final LocalDate now, Membership membership) {
+                           final Store store, final LocalDate now) {
         Inventories sameProductInventories = inventories.findProducts(productName);
 
         for (Inventory inventory : sameProductInventories.getInventories()) {
             String promotionName = inventory.getPromotionName();
             // 프로모션이 없을 경우 그냥 구매
             if (promotionName.equals(NULL)) {
-                purchaseWithoutPromotion(receipt, membership, quantity, inventory);
+                purchaseWithoutPromotion(store, quantity, inventory);
                 return Response.buyWithNoPromotion(inventory);
             }
             Optional<Promotion> optionalPromotion = promotions.find(promotionName, now); // 프로모션 찾기
@@ -56,13 +55,13 @@ public class PaymentSystem {
                 }
 
                 // 프로모션 적용 최소수량 만족하지 않으면 그냥 구매
-                sameProductInventories.buyProductWithoutPromotion(quantity, membership, receipt);
+                sameProductInventories.buyProductWithoutPromotion(quantity, store);
                 return Response.buyWithNoPromotion(inventory);
             }
 
             // 할인 적용X
             if (quantity < purchaseQuantity) {
-                purchaseWithoutPromotion(receipt, membership, quantity, inventory);
+                purchaseWithoutPromotion(store, quantity, inventory);
                 return Response.buyWithNoPromotion(inventory);
             }
 
@@ -77,17 +76,16 @@ public class PaymentSystem {
             int setSize = quantity / (promotionQuantity);
             int totalBonusQuantity = setSize * bonusQuantity; // 보너스 수량
             inventory.subtract(quantity);
-            receipt.purchaseProducts(inventory.getProduct(), quantity);
+            store.notePurchaseProduct(inventory.getProduct(), quantity);
             return Response.buyWithPromotion(totalBonusQuantity, inventory);
         }
         throw new IllegalStateException("[ERROR] 상품을 구매할 수 없습니다.");
     }
 
-    private void purchaseWithoutPromotion(final Receipt receipt, final Membership membership, final int totalQuantity,
-                                        final Inventory inventory) {
+    private void purchaseWithoutPromotion(final Store store, final int totalQuantity,
+                                          final Inventory inventory) {
         inventory.subtract(totalQuantity);
         Product product = inventory.getProduct();
-        membership.addNoPromotionProduct(product, totalQuantity);
-        receipt.purchaseProducts(product, totalQuantity);
+        store.noteNoPromotionProduct(product, totalQuantity);
     }
 }

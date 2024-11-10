@@ -17,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
@@ -130,12 +131,13 @@ public class StoreController {
         Map<String, Integer> purchasedItems = purchaseOrderForms.getProductsToBuy();
         Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
         Membership membership = new Membership(new HashMap<>());
+        Store store = new Store(receipt, membership);
         for (Entry<String, Integer> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
             int quantity = entry.getValue();
             LocalDate now = DateTimes.now().toLocalDate();
-            Response response = paymentSystem.canBuy(productName, quantity, receipt, now, membership);
-            checkResponse(purchaseOrderForms, receipt, productName, quantity, response, membership);
+            Response response = paymentSystem.canBuy(productName, quantity, store, now);
+            checkResponse(purchaseOrderForms, store, productName, quantity, response);
         }
         BigDecimal membershipPrice = checkMemberShip(membership);
         showResultPrice(receipt, membershipPrice);
@@ -211,31 +213,31 @@ public class StoreController {
     }
 
     private void checkResponse(final PurchaseOrderForms purchaseOrderForms,
-                               final Receipt receipt, final String productName,
+                               final Store store, final String productName,
                                final int quantity,
-                               final Response response, final Membership membership) {
+                               final Response response) {
         if (response.status() == ResponseStatus.BUY_WITH_NO_PROMOTION) {
             return;
         }
         if (response.status() == ResponseStatus.BUY_WITH_PROMOTION) {
             int bonusQuantity = response.bonusQuantity();
-            receipt.addBonusProducts(response.inventory().getProduct(), bonusQuantity);
+            store.noteBonusProduct(response.inventory().getProduct(), bonusQuantity);
             return;
         }
         if (response.status() == ResponseStatus.OUT_OF_STOCK) {
-            int outOfStockQuantity = outOfStock(productName, response, receipt, quantity, membership);
+            int outOfStockQuantity = outOfStock(productName, response, store, quantity);
             if (outOfStockQuantity > 0) { // 구매안함
                 purchaseOrderForms.put(productName, quantity - outOfStockQuantity);
             }
             return;
         }
-        int canGetMoreQuantity = canGetBonus(receipt, productName, response);
+        int canGetMoreQuantity = canGetBonus(store, productName, response);
         Product product = response.inventory().getProduct();
         purchaseOrderForms.put(productName, quantity);
-        receipt.purchaseProducts(product, quantity);
+        store.notePurchaseProduct(product, quantity);
         if (canGetMoreQuantity > 0) {
             purchaseOrderForms.put(productName, quantity + canGetMoreQuantity);
-            receipt.purchaseProducts(product, canGetMoreQuantity);
+            store.notePurchaseProduct(product, canGetMoreQuantity);
         }
     }
 
@@ -272,25 +274,23 @@ public class StoreController {
     }
 
     private int outOfStock(final String productName,
-                           final Response response, final Receipt receipt,
-                           final int quantity, final Membership membership) {
+                           final Response response, final Store store,
+                           final int quantity) {
         int totalBonusQuantity = response.bonusQuantity();
-        receipt.addBonusProducts(response.inventory().getProduct(), totalBonusQuantity);
+        store.noteBonusProduct(response.inventory().getProduct(), totalBonusQuantity);
         int noPromotionQuantityOfResponse = response.noPromotionQuantity();
         outputView.showPromotionDiscount(productName, noPromotionQuantityOfResponse);
         String intent = readYOrN();
         Product product = response.inventory().getProduct();
         if (intent.equals(NO)) {
-            receipt.purchaseProducts(product, quantity - noPromotionQuantityOfResponse);
+            store.notePurchaseProduct(product, quantity - noPromotionQuantityOfResponse);
             return noPromotionQuantityOfResponse;
         }
-        receipt.purchaseProducts(product, quantity);
-        membership.addNoPromotionProduct(product, quantity);
+        store.noteNoPromotionProduct(product, quantity);
         return 0;
     }
 
-    private int canGetBonus(final Receipt receipt, final String productName,
-                            final Response response) {
+    private int canGetBonus(final Store store, final String productName, final Response response) {
         if (response.status() == ResponseStatus.CAN_GET_BONUS) {
             int bonusQuantity = response.bonusQuantity();
             int canGetMoreQuantity = response.canGetMoreQuantity();
@@ -298,10 +298,10 @@ public class StoreController {
             String intent = readYOrN();
             Product product = response.inventory().getProduct();
             if (intent.equals(YES)) {
-                receipt.addBonusProducts(product, bonusQuantity);
+                store.noteBonusProduct(product, bonusQuantity);
                 return canGetMoreQuantity;
             }
-            receipt.addBonusProducts(product, bonusQuantity - canGetMoreQuantity);
+            store.noteBonusProduct(product, bonusQuantity - canGetMoreQuantity);
         }
         return 0;
     }

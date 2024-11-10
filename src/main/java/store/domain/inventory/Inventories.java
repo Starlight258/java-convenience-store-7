@@ -7,8 +7,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import store.domain.membership.Membership;
-import store.domain.receipt.Receipt;
+import store.domain.Store;
 
 public class Inventories {
 
@@ -30,13 +29,12 @@ public class Inventories {
         }
     }
 
-    public void buyProductWithoutPromotion(final int quantity, final Membership membership, final Receipt receipt) {
+    public void buyProductWithoutPromotion(final int quantity, final Store store) {
         int totalQuantity = quantity;
         for (Inventory inventory : inventories) {
             int subtractQuantity = inventory.subtractMaximum(totalQuantity);
             totalQuantity -= subtractQuantity;
-            membership.addNoPromotionProduct(inventory.getProduct(), subtractQuantity);
-            receipt.purchaseProducts(inventory.getProduct(), subtractQuantity);
+            store.noteNoPromotionProduct(inventory.getProduct(), subtractQuantity);
             if (totalQuantity == 0) {
                 return;
             }
