@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -131,8 +131,8 @@ public class StoreController {
 
     private void convenienceStore(final PurchaseOrderForms purchaseOrderForms, final PaymentSystem paymentSystem) {
         Map<String, Quantity> purchasedItems = purchaseOrderForms.getProductsToBuy();
-        Receipt receipt = new Receipt(new HashMap<>(), new HashMap<>());
-        Membership membership = new Membership(new HashMap<>());
+        Receipt receipt = new Receipt(new LinkedHashMap<>(), new LinkedHashMap<>());
+        Membership membership = new Membership(new LinkedHashMap<>());
         Store store = new Store(receipt, membership);
         for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
             String productName = entry.getKey();
@@ -197,7 +197,8 @@ public class StoreController {
         Entry<Quantity, Price> totalPurchases = receipt.getTotalPurchase();
         Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
         Price totalPurchasePrice = totalPurchases.getValue();
-        int blankLength = String.valueOf(totalPurchasePrice).length() - String.valueOf(priceToPay).length();
+        int blankLength =
+                String.valueOf(totalPurchasePrice.getPrice()).length() - String.valueOf(priceToPay.getPrice()).length();
         outputView.showTotalPrice(totalPurchases.getKey().getQuantity(), totalPurchasePrice.getPrice());
         outputView.showPromotionDiscountPrice(receipt.getPromotionDiscountPrice().getPrice());
         outputView.showMemberShipDiscountPrice(membershipPrice.getPrice());
@@ -244,7 +245,7 @@ public class StoreController {
     }
 
     public Map<String, Quantity> promptProductNameAndQuantity() {
-        Map<String, Quantity> purchasedItems = new HashMap<>();
+        Map<String, Quantity> purchasedItems = new LinkedHashMap<>();
         String input = inputView.readLine();
         List<String> splitText = splitter.split(input);
         addPurchasedItems(purchasedItems, splitText);

@@ -91,7 +91,7 @@ public class OutputView {
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf(storeFormatter.format(name) + " \t%d \t%,.0f"
+        System.out.printf(storeFormatter.format(name) + "\t%d \t%,.0f"
                 + System.lineSeparator(), quantity, totalPrice);
     }
 }
