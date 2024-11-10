@@ -33,7 +33,7 @@ public class ExceptionHandler {
     public <T> T actionOfFileRead(Supplier<T> action) {
         try {
             return action.get();
-        } catch (RuntimeException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             outputView.showExceptionMessage(e.getMessage());
             throw e;
         }

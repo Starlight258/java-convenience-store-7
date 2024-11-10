@@ -1,7 +1,6 @@
 package store;
 
 import camp.nextstep.edu.missionutils.Console;
-import java.util.NoSuchElementException;
 import store.config.StoreConfig;
 import store.controller.StoreController;
 
@@ -12,7 +11,6 @@ public class Application {
         StoreController controller = config.createController();
         try {
             controller.process();
-        } catch (NoSuchElementException ignored) {
         } finally {
             Console.close();
         }
