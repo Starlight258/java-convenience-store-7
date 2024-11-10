@@ -18,6 +18,10 @@ public class Quantity {
         return new Quantity(0);
     }
 
+    public static Quantity one() {
+        return new Quantity(1);
+    }
+
     public Quantity add(final Quantity value) {
         return new Quantity(this.quantity + value.getQuantity());
     }

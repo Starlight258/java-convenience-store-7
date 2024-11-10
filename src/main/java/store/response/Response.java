@@ -23,10 +23,9 @@ public record Response(ResponseStatus status, Quantity bonusQuantity, Quantity n
                 inventory);
     }
 
-    public static Response canGetMoreQuantity(final Quantity bonusQuantity, final Quantity canGetMoreQuantity,
-                                              final Inventory inventory) {
+    public static Response canGetMoreQuantity(final Inventory inventory) {
 
-        return new Response(ResponseStatus.CAN_GET_BONUS, bonusQuantity, Quantity.zero(), canGetMoreQuantity,
+        return new Response(ResponseStatus.CAN_GET_BONUS, Quantity.one(), Quantity.zero(), Quantity.one(),
                 inventory);
     }
 }

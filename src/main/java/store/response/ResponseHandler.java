@@ -43,17 +43,17 @@ public class ResponseHandler {
     }
 
     private void processWithPromotion(final Response response) {
-        store.noteBonusProduct(response.inventory().getProduct(), response.bonusQuantity());
+        store.noteBonusProduct(response.inventory().getProduct());
     }
 
     private void processOutOfStock(final Response response) {
         Product product = response.inventory().getProduct();
-        store.noteBonusProduct(product, response.bonusQuantity());
+        store.noteBonusProduct(product);
         askNoPromotion(response, product);
     }
 
     private void askNoPromotion(final Response response, final Product product) {
-        store.noteBonusProduct(product, response.bonusQuantity());
+        store.noteBonusProduct(product);
         Quantity noPromotionQuantity = response.noPromotionQuantity();
         if (interactionView.askForNoPromotion(productName, noPromotionQuantity.getQuantity())) {
             store.notePurchaseProduct(product, quantity.subtract(noPromotionQuantity));
@@ -65,7 +65,7 @@ public class ResponseHandler {
     private void processCanGetBonus(final Response response) {
         Product product = response.inventory().getProduct();
         processInitialOrder(product);
-        processBonusQuantity(response, product);
+        processBonusQuantity(product);
     }
 
     private void processInitialOrder(final Product product) {
@@ -73,13 +73,10 @@ public class ResponseHandler {
         store.notePurchaseProduct(product, quantity);
     }
 
-    private void processBonusQuantity(final Response response, final Product product) {
-        Quantity bonusQuantity = response.bonusQuantity();
-        Quantity canGetMoreQuantity = response.canGetMoreQuantity();
-        if (interactionView.askForBonus(productName, canGetMoreQuantity.getQuantity())) {
-            store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
-            orders.put(productName, quantity.add(canGetMoreQuantity));
+    private void processBonusQuantity(final Product product) {
+        if (interactionView.askForBonus(productName)) {
+            store.noteAddingMoreQuantity(product);
+            orders.put(productName, quantity.add(Quantity.one()));
         }
-        store.noteBonusProduct(product, bonusQuantity.subtract(canGetMoreQuantity));
     }
 }

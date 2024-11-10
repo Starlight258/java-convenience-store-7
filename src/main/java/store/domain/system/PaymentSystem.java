@@ -72,8 +72,8 @@ public class PaymentSystem {
             return processNormalPurchase(inventory, quantity, store);
         }
 
-        if (canGetAdditionalItems(quantity, promotionQuantities.totalQuantity())) {
-            return createAdditionalItemsResponse(quantity, promotionQuantities, inventory);
+        if (canGetAdditionalItems(quantity, promotionQuantities)) {
+            return createAdditionalItemsResponse(inventory);
         }
         return processPromotionPurchase(quantity, promotionQuantities, inventory, store);
     }
@@ -143,27 +143,24 @@ public class PaymentSystem {
         return quantity.isLessThan(minimumQuantity);
     }
 
-    private boolean canGetAdditionalItems(Quantity quantity, Quantity promotionTotalQuantity) {
-        return quantity.isLessThan(promotionTotalQuantity);
+    private boolean canGetAdditionalItems(Quantity quantity, PromotionQuantities promotionQuantities) {
+        int purchaseUnit = promotionQuantities.purchaseQuantity().getQuantity(); // 1 또는 2
+        int totalUnit = promotionQuantities.totalQuantity().getQuantity();       // 2 또는 3
+        if (quantity.getQuantity() < purchaseUnit || quantity.getQuantity() % totalUnit == 0) {
+            return false;
+        }
+        return true;
     }
 
-    private Response createAdditionalItemsResponse(Quantity quantity,
-                                                   PromotionQuantities promotionQuantities,
-                                                   Inventory inventory) {
-        Quantity freeQuantity = calculateFreeQuantity(quantity, promotionQuantities);
-        return Response.canGetMoreQuantity(promotionQuantities.bonusQuantity(),
-                freeQuantity, inventory);
-    }
-
-    private Quantity calculateFreeQuantity(Quantity quantity, PromotionQuantities promotionQuantities) {
-        return promotionQuantities.totalQuantity().subtract(quantity);
+    private Response createAdditionalItemsResponse(Inventory inventory) {
+        return Response.canGetMoreQuantity(inventory);
     }
 
     private Response processPromotionPurchase(Quantity quantity,
                                               PromotionQuantities promotionQuantities,
                                               Inventory inventory, Store store) {
         Quantity setSize = calculateSetSize(quantity, promotionQuantities);
-        Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
+        Quantity totalBonusQuantity = new Quantity(1);
         completePurchase(quantity, inventory, store);
         return Response.buyWithPromotion(totalBonusQuantity, inventory);
     }

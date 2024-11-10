@@ -2,6 +2,7 @@ package store.view;
 
 import static store.exception.ExceptionMessages.WRONG_INPUT;
 
+import store.domain.quantity.Quantity;
 import store.exception.ExceptionHandler;
 
 public class InteractionView {
@@ -20,8 +21,8 @@ public class InteractionView {
         this.exceptionHandler = exceptionHandler;
     }
 
-    public boolean askForBonus(String productName, int quantity) {
-        outputView.showFreeQuantity(productName, quantity);
+    public boolean askForBonus(String productName) {
+        outputView.showFreeQuantity(productName, Quantity.one().getQuantity());
         return readYOrN();
     }
 
