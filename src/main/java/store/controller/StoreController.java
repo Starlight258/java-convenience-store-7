@@ -69,12 +69,12 @@ public class StoreController {
     }
 
     private void processTransactions(final PaymentSystem paymentSystem) {
-        exceptionHandler.retryWithNoReturn(() -> {
-            if (processTransaction(paymentSystem)) {
+        while (true) {
+            if (exceptionHandler.tryWithReturn(() -> processTransaction(paymentSystem))) {
                 return;
             }
             outputView.showBlankLine();
-        });
+        }
     }
 
     private PaymentSystem initializePaymentSystem() {

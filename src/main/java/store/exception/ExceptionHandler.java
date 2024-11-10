@@ -21,14 +21,12 @@ public class ExceptionHandler {
         }
     }
 
-    public void retryWithNoReturn(Runnable action) {
-        while (true) {
-            try {
-                action.run();
-                return;
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                outputView.showExceptionMessage(e.getMessage());
-            }
+    public boolean tryWithReturn(Supplier<Boolean> action) {
+        try {
+            return action.get();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            outputView.showExceptionMessage(e.getMessage());
+            return false;
         }
     }
 
