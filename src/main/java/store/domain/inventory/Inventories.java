@@ -9,8 +9,13 @@ import java.util.TreeSet;
 import store.domain.Store;
 import store.domain.player.PurchaseOrderForms;
 import store.domain.quantity.Quantity;
+import store.exception.ExceptionMessage;
+import store.exception.ExceptionMessages;
 
 public class Inventories {
+
+    private static final ExceptionMessage NOT_EXIST_PRODUCT = new ExceptionMessage("존재하지 않는 상품입니다. 다시 입력해 주세요.");
+    private static final ExceptionMessage OUT_OF_STOCK = new ExceptionMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
 
     private final TreeSet<Inventory> inventories;
 
@@ -44,19 +49,19 @@ public class Inventories {
 
     private void totalOutOfStock(final Quantity quantity, final Quantity totalStock) {
         if (totalStock.isLessThan(quantity)) {
-            throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+            throw new IllegalArgumentException(OUT_OF_STOCK.getMessage());
         }
     }
 
     private void notExistProductName(final Inventories sameProductInventories) {
         if (sameProductInventories.getInventories().size() == 0) {
-            throw new IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.");
+            throw new IllegalArgumentException(NOT_EXIST_PRODUCT.getMessage());
         }
     }
 
     private void validateInventories(final List<Inventory> inventories) {
         if (inventories == null) {
-            throw new IllegalArgumentException("[ERROR] 인벤토리 리스트는 null일 수 없습니다.");
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
         }
     }
 

@@ -3,6 +3,7 @@ package store.domain.promotion;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import store.exception.ExceptionMessages;
 
 public class Promotions {
 
@@ -15,7 +16,7 @@ public class Promotions {
 
     private void validatePromotions(final List<Promotion> promotions) {
         if (promotions == null) {
-            throw new IllegalArgumentException("[ERROR] 프로모션 리스트는 null일 수 없습니다.");
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
         }
     }
 

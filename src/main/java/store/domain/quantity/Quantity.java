@@ -1,8 +1,11 @@
 package store.domain.quantity;
 
 import java.util.Objects;
+import store.exception.ExceptionMessage;
 
 public class Quantity {
+
+    public static final ExceptionMessage EXCEPTION_CANNOT_MINUS = new ExceptionMessage("수량은 음수일 수 없습니다.");
 
     private int quantity;
 
@@ -21,7 +24,7 @@ public class Quantity {
 
     public Quantity subtract(final Quantity value) {
         if (this.quantity < value.quantity) {
-            throw new IllegalArgumentException("[ERROR] 수량은 음수일 수 없습니다.");
+            throw new IllegalArgumentException(EXCEPTION_CANNOT_MINUS.getMessage());
         }
         return new Quantity(this.quantity - value.quantity);
     }
@@ -52,7 +55,7 @@ public class Quantity {
 
     private void validate(final int quantity) {
         if (quantity < 0) {
-            throw new IllegalArgumentException("[ERROR] 수량은 음수일 수 없습니다.");
+            throw new IllegalArgumentException(EXCEPTION_CANNOT_MINUS.getMessage());
         }
     }
 

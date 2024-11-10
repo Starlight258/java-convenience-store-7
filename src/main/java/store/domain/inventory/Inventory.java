@@ -3,10 +3,12 @@ package store.domain.inventory;
 import java.util.Objects;
 import store.domain.price.Price;
 import store.domain.quantity.Quantity;
+import store.exception.ExceptionMessage;
+import store.exception.ExceptionMessages;
 
 public class Inventory implements Comparable<Inventory> {
 
-    public static final String ERROR = "[ERROR]";
+    private static final ExceptionMessage OUT_OF_STOCK = new ExceptionMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
 
     private final Product product;
     private Quantity quantity;
@@ -28,7 +30,7 @@ public class Inventory implements Comparable<Inventory> {
             quantity = quantity.subtract(purchaseQuantity);
             return;
         }
-        throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+        throw new IllegalArgumentException(OUT_OF_STOCK.getMessage());
     }
 
     public Quantity subtractMaximum(final Quantity purchaseQuantity) {
@@ -51,7 +53,7 @@ public class Inventory implements Comparable<Inventory> {
 
     private void validate(final Product product) {
         if (product == null) {
-            throw new IllegalArgumentException(ERROR + " 상품은 null일 수 없습니다.");
+            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getErrorMessage());
         }
     }
 

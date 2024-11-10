@@ -39,7 +39,7 @@ public class InventoriesTest {
         assertThatThrownBy(() -> new Inventories(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("인벤토리 리스트는 null일 수 없습니다.");
+                .hasMessageContaining("인자 값은 null일 수 없습니다.");
     }
 
     @Test
@@ -52,7 +52,7 @@ public class InventoriesTest {
         assertThatThrownBy(() -> new Inventory(null, 10, promotionName))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 상품은 null일 수 없습니다.");
+                .hasMessageContaining("[ERROR] 인자 값은 null일 수 없습니다.");
     }
 
     @Test

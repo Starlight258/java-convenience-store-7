@@ -21,7 +21,7 @@ class PromotionsTest {
         assertThatThrownBy(() -> new Promotions(null))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("프로모션 리스트는 null일 수 없습니다.");
+                .hasMessageContaining("인자 값은 null일 수 없습니다.");
     }
 
     @Test

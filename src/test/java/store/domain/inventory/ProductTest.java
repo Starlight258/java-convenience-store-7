@@ -49,6 +49,6 @@ public class ProductTest {
         assertThatThrownBy(() -> new Product("콜라", null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
-                .hasMessageContaining("[ERROR] 가격은 null일 수 없습니다.");
+                .hasMessageContaining("[ERROR] 인자 값은 null일 수 없습니다.");
     }
 }

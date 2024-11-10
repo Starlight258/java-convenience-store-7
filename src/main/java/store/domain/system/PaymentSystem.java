@@ -9,11 +9,13 @@ import store.domain.inventory.Product;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
+import store.exception.ExceptionMessage;
 import store.response.Response;
 
 public class PaymentSystem {
 
-    public static final String NULL = "null";
+    private static final String NULL = "null";
+    private static final ExceptionMessage CANNOT_BUY_PRODUCT = new ExceptionMessage("상품을 구매할 수 없습니다.");
 
     private final Inventories inventories;
     private final Promotions promotions;
@@ -80,7 +82,7 @@ public class PaymentSystem {
             store.notePurchaseProduct(inventory.getProduct(), quantity);
             return Response.buyWithPromotion(totalBonusQuantity, inventory);
         }
-        throw new IllegalStateException("[ERROR] 상품을 구매할 수 없습니다.");
+        throw new IllegalStateException(CANNOT_BUY_PRODUCT.getMessage());
     }
 
     private void purchaseWithoutPromotion(final Store store, final Quantity totalQuantity,

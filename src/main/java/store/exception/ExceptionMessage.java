@@ -1,20 +1,14 @@
 package store.exception;
 
-public enum ExceptionMessage {
+public class ExceptionMessage {
 
-    ERROR_PREFIX("[ERROR] "),
-    WRONG_INPUT("잘못된 입력입니다. 다시 입력해 주세요."),
-    NO_INPUT("아무것도 입력하지 않았습니다."),
-    INVALID_FILE_FORMAT("파일 형식이 잘못되었습니다."),
-    INVALID_FORMAT("올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+    private final String message;
 
-    private String content;
-
-    ExceptionMessage(final java.lang.String content) {
-        this.content = content;
+    public ExceptionMessage(final String message) {
+        this.message = message;
     }
 
-    public String getErrorMessage() {
-        return ERROR_PREFIX.content + this.content;
+    public String getMessage() {
+        return ExceptionMessages.ERROR_PREFIX.getErrorMessage() + message;
     }
 }

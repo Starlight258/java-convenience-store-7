@@ -1,9 +1,9 @@
 package store.controller;
 
-import static store.exception.ExceptionMessage.INVALID_FILE_FORMAT;
-import static store.exception.ExceptionMessage.INVALID_FORMAT;
-import static store.exception.ExceptionMessage.NO_INPUT;
-import static store.exception.ExceptionMessage.WRONG_INPUT;
+import static store.exception.ExceptionMessages.INVALID_FILE_FORMAT;
+import static store.exception.ExceptionMessages.INVALID_FORMAT;
+import static store.exception.ExceptionMessages.NO_INPUT;
+import static store.exception.ExceptionMessages.WRONG_INPUT;
 
 import camp.nextstep.edu.missionutils.DateTimes;
 import java.io.IOException;
