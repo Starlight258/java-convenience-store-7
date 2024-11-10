@@ -250,14 +250,18 @@ public class StoreController {
         return addPurchasedItems(purchasedItems, splitText);
     }
 
-    private PurchaseOrderForms addPurchasedItems(final PurchaseOrderForms purchaseOrderForms, final List<String> splittedText) {
+    private PurchaseOrderForms addPurchasedItems(final PurchaseOrderForms purchaseOrderForms,
+                                                 final List<String> splittedText) {
         for (String text : splittedText) {
             Matcher matcher = PATTERN.matcher(text);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException(INVALID_FORMAT.getErrorMessage());
             }
-            int quantityValue = Converter.convertToInteger((matcher.group(3)));
             String productValue = matcher.group(2);
+            int quantityValue = Converter.convertToInteger((matcher.group(3)));
+            if (quantityValue == 0) {
+                throw new IllegalArgumentException(WRONG_INPUT.getErrorMessage());
+            }
             purchaseOrderForms.put(productValue, new Quantity(quantityValue));
         }
         return purchaseOrderForms;
