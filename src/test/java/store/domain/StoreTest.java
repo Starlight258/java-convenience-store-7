@@ -68,11 +68,11 @@ class StoreTest {
         Product product = new Product("콜라", BigDecimal.valueOf(1000));
 
         // When
-        store.noteBonusProduct(product);
+        store.noteBonusProduct(product, new Quantity(3));
 
         // Then
         assertThat(store).extracting("receipt").extracting("bonusProducts").isEqualTo(new HashMap<>() {{
-            put(product, new Quantity(1));
+            put(product, new Quantity(3));
         }});
     }
 
@@ -86,11 +86,11 @@ class StoreTest {
         Product product = new Product("콜라", BigDecimal.valueOf(1000));
 
         // When
-        store.noteAddingMoreQuantity(product);
+        store.noteAddingMoreQuantity(product, new Quantity(2), new Quantity(1));
 
         // Then
         assertThat(store).extracting("receipt").extracting("bonusProducts").isEqualTo(new HashMap<>() {{
-            put(product, new Quantity(1));
+            put(product, new Quantity(2));
         }});
         assertThat(store).extracting("receipt").extracting("purchasedProducts").isEqualTo(new HashMap<>() {{
             put(product, new Quantity(1));

@@ -39,11 +39,11 @@ class ReceiptTest {
         Product coke = new Product("콜라", new BigDecimal(1000));
 
         // When
-        receipt.addBonusProducts(coke);
+        receipt.addBonusProducts(coke, new Quantity(2));
 
         // Then
         assertThat(receipt).extracting("bonusProducts").isEqualTo(new HashMap<>() {{
-            put(coke, new Quantity(1));
+            put(coke, new Quantity(2));
         }});
     }
 

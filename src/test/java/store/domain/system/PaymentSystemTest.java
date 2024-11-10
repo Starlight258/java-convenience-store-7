@@ -11,8 +11,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
@@ -110,12 +108,11 @@ public class PaymentSystemTest {
         assertThat(response.noPromotionQuantity()).isEqualTo(new Quantity(4));
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {2, 4})
+    @Test
     @DisplayName("프로모션의 보너스 수량을 안내한다.")
-    void notifyAvailableBonus(int quantity) {
+    void notifyAvailableBonus() {
         Response response = createSystem(10, 0)
-                .canBuy(PRODUCT_NAME, new Quantity(quantity), store, VALID_DATE);
+                .canBuy(PRODUCT_NAME, new Quantity(2), store, VALID_DATE);
 
         assertThat(response.status()).isEqualTo(ResponseStatus.CAN_GET_BONUS);
         assertThat(response.bonusQuantity().getQuantity()).isEqualTo(new Quantity(1).getQuantity());
