@@ -1,11 +1,18 @@
 package store.view;
 
 import java.math.BigDecimal;
+import java.util.Map.Entry;
+import store.domain.inventory.Product;
+import store.domain.price.Price;
+import store.domain.quantity.Quantity;
+import store.domain.receipt.Receipt;
 import store.support.StoreFormatter;
 
 public class OutputView {
 
+    private static final int FORMAT_SIZE = 12;
     private static final String STORE_HEADER = "==============W 편의점================";
+
     private final StoreFormatter storeFormatter;
 
     public OutputView(final StoreFormatter storeFormatter) {
@@ -40,10 +47,6 @@ public class OutputView {
         System.out.println(System.lineSeparator() + "감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
     }
 
-    public void showMessage(final String message) {
-        System.out.println(message);
-    }
-
     public void showCommentOfPurchase() {
         System.out.println(System.lineSeparator() + "구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])");
     }
@@ -61,41 +64,79 @@ public class OutputView {
     }
 
     public void showTotalPrice(final Integer quantity, final BigDecimal totalPurchaseValue) {
-        System.out.printf("총구매액\t%d\t%,.0f", quantity, totalPurchaseValue);
-        System.out.println();
+        System.out.printf(
+                storeFormatter.format("총구매액", FORMAT_SIZE) + " \t%d \t%,.0f"
+                        + System.lineSeparator(),
+                quantity, totalPurchaseValue);
     }
 
     public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
-        int length = String.format(",.0f", promotionDiscountPrice).length();
-        System.out.printf("행사할인\t\t-%,.0f", promotionDiscountPrice);
-        System.out.println();
+        System.out.printf(storeFormatter.format("행사할인", FORMAT_SIZE) + " \t\t-%,.0f\n",
+                promotionDiscountPrice);
     }
 
     public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
-        int length = String.format(",.0f", memberShipDiscountPrice).length();
-        System.out.printf("멤버십할인\t\t-%,.0f", memberShipDiscountPrice);
-        System.out.println();
+        System.out.printf(storeFormatter.format("멤버십할인", FORMAT_SIZE) + " \t\t-%,.0f\n",
+                memberShipDiscountPrice);
     }
 
     public void showMoneyToPay(final BigDecimal priceToPay) {
-        int length = String.format(",.0f", priceToPay).length();
-        System.out.printf("내실돈\t\t%,.0f", priceToPay);
-        System.out.println();
+        System.out.printf(storeFormatter.format("내실돈", FORMAT_SIZE) + " \t\t %,.0f\n", priceToPay);
     }
 
     public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf("%s\t\t%d", name, quantity);
+        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + "\t%d \t" + System.lineSeparator(), quantity);
         System.out.println();
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf("%s\t\t%d\t%,.0f%n", name, quantity, totalPrice);
+        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + "\t%d \t%,.0f\n"
+                + System.lineSeparator(), quantity, totalPrice);
+    }
+
+    public void showCommentOfInventory() {
+        System.out.println(System.lineSeparator() + STORE_HEADER);
+        System.out.printf("상품명\t\t수량\t금액");
         System.out.println();
     }
 
-    public void showCommentOfInventory(int length) {
-        System.out.println(System.lineSeparator() + STORE_HEADER);
-        System.out.printf("상품명\t수량\t금액");
-        System.out.println();
+    public void showPurchaseProducts(final Receipt receipt) {
+        showCommentOfInventory();
+        for (Entry<Product, Quantity> entry : receipt.getPurchasedProducts().entrySet()) {
+            showEachProduct(entry);
+        }
+    }
+
+    public void showReceipt(final Receipt receipt, final Price membershipPrice) {
+        showReceiptStartMark();
+        Entry<Quantity, Price> totalPurchases = receipt.getTotalPurchase();
+        Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
+        Price totalPurchasePrice = totalPurchases.getValue();
+        showTotalPrice(totalPurchases.getKey().getQuantity(), totalPurchasePrice.getPrice());
+        showPromotionDiscountPrice(receipt.getPromotionDiscountPrice().getPrice());
+        showMemberShipDiscountPrice(membershipPrice.getPrice());
+        showMoneyToPay(priceToPay.getPrice());
+    }
+
+    public void showBonusProducts(final Receipt receipt) {
+        showBonus();
+        for (Entry<Product, Quantity> entry : receipt.getBonusProducts().entrySet()) {
+            Product product = entry.getKey();
+            String name = product.getName();
+            int quantity = entry.getValue().getQuantity();
+            showBonusProduct(name, quantity);
+        }
+    }
+
+    public void showMessage(final String message) {
+        System.out.println(message);
+    }
+
+    private void showEachProduct(final Entry<Product, Quantity> entry) {
+        Product product = entry.getKey();
+        String name = product.getName();
+        Quantity quantity = entry.getValue();
+        Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity.getQuantity()));
+        showInventory(name, quantity.getQuantity(), totalPrice.getPrice());
     }
 }
