@@ -3,7 +3,7 @@ package store.domain.price;
 import java.math.BigDecimal;
 import java.util.Objects;
 import store.exception.ExceptionMessage;
-import store.exception.ExceptionMessages;
+import store.util.InputValidator;
 
 public class Price {
 
@@ -57,9 +57,7 @@ public class Price {
     }
 
     private void validateIsNull(final BigDecimal price) {
-        if (price == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
-        }
+        InputValidator.validateNotNull(price);
     }
 
     public BigDecimal getPrice() {

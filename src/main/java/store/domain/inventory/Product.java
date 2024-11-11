@@ -3,11 +3,9 @@ package store.domain.inventory;
 import java.math.BigDecimal;
 import java.util.Objects;
 import store.domain.price.Price;
-import store.exception.ExceptionMessage;
+import store.util.InputValidator;
 
 public class Product {
-
-    private static final ExceptionMessage INVALID_PRODUCT_NAME = new ExceptionMessage("상품명은 비어있거나 null일 수 없습니다.");
 
     private final String name;
     private final Price price;
@@ -23,9 +21,7 @@ public class Product {
     }
 
     private void validateName(final String name) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException(INVALID_PRODUCT_NAME.getMessage());
-        }
+        InputValidator.validateNotNullOrBlank(name);
     }
 
     public Price getPrice() {
@@ -37,14 +33,14 @@ public class Product {
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
+    public boolean equals(final Object other) {
+        if (this == other) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (other == null || getClass() != other.getClass()) {
             return false;
         }
-        Product product = (Product) o;
+        Product product = (Product) other;
         return Objects.equals(name, product.name) && Objects.equals(price, product.price);
     }
 

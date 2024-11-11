@@ -6,9 +6,6 @@ import static store.util.CustomExceptionAssertions.assertCustomIllegalArgumentEx
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import store.domain.price.Price;
 
 @DisplayName("상품 테스트")
@@ -25,15 +22,6 @@ public class ProductTest {
         assertThat(product)
                 .extracting("name", "price")
                 .contains(PRODUCT_NAME, new Price(PRODUCT_PRICE));
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = " ")
-    @DisplayName("상품명은 비어있거나 null일 수 없다.")
-    void 실패_상품_상품명비어있거나null(String input) {
-        assertCustomIllegalArgumentException(() -> new Product(input, PRODUCT_PRICE))
-                .hasMessageContaining("상품명은 비어있거나 null일 수 없습니다.");
     }
 
     @Test

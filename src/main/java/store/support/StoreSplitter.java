@@ -1,6 +1,7 @@
 package store.support;
 
 import java.util.List;
+import store.util.InputValidator;
 
 public class StoreSplitter {
 
@@ -13,6 +14,7 @@ public class StoreSplitter {
     }
 
     public List<String> split(String text) {
+        InputValidator.validateNotNullOrBlank(text);
         return List.of(text.split(delimiter, CONTAINS_EMPTY));
     }
 }
