@@ -111,7 +111,8 @@ public class PaymentSystem {
                                               PromotionQuantities promotionQuantities,
                                               Store store, Inventories sameProductInventories) {
         if (canApplyPartialPromotion(inventory.getQuantity(), promotionQuantities)) {
-            return createPartialPromotionResponse(inventory, quantity, promotionQuantities, sameProductInventories);
+            return createPartialPromotionResponseForOutOfStock(inventory, quantity, promotionQuantities,
+                    sameProductInventories);
         }
         return processNormalOutOfStockPurchase(inventory, quantity, store, sameProductInventories);
     }
@@ -124,6 +125,15 @@ public class PaymentSystem {
                                                     PromotionQuantities promotionQuantities,
                                                     final Inventories sameProductInventories) {
         Quantity setSize = calculateSetSize(quantity, promotionQuantities);
+        Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
+        Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
+        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);
+    }
+
+    private Response createPartialPromotionResponseForOutOfStock(Inventory inventory, Quantity quantity,
+                                                                 PromotionQuantities promotionQuantities,
+                                                                 final Inventories sameProductInventories) {
+        Quantity setSize = calculateSetSize(inventory.getQuantity(), promotionQuantities);
         Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
         return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);

@@ -3,7 +3,6 @@ package store.response;
 import java.util.Map;
 import java.util.function.Consumer;
 import store.domain.Store;
-import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.player.Orders;
@@ -56,13 +55,21 @@ public class ResponseHandler {
 
     private void askNoPromotion(final Response response, final Product product) {
         Quantity noPromotionQuantity = response.noPromotionQuantity();
-        Inventories inventories = response.sameProductInventories();
-        Inventory noPromotionInventory = inventories.findNoPromotionInventory();
+        Inventory noPromotionInventory = response.sameProductInventories().findNoPromotionInventory();
         if (interactionView.askForNoPromotion(productName, noPromotionQuantity.getQuantity())) {
+            purchaseOnlyPromotionProduct(response, product, noPromotionInventory);
+            return;
+        }
+        purchaseWithinPromotionStock(response, product, noPromotionQuantity);
+    }
+
+    private void purchaseOnlyPromotionProduct(final Response response, final Product product,
+                                              final Inventory noPromotionInventory) {
+        if (quantity.isLessThan(response.inventory().getQuantity())) {
             purchaseWithNoPromotionProduct(response, product, noPromotionInventory);
             return;
         }
-        purchaseOnlyPromotionProduct(response, product, noPromotionQuantity);
+        purchaseWithNoPromotionProductOfOutOfStock(response, product, noPromotionInventory);
     }
 
     private void purchaseWithNoPromotionProduct(final Response response, final Product product,
@@ -70,11 +77,19 @@ public class ResponseHandler {
         store.noteWithNoPromotion(product, quantity, response.noPromotionQuantity());
         Inventory inventory = response.inventory();
         Quantity quantityOfInventory = inventory.getQuantity();
-        noPromotionInventory.subtract(quantity.subtract(response.noPromotionQuantity()));
-        inventory.subtract(response.noPromotionQuantity());
+        inventory.subtract(quantity);
     }
 
-    private void purchaseOnlyPromotionProduct(final Response response, final Product product,
+    private void purchaseWithNoPromotionProductOfOutOfStock(final Response response, final Product product,
+                                                            final Inventory noPromotionInventory) {
+        store.noteWithNoPromotion(product, quantity, response.noPromotionQuantity());
+        Inventory inventory = response.inventory();
+        Quantity quantityOfInventory = inventory.getQuantity();
+        noPromotionInventory.subtract(quantity.subtract(quantityOfInventory));
+        inventory.subtract(quantityOfInventory);
+    }
+
+    private void purchaseWithinPromotionStock(final Response response, final Product product,
                                               final Quantity noPromotionQuantity) {
         Quantity subtractedQuantity = quantity.subtract(noPromotionQuantity);
         store.notePurchaseProduct(product, subtractedQuantity);
