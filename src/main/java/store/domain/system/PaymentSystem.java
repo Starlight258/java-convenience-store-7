@@ -47,7 +47,6 @@ public class PaymentSystem {
         if (isNoPromotionPurchase(inventory)) {
             return processNormalPurchase(inventory, quantity, store);
         }
-
         Optional<Promotion> optionalPromotion = findValidPromotion(inventory.getPromotionName(), now);
         return optionalPromotion.map(
                         promotion -> processPromotionInventory(inventory, quantity, store, sameProductInventories, promotion))
@@ -64,19 +63,26 @@ public class PaymentSystem {
         if (checkOutOfStock(quantity, promotionQuantities)) {
             return createPartialPromotionResponse(inventory, quantity, promotionQuantities, sameProductInventories);
         }
-        return processInStockPurchase(inventory, quantity, promotionQuantities, store, sameProductInventories);
+        return processInStockPurchase(inventory, quantity, promotionQuantities, store);
     }
 
     private Response processInStockPurchase(Inventory inventory, Quantity quantity,
-                                            PromotionQuantities promotionQuantities, Store store,
-                                            Inventories sameProductInventories) {
+                                            PromotionQuantities promotionQuantities, Store store) {
         if (isLessThanMinimumPurchase(quantity, promotionQuantities.purchaseQuantity())) {
             return processNormalPurchase(inventory, quantity, store);
         }
         if (canGetAdditionalItems(quantity, promotionQuantities)) {
-            return createAdditionalItemsResponse(quantity, promotionQuantities, inventory);
+            return checkOutOfStock(inventory, quantity, promotionQuantities, store);
         }
         return processPromotionPurchase(quantity, promotionQuantities, inventory, store);
+    }
+
+    private Response checkOutOfStock(final Inventory inventory, final Quantity quantity,
+                                     final PromotionQuantities promotionQuantities, final Store store) {
+        if (inventory.getQuantity().equals(quantity)) {
+            return processNormalPurchase(inventory, quantity, store);
+        }
+        return createAdditionalItemsResponse(quantity, promotionQuantities, inventory);
     }
 
     private boolean checkOutOfStock(final Quantity quantity, final PromotionQuantities promotionQuantities) {
