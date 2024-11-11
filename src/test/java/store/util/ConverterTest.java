@@ -11,10 +11,8 @@ public class ConverterTest {
     void 성공_정수변환() {
         // Given
         String input = "3";
-
         // When
         int number = Converter.convertToInteger(input);
-
         // Then
         Assertions.assertThat(number).isEqualTo(3);
     }

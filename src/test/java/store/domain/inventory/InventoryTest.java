@@ -60,7 +60,7 @@ public class InventoryTest {
     }
 
     @Nested
-    @DisplayName("구매 테스")
+    @DisplayName("구매 테스트")
     class Purchase {
         @Test
         @DisplayName("성공적으로 구매한다.")

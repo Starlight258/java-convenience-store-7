@@ -14,10 +14,8 @@ class StoreFormatterTest {
     void 성공_인벤토리메세지() {
         // Given
         StoreFormatter formatter = new StoreFormatter(12);
-
         // When
         String message = formatter.makeInventoryMessage(3, "탄산2+1", "콜라", BigDecimal.valueOf(1000));
-
         // Then
         assertThat(message).isEqualTo("- 콜라 1,000원 3개 탄산2+1");
     }

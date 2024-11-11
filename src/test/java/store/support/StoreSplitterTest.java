@@ -15,10 +15,8 @@ class StoreSplitterTest {
         // Given
         StoreSplitter splitter = new StoreSplitter(",");
         String text = "mint,dobby";
-
         // When
         List<String> splittedText = splitter.split(text);
-
         // Then
         assertThat(splittedText).containsExactly("mint", "dobby");
     }

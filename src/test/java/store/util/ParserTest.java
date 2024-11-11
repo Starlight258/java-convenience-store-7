@@ -18,10 +18,8 @@ public class ParserTest {
     void 성공_파싱() {
         // Given
         String input = "2024-12-31";
-
         // When
         LocalDate date = Parser.parseToLocalDate(input);
-
         // Then
         assertThat(date).isEqualTo(LocalDate.of(2024, 12, 31));
     }
@@ -30,9 +28,7 @@ public class ParserTest {
     @ValueSource(strings = {"2024-12-41", "20241231", "abc"})
     @DisplayName("유효한 날짜 형식이 아닐 경우 예외가 발생한다.")
     void 실패_파싱(String input) {
-        // Given
-
-        // When
+        // When & Then
         assertThatThrownBy(() -> Parser.parseToLocalDate(input))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
