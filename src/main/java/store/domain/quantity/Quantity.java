@@ -83,4 +83,8 @@ public class Quantity {
     public int hashCode() {
         return Objects.hash(quantity);
     }
+
+    public Quantity remainder(final Quantity sum) {
+        return new Quantity(this.quantity % sum.quantity);
+    }
 }

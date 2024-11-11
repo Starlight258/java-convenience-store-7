@@ -58,24 +58,32 @@ public class PaymentSystem {
                                                Store store, Inventories sameProductInventories,
                                                Promotion promotion) {
         PromotionQuantities promotionQuantities = calculatePromotionQuantities(promotion);
-
         if (isOutOfStock(inventory.getQuantity(), quantity)) {
             return handleOutOfStockPurchase(inventory, quantity, promotionQuantities, store, sameProductInventories);
         }
-
-        return processInStockPurchase(inventory, quantity, promotionQuantities, store);
+        if (checkOutOfStock(quantity, promotionQuantities)) {
+            return createPartialPromotionResponse(inventory, quantity, promotionQuantities, sameProductInventories);
+        }
+        return processInStockPurchase(inventory, quantity, promotionQuantities, store, sameProductInventories);
     }
 
     private Response processInStockPurchase(Inventory inventory, Quantity quantity,
-                                            PromotionQuantities promotionQuantities, Store store) {
+                                            PromotionQuantities promotionQuantities, Store store,
+                                            Inventories sameProductInventories) {
         if (isLessThanMinimumPurchase(quantity, promotionQuantities.purchaseQuantity())) {
             return processNormalPurchase(inventory, quantity, store);
         }
-
         if (canGetAdditionalItems(quantity, promotionQuantities)) {
             return createAdditionalItemsResponse(quantity, promotionQuantities, inventory);
         }
         return processPromotionPurchase(quantity, promotionQuantities, inventory, store);
+    }
+
+    private boolean checkOutOfStock(final Quantity quantity, final PromotionQuantities promotionQuantities) {
+        Quantity bonusQuantity = promotionQuantities.bonusQuantity();
+        Quantity purchaseQuantity = promotionQuantities.purchaseQuantity();
+        Quantity sum = bonusQuantity.add(purchaseQuantity);
+        return quantity.isMoreThan(sum) && !quantity.remainder(sum).equals(Quantity.zero());
     }
 
     private boolean isNoPromotionPurchase(Inventory inventory) {
