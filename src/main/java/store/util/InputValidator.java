@@ -4,7 +4,6 @@ import static store.exception.ExceptionMessages.NOT_NULL_ARGUMENT;
 import static store.exception.ExceptionMessages.NOT_NULL_BLANK;
 import static store.exception.ExceptionMessages.NOT_NULL_EMPTY;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public class InputValidator {
@@ -21,7 +20,7 @@ public class InputValidator {
         }
     }
 
-    public static void validateNotNull(final BigDecimal input) {
+    public static <T> void validateNotNull(final T input) {
         if (input == null) {
             throw new IllegalArgumentException(NOT_NULL_ARGUMENT.getMessageWithPrefix());
         }
