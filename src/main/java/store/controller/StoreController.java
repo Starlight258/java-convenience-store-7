@@ -40,8 +40,8 @@ import store.view.OutputView;
 
 public class StoreController {
 
-    private static final String INVENTORY_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/products.md";
-    private static final String PROMOTION_FILENAME = "/Users/mae/Desktop/archive/wooteco/precourse/java-convenience-store-7-Starlight258/src/main/resources/promotions.md";
+    private static final String INVENTORY_FILENAME = "src/main/resources/products.md";
+    private static final String PROMOTION_FILENAME = "src/main/resources/promotions.md";
     private static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
     private static final Pattern PATTERN = Pattern.compile(REGEX);
     private static final String NULL = "null";
