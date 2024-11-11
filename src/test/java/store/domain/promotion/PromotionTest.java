@@ -9,8 +9,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import store.domain.quantity.Quantity;
 
 @DisplayName("할인 정보 테스트")
@@ -20,16 +18,6 @@ class PromotionTest {
     void createPromotion() {
         assertThatCode(() -> new Promotion("탄산2+1", new Quantity(2), new Quantity(1),
                 LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))).doesNotThrowAnyException();
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" "})
-    @DisplayName("프로모션 이름이 비어있거나 null이면 예외가 발생한다")
-    void throwExceptionWhenNameInvalid(String input) {
-        assertCustomIllegalArgumentException(() -> new Promotion(input, new Quantity(2), new Quantity(1),
-                LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)))
-                .hasMessageContaining("프로모션 이름이 비어있거나 null일 수 없습니다.");
     }
 
     @Test

@@ -21,7 +21,7 @@ class PromotionsTest {
 
     @Test
     @DisplayName("프로모션 이름으로 프로모션을 조회한다")
-    void findByName() {
+    void 성공_프로모션이름조회() {
         LocalDate date = LocalDate.of(2024, 1, 1);
         Promotion cokePromotion = new Promotion("탄산2+1", new Quantity(2), new Quantity(1), date, date.plusYears(1));
         Promotions promotions = new Promotions(List.of(cokePromotion));
