@@ -98,7 +98,7 @@ public class StoreService {
     private void processEachProduct(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store,
                                     String productName, Quantity quantity) {
         LocalDate now = DateTimes.now().toLocalDate();
-        Response response = paymentSystem.canBuy(productName, quantity, store, now);
+        Response response = paymentSystem.pay(productName, quantity, store, now);
         ResponseHandler handler = new ResponseHandler(orders, store, productName, quantity, interactionView);
         handler.handle(response);
     }

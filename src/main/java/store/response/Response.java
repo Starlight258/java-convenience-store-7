@@ -8,7 +8,7 @@ public record Response(ResponseStatus status, Quantity bonusQuantity, Quantity n
                        Quantity canGetMoreQuantity,
                        Inventory inventory, Inventories sameProductInventories) {
 
-    public static Response buyWithNoPromotion(final Inventory inventory) { // 그냥 구매한 금액
+    public static Response purchaseWithNoPromotion(final Inventory inventory) {
         return new Response(ResponseStatus.BUY_WITH_NO_PROMOTION, Quantity.zero(), Quantity.zero(), Quantity.zero(),
                 inventory, null);
     }

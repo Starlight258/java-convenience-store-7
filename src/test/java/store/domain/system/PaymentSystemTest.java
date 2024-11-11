@@ -59,7 +59,7 @@ public class PaymentSystemTest {
     @DisplayName("프로모션 기간이 지난 경우 일반 구매로 처리한다")
     void expiredPromotion() {
         Response response = createSystem(10, 10)
-                .canBuy(PRODUCT_NAME, new Quantity(3), store, LocalDate.of(2025, 1, 1));
+                .pay(PRODUCT_NAME, new Quantity(3), store, LocalDate.of(2025, 1, 1));
         assertThat(response.status()).isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION);
     }
 
@@ -69,7 +69,7 @@ public class PaymentSystemTest {
         paymentSystem = new PaymentSystem(
                 new Inventories(List.of(new Inventory(PRODUCT, 10, "null"))),
                 new Promotions(Collections.emptyList()));
-        assertThat(paymentSystem.canBuy(PRODUCT_NAME, new Quantity(3), store,
+        assertThat(paymentSystem.pay(PRODUCT_NAME, new Quantity(3), store,
                 LocalDate.of(2024, 3, 1)).status())
                 .isEqualTo(ResponseStatus.BUY_WITH_NO_PROMOTION);
     }
@@ -78,7 +78,7 @@ public class PaymentSystemTest {
     @DisplayName("프로모션 재고가 부족할 때 일부만 적용한다")
     void outOfPromotionStock() {
         Response response = createSystem(7, 10)
-                .canBuy(PRODUCT_NAME, new Quantity(10), store, LocalDate.of(2024, 3, 1));
+                .pay(PRODUCT_NAME, new Quantity(10), store, LocalDate.of(2024, 3, 1));
         assertThat(response.status()).isEqualTo(ResponseStatus.OUT_OF_STOCK);
         assertThat(response.bonusQuantity()).isEqualTo(new Quantity(2));
     }
@@ -87,7 +87,7 @@ public class PaymentSystemTest {
     @DisplayName("보너스 수량을 안내한다")
     void notifyAvailableBonus() {
         Response response = createSystem(10, 0)
-                .canBuy(PRODUCT_NAME, new Quantity(2), store, LocalDate.of(2024, 3, 1));
+                .pay(PRODUCT_NAME, new Quantity(2), store, LocalDate.of(2024, 3, 1));
         assertThat(response.status()).isEqualTo(ResponseStatus.CAN_GET_BONUS);
         assertThat(response.bonusQuantity()).isEqualTo(new Quantity(1));
     }
