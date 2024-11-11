@@ -26,6 +26,16 @@ public class Receipt {
         bonusProducts.put(product, bonusProducts.getOrDefault(product, Quantity.zero()).add(bonusQuantity));
     }
 
+    public BigDecimal getMaxTotalPrice() {
+        return getPurchasedProducts().entrySet().stream()
+                .map(entry -> {
+                    return entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue().getQuantity()));
+                })
+                .map(Price::getPrice)
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+    }
+
     public Price getPromotionDiscountPrice() {
         Price promotionPrice = Price.zero();
         for (Entry<Product, Quantity> entry : bonusProducts.entrySet()) {

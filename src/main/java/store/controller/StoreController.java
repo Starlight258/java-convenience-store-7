@@ -217,14 +217,19 @@ public class StoreController {
     }
 
     private void showPurchasedProducts(final Receipt receipt) {
-        outputView.showCommentOfInventory();
+        int length = String.format("%,.0f", receipt.getMaxTotalPrice()).length();
+        outputView.showCommentOfInventory(length);
         for (Entry<Product, Quantity> entry : receipt.getPurchasedProducts().entrySet()) {
-            Product product = entry.getKey();
-            String name = product.getName();
-            Quantity quantity = entry.getValue();
-            Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity.getQuantity()));
-            outputView.showInventory(name, quantity.getQuantity(), totalPrice.getPrice());
+            showEachProduct(entry);
         }
+    }
+
+    private void showEachProduct(final Entry<Product, Quantity> entry) {
+        Product product = entry.getKey();
+        String name = product.getName();
+        Quantity quantity = entry.getValue();
+        Price totalPrice = entry.getKey().getPrice().multiply(BigDecimal.valueOf(quantity.getQuantity()));
+        outputView.showInventory(name, quantity.getQuantity(), totalPrice.getPrice());
     }
 
     private void showReceipt(final Receipt receipt, final Price membershipPrice) {
