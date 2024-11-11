@@ -3,32 +3,41 @@ package store.support;
 import store.domain.inventory.Inventory;
 
 public class StoreFormatter {
+    private static final String INVENTORY_MESSAGE_FORMAT = "- %s %,.0f원 %s%s";
+    private static final String STRING_FORMAT = "%%-%ds";
 
     private static final String NO_STOCK = "재고 없음";
     private static final String QUANTITY_UNIT = "개";
     private static final String NULL = "null";
+    private static final String EMPTY = "";
+    private static final String SPACE = " ";
+
+    private static final char KOREAN_FIRST = '가';
+    private static final char KOREAN_LAST = '힣';
 
     public String makeInventoryMessage(final Inventory inventory) {
         String quantityText = makeQuantityText(inventory.getQuantity().getQuantity());
         String promotionText = makePromotionText(inventory.getPromotionName());
-        return String.format("- %s %,.0f원 %s%s",
-                        inventory.getProductName(), inventory.getProduct().getPrice().getPrice(), quantityText, promotionText)
-                .trim();
+        return String.format(INVENTORY_MESSAGE_FORMAT,
+                inventory.getProductName(),
+                inventory.getProduct().getPrice().getPrice(),
+                quantityText,
+                promotionText).trim();
     }
 
     public String format(String word, int formatSize) {
-        String formatter = String.format("%%-%ds", formatSize - getKoreanCount(word));
+        String formatter = String.format(STRING_FORMAT, formatSize - countKoreanCharacters(word));
         return String.format(formatter, word);
     }
 
-    private int getKoreanCount(String text) {
-        int cnt = 0;
-        for (int i = 0; i < text.length(); i++) {
-            if (text.charAt(i) >= '가' && text.charAt(i) <= '힣') {
-                cnt++;
-            }
-        }
-        return cnt;
+    private int countKoreanCharacters(String text) {
+        return (int) text.chars()
+                .filter(this::isKoreanCharacter)
+                .count();
+    }
+
+    private boolean isKoreanCharacter(int ch) {
+        return ch >= KOREAN_FIRST && ch <= KOREAN_LAST;
     }
 
     private String makeQuantityText(final int quantity) {
@@ -39,9 +48,9 @@ public class StoreFormatter {
     }
 
     private String makePromotionText(final String promotionName) {
-        if (promotionName.equals(NULL)) {
-            return "";
+        if (NULL.equals(promotionName)) {
+            return EMPTY;
         }
-        return " " + promotionName;
+        return SPACE + promotionName;
     }
 }

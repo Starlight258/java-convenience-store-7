@@ -14,11 +14,4 @@ public class CustomExceptionAssertions {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith(ExceptionMessages.ERROR_PREFIX.getMessage());
     }
-
-    public static AbstractThrowableAssert<?, ? extends Throwable> assertCustomIllegalStateException(
-            ThrowableAssert.ThrowingCallable throwingCallable) {
-        return assertThatThrownBy(throwingCallable)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageStartingWith(ExceptionMessages.ERROR_PREFIX.getMessage());
-    }
 }
