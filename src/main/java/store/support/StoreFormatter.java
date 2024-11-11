@@ -19,10 +19,6 @@ public class StoreFormatter {
         return String.format(formatter, word);
     }
 
-    public int getCount(String word) {
-        return getKoreanCount(word);
-    }
-
     private int getKoreanCount(String text) {
         int cnt = 0;
         for (int i = 0; i < text.length(); i++) {
@@ -42,10 +38,16 @@ public class StoreFormatter {
     }
 
     private String makeQuantityText(final int quantity) {
-        return quantity == 0 ? NO_STOCK : quantity + QUANTITY_UNIT;
+        if (quantity == 0) {
+            return NO_STOCK;
+        }
+        return quantity + QUANTITY_UNIT;
     }
 
     private String makePromotionText(final String promotionName) {
-        return promotionName.equals(NULL) ? "" : " " + promotionName;
+        if (promotionName.equals(NULL)) {
+            return "";
+        }
+        return " " + promotionName;
     }
 }
