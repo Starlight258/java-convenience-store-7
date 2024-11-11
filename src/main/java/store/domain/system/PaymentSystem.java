@@ -123,7 +123,7 @@ public class PaymentSystem {
     private Response createPartialPromotionResponse(Inventory inventory, Quantity quantity,
                                                     PromotionQuantities promotionQuantities,
                                                     final Inventories sameProductInventories) {
-        Quantity setSize = calculateSetSize(inventory.getQuantity(), promotionQuantities);
+        Quantity setSize = calculateSetSize(quantity, promotionQuantities);
         Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
         return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);
