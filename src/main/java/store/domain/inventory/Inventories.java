@@ -1,11 +1,14 @@
 package store.domain.inventory;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 import store.domain.Store;
 import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
@@ -18,11 +21,33 @@ public class Inventories {
     private static final ExceptionMessage OUT_OF_STOCK = new ExceptionMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
     private static final ExceptionMessage NO_PROMOTION_PRODUCT = new ExceptionMessage("프로모션이 없는 상품을 찾을 수 없습니다.");
 
-    private final TreeSet<Inventory> inventories;
+    private final Set<Inventory> inventories;
 
     public Inventories(final List<Inventory> inventories) {
         validateInventories(inventories);
-        this.inventories = new TreeSet<>(inventories);
+        this.inventories = new LinkedHashSet<>();
+        Map<String, List<Inventory>> groups = groupByProductName(inventories);
+        for (List<Inventory> group : groups.values()) {
+            addInventory(group);
+        }
+    }
+
+    private void addInventory(final List<Inventory> group) {
+        group.stream()
+                .filter(inv -> inv.getPromotionName() != null)
+                .forEach(this.inventories::add);
+        group.stream()
+                .filter(inv -> inv.getPromotionName() == null)
+                .forEach(this.inventories::add);
+    }
+
+    private static Map<String, List<Inventory>> groupByProductName(final List<Inventory> inventories) {
+        return inventories.stream()
+                .collect(Collectors.groupingBy(
+                        inv -> inv.getProduct().getName(),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
     }
 
     public void getPurchasedItems(final Orders purchasedItems) {

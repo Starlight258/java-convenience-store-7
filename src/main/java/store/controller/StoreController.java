@@ -129,7 +129,11 @@ public class StoreController {
 
     private void showInventories(final Inventories inventories) {
         Map<String, List<Inventory>> groups = inventories.getInventories().stream()
-                .collect(Collectors.groupingBy(Inventory::getProductName));
+                .collect(Collectors.groupingBy(
+                        Inventory::getProductName,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
         groups.values().forEach(this::showProductInventories);
     }
 
@@ -321,7 +325,7 @@ public class StoreController {
                 .filter(input -> !input.startsWith("name"))
                 .map(splitter::split)
                 .map(this::createInventory)
-                .collect(Collectors.toList()));
+                .toList());
     }
 
     private Inventory createInventory(final List<String> splittedText) {

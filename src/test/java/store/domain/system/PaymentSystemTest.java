@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,10 @@ public class PaymentSystemTest {
         Promotion promotion = new Promotion("탄산2+1", new Quantity(2), new Quantity(1),
                 LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
         return new PaymentSystem(
-                new Inventories(List.of(new Inventory(PRODUCT, promotionStock, "탄산2+1"),
-                        new Inventory(PRODUCT, normalStock, "null"))),
+                new Inventories(Arrays.asList(
+                        new Inventory(PRODUCT, promotionStock, "탄산2+1"),
+                        new Inventory(PRODUCT, normalStock, "null")
+                )),
                 new Promotions(List.of(promotion)));
     }
 
