@@ -4,7 +4,7 @@ import static store.exception.ExceptionMessages.OUT_OF_STOCK;
 
 import java.util.Objects;
 import store.domain.quantity.Quantity;
-import store.exception.ExceptionMessages;
+import store.util.InputValidator;
 
 public class Inventory implements Comparable<Inventory> {
 
@@ -56,12 +56,8 @@ public class Inventory implements Comparable<Inventory> {
     }
 
     private void validate(final Product product, final String promotionName) {
-        if (product == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
-        }
-        if (promotionName.isBlank()) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_BLANK.getMessageWithPrefix());
-        }
+        InputValidator.validateNotNull(product);
+        InputValidator.validateNotNullOrBlank(promotionName);
     }
 
     public Quantity getQuantity() {

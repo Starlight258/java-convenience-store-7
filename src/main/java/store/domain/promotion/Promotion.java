@@ -3,11 +3,11 @@ package store.domain.promotion;
 import java.time.LocalDate;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessage;
+import store.util.InputValidator;
 
 public class Promotion {
 
     public static final ExceptionMessage INVALID_DATE = new ExceptionMessage("시작 날짜는 이후 날짜 이전일 수 없습니다.");
-    public static final ExceptionMessage INVALID_NULL_EMPTY = new ExceptionMessage("프로모션 이름이 비어있거나 null일 수 없습니다.");
 
     private final String promotionName;
     private final Quantity purchaseQuantity;
@@ -50,9 +50,7 @@ public class Promotion {
     }
 
     private void validatePromotionName(final String promotionName) {
-        if (promotionName == null || promotionName.isBlank()) {
-            throw new IllegalArgumentException(INVALID_NULL_EMPTY.getMessage());
-        }
+        InputValidator.validateNotNullOrBlank(promotionName);
     }
 
     public Quantity getPurchaseQuantity() {

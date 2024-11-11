@@ -3,7 +3,7 @@ package store.domain.promotion;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import store.exception.ExceptionMessages;
+import store.util.InputValidator;
 
 public class Promotions {
 
@@ -15,9 +15,7 @@ public class Promotions {
     }
 
     private void validatePromotions(final List<Promotion> promotions) {
-        if (promotions == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
-        }
+        InputValidator.validateNotNull(promotions);
     }
 
     public Optional<Promotion> find(final String promotionName, final LocalDate now) {
