@@ -86,12 +86,10 @@ public class OutputView {
 
     public void showBonusProduct(final String name, final int quantity) {
         System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + "\t%d \t" + System.lineSeparator(), quantity);
-        System.out.println();
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + "\t%d \t%,.0f\n"
-                + System.lineSeparator(), quantity, totalPrice);
+        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + "\t%d \t%,.0f\n", quantity, totalPrice);
     }
 
     public void showCommentOfInventory() {
