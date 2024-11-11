@@ -28,7 +28,7 @@ public class OutputView {
     }
 
     public void showFreeQuantity(final String productName, final int canGetMoreQuantity) {
-        System.out.printf(System.lineSeparator() + "현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)"
+        System.out.printf(System.lineSeparator() + "현재 %s은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)"
                 + System.lineSeparator(), productName, canGetMoreQuantity);
     }
 
@@ -57,48 +57,45 @@ public class OutputView {
     }
 
     public void showBonus() {
-        System.out.println("=============증     정===============");
+        System.out.println("=============증\t정===============");
     }
 
     public void showTotalPrice(final Integer quantity, final BigDecimal totalPurchaseValue) {
-        int length = String.format(",.0f", totalPurchaseValue).length();
-        System.out.printf("%s%10s%d%" + (12 - length) + "s%,.0f%n",
-                storeFormatter.format("총구매액"), " ", quantity, " ", totalPurchaseValue);
+        System.out.printf("총구매액\t\t%d\t%,.0f", quantity, totalPurchaseValue);
+        System.out.println();
     }
 
     public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
         int length = String.format(",.0f", promotionDiscountPrice).length();
-        System.out.printf("%s%10s%" + (14 - length) + "s-%,.0f%n",
-                storeFormatter.format("행사할인"), " ", " ", promotionDiscountPrice);
+        System.out.printf("행사할인\t\t\t-%,.0f", promotionDiscountPrice);
+        System.out.println();
     }
 
     public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
         int length = String.format(",.0f", memberShipDiscountPrice).length();
-        System.out.printf("%s%10s%" + (15 - length) + "s-%,.0f%n",
-                storeFormatter.format("멤버십할인"), " ", " ", memberShipDiscountPrice);
+        System.out.printf("멤버십할인\t\t\t-%,.0f", memberShipDiscountPrice);
+        System.out.println();
     }
 
     public void showMoneyToPay(final BigDecimal priceToPay) {
         int length = String.format(",.0f", priceToPay).length();
-        System.out.printf("%s%10s%" + (13 - length) + "s%,.0f%n",
-                storeFormatter.format("내실돈"), " ", " ", priceToPay);
+        System.out.printf("내실돈\t\t\t%,.0f", priceToPay);
+        System.out.println();
     }
 
     public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf("%-19s%-10d",
-                storeFormatter.format(name), quantity);
+        System.out.printf("%s\t\t\t%d", name, quantity);
         System.out.println();
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        int length = String.format(",.0f", totalPrice).length();
-        System.out.printf("%-10s%-" + (10 - name.length() / 2) + "s%d%" + (10 - length) + "s%,.0f%n",
-                storeFormatter.format(name), " ", quantity, " ", totalPrice);
+        System.out.printf("%s\t\t\t%d\t%,.0f%n", name, quantity, totalPrice);
+        System.out.println();
     }
 
     public void showCommentOfInventory(int length) {
         System.out.println(System.lineSeparator() + STORE_HEADER);
-        System.out.printf("%-19s%s%" + (12 - length) + "s%s", "상품명", "수량", " ", "금액");
+        System.out.printf("상품명\t\t수량\t금액");
         System.out.println();
     }
 }
