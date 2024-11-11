@@ -1,6 +1,6 @@
 package store.support;
 
-import java.math.BigDecimal;
+import store.domain.inventory.Inventory;
 
 public class StoreFormatter {
 
@@ -8,13 +8,15 @@ public class StoreFormatter {
     private static final String QUANTITY_UNIT = "개";
     private static final String NULL = "null";
 
-    private final int formatSize;
-
-    public StoreFormatter(final int formatSize) {
-        this.formatSize = formatSize;
+    public String makeInventoryMessage(final Inventory inventory) {
+        String quantityText = makeQuantityText(inventory.getQuantity().getQuantity());
+        String promotionText = makePromotionText(inventory.getPromotionName());
+        return String.format("- %s %,.0f원 %s%s",
+                        inventory.getProductName(), inventory.getProduct().getPrice().getPrice(), quantityText, promotionText)
+                .trim();
     }
 
-    public String format(String word) {
+    public String format(String word, int formatSize) {
         String formatter = String.format("%%-%ds", formatSize - getKoreanCount(word));
         return String.format(formatter, word);
     }
@@ -27,14 +29,6 @@ public class StoreFormatter {
             }
         }
         return cnt;
-    }
-
-    public String makeInventoryMessage(final int quantity, final String promotionName,
-                                       final String productName, final BigDecimal productPrice) {
-        String quantityText = makeQuantityText(quantity);
-        String promotionText = makePromotionText(promotionName);
-        return String.format("- %s %,d원 %s%s",
-                productName, productPrice.intValue(), quantityText, promotionText).trim();
     }
 
     private String makeQuantityText(final int quantity) {
