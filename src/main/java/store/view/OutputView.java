@@ -61,41 +61,41 @@ public class OutputView {
     }
 
     public void showTotalPrice(final Integer quantity, final BigDecimal totalPurchaseValue) {
-        System.out.printf("총구매액\t\t%d\t%,.0f", quantity, totalPurchaseValue);
+        System.out.printf("총구매액\t%d\t%,.0f", quantity, totalPurchaseValue);
         System.out.println();
     }
 
     public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
         int length = String.format(",.0f", promotionDiscountPrice).length();
-        System.out.printf("행사할인\t\t\t-%,.0f", promotionDiscountPrice);
+        System.out.printf("행사할인\t\t-%,.0f", promotionDiscountPrice);
         System.out.println();
     }
 
     public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
         int length = String.format(",.0f", memberShipDiscountPrice).length();
-        System.out.printf("멤버십할인\t\t\t-%,.0f", memberShipDiscountPrice);
+        System.out.printf("멤버십할인\t\t-%,.0f", memberShipDiscountPrice);
         System.out.println();
     }
 
     public void showMoneyToPay(final BigDecimal priceToPay) {
         int length = String.format(",.0f", priceToPay).length();
-        System.out.printf("내실돈\t\t\t%,.0f", priceToPay);
+        System.out.printf("내실돈\t\t%,.0f", priceToPay);
         System.out.println();
     }
 
     public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf("%s\t\t\t%d", name, quantity);
+        System.out.printf("%s\t\t%d", name, quantity);
         System.out.println();
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf("%s\t\t\t%d\t%,.0f%n", name, quantity, totalPrice);
+        System.out.printf("%s\t\t%d\t%,.0f%n", name, quantity, totalPrice);
         System.out.println();
     }
 
     public void showCommentOfInventory(int length) {
         System.out.println(System.lineSeparator() + STORE_HEADER);
-        System.out.printf("상품명\t\t수량\t금액");
+        System.out.printf("상품명\t수량\t금액");
         System.out.println();
     }
 }

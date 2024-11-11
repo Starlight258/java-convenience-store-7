@@ -248,9 +248,6 @@ public class StoreController {
     }
 
     private void showBonus(final Receipt receipt) {
-        if (receipt.getBonusProducts().size() == 0) {
-            return;
-        }
         showBonusProducts(receipt);
     }
 
