@@ -6,8 +6,8 @@ import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.membership.Membership;
-import store.domain.player.Orders;
 import store.domain.price.Price;
+import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
 import store.exception.ExceptionHandler;
@@ -55,7 +55,7 @@ public class StoreController {
     private boolean processTransaction(final PaymentSystem paymentSystem) {
         Inventories inventories = paymentSystem.getInventories();
         showWelcomeMessage(inventories);
-        Orders orders = getPurchasedItems(inventories);
+        Map<String, Quantity> orders = getPurchasedItems(inventories);
         processStore(orders, paymentSystem);
         return !continueTransaction();
     }
@@ -94,7 +94,7 @@ public class StoreController {
         outputView.showMessage(storeFormatter.makeInventoryMessage(inventory));
     }
 
-    private Orders getPurchasedItems(final Inventories inventories) {
+    private Map<String, Quantity> getPurchasedItems(final Inventories inventories) {
         outputView.showCommentOfPurchase();
         return exceptionHandler.retryWithReturn(() -> {
             String input = inputView.readLine();
@@ -102,13 +102,13 @@ public class StoreController {
         });
     }
 
-    private void processStore(final Orders orders, final PaymentSystem paymentSystem) {
+    private void processStore(final Map<String, Quantity> orders, final PaymentSystem paymentSystem) {
         Store store = storeService.initializeStore();
         Price membershipPrice = processPurchaseAndMembership(orders, paymentSystem, store);
         showResults(store.getReceipt(), membershipPrice);
     }
 
-    private Price processPurchaseAndMembership(Orders orders, PaymentSystem paymentSystem, Store store) {
+    private Price processPurchaseAndMembership(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store) {
         storeService.processPurchase(orders, paymentSystem, store);
         return checkMembership(store.getMembership());
     }

@@ -5,19 +5,19 @@ import java.util.function.Consumer;
 import store.domain.Store;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
-import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
 import store.view.InteractionView;
 
 public class ResponseHandler {
 
-    private final Orders orders;
+    private final Map<String, Quantity> orders;
     private final Store store;
     private final String productName;
     private final Quantity quantity;
     private final InteractionView interactionView;
 
-    public ResponseHandler(final Orders orders, final Store store, final String productName, final Quantity quantity,
+    public ResponseHandler(final Map<String, Quantity> orders, final Store store, final String productName,
+                           final Quantity quantity,
                            final InteractionView interactionView) {
         this.orders = orders;
         this.store = store;
@@ -93,7 +93,8 @@ public class ResponseHandler {
                                               final Quantity noPromotionQuantity) {
         Quantity subtractedQuantity = quantity.subtract(noPromotionQuantity);
         store.notePurchaseProduct(product, subtractedQuantity);
-        orders.put(productName, subtractedQuantity);
+
+        orders.put(productName, orders.getOrDefault(productName, Quantity.zero()).add(subtractedQuantity));
         response.inventory().subtract(quantity.subtract(noPromotionQuantity));
     }
 
@@ -104,7 +105,7 @@ public class ResponseHandler {
     }
 
     private void processInitialOrder(final Product product) {
-        orders.put(productName, quantity);
+        orders.put(productName, orders.getOrDefault(productName, Quantity.zero()).add(quantity));
         store.notePurchaseProduct(product, quantity);
     }
 
@@ -123,7 +124,8 @@ public class ResponseHandler {
                                            final Quantity canGetMoreQuantity,
                                            final Inventory inventory) {
         store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
-        orders.put(productName, quantity.add(canGetMoreQuantity));
+        orders.put(productName,
+                orders.getOrDefault(productName, Quantity.zero()).add(quantity.add(canGetMoreQuantity)));
         inventory.subtract(quantity.add(canGetMoreQuantity));
     }
 

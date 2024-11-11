@@ -18,7 +18,6 @@ import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
-import store.domain.player.Orders;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
@@ -83,20 +82,20 @@ public class StoreService {
                 new Membership(new LinkedHashMap<>()));
     }
 
-    public Orders createOrders(String input, Inventories inventories) {
+    public Map<String, Quantity> createOrders(String input, Inventories inventories) {
         List<String> splitText = splitter.split(input);
-        Orders orders = parseOrders(splitText);
+        Map<String, Quantity> orders = parseOrders(splitText);
         inventories.getPurchasedItems(orders);
         return orders;
     }
 
-    public void processPurchase(Orders orders, PaymentSystem paymentSystem, Store store) {
-        for (Entry<String, Quantity> entry : orders.getProductsToBuy().entrySet()) {
+    public void processPurchase(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store) {
+        for (Entry<String, Quantity> entry : orders.entrySet()) {
             processEachProduct(orders, paymentSystem, store, entry.getKey(), entry.getValue());
         }
     }
 
-    private void processEachProduct(Orders orders, PaymentSystem paymentSystem, Store store,
+    private void processEachProduct(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store,
                                     String productName, Quantity quantity) {
         LocalDate now = DateTimes.now().toLocalDate();
         Response response = paymentSystem.canBuy(productName, quantity, store, now);
@@ -104,8 +103,8 @@ public class StoreService {
         handler.handle(response);
     }
 
-    private Orders parseOrders(List<String> splitText) {
-        Orders orders = new Orders(new LinkedHashMap<>());
+    private Map<String, Quantity> parseOrders(List<String> splitText) {
+        Map<String, Quantity> orders = new LinkedHashMap<>();
         for (String text : splitText) {
             Matcher matcher = validateFormat(text);
             addOrder(orders, matcher);
@@ -139,13 +138,13 @@ public class StoreService {
         return matcher;
     }
 
-    private void addOrder(final Orders orders, final Matcher matcher) {
+    private void addOrder(final Map<String, Quantity> orders, final Matcher matcher) {
         String productValue = matcher.group(2);
         int quantityValue = Converter.convertToInteger((matcher.group(3)));
         if (quantityValue == 0) {
             throw new IllegalArgumentException(WRONG_INPUT.getMessageWithPrefix());
         }
-        orders.put(productValue, new Quantity(quantityValue));
+        orders.put(productValue, orders.getOrDefault(productValue, Quantity.zero()).add(new Quantity(quantityValue)));
     }
 
     private Promotion createPromotion(final List<String> splittedText) {

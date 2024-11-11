@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static store.util.CustomExceptionAssertions.assertCustomIllegalArgumentException;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import store.domain.player.Orders;
 import store.domain.quantity.Quantity;
 
 @DisplayName("재고 집합 테스트")
@@ -59,7 +59,7 @@ public class InventoriesTest {
     @DisplayName("상품이 없을 경우 예외가 발생한다")
     void 실패_안내_상품없음() {
         Map<String, Quantity> items = Map.of("invalid", new Quantity(3));
-        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new Orders(items)))
+        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new HashMap<>(items)))
                 .hasMessageContaining("존재하지 않는 상품입니다.");
     }
 
@@ -67,7 +67,7 @@ public class InventoriesTest {
     @DisplayName("재고 수량 이상으로 구매할 경우 예외가 발생한다")
     void 실패_안내_재고없음() {
         Map<String, Quantity> items = Map.of("coke", new Quantity(33));
-        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new Orders(items)))
+        assertCustomIllegalArgumentException(() -> inventories.getPurchasedItems(new HashMap(items)))
                 .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다.");
     }
 }
