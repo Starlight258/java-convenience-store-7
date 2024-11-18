@@ -5,6 +5,8 @@ import store.view.OutputView;
 
 public class ExceptionHandler {
 
+    private static final int MAX_RETRY = 3;
+
     private final OutputView outputView;
 
     public ExceptionHandler(final OutputView outputView) {
@@ -12,13 +14,21 @@ public class ExceptionHandler {
     }
 
     public <T> T retryWithReturn(Supplier<T> action) {
-        while (true) {
+        for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
             try {
                 return action.get();
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                outputView.showExceptionMessage(e.getMessage());
+            } catch (IllegalArgumentException e) {
+                handleError(e, attempt);
             }
         }
+        throw new IllegalArgumentException();
+    }
+
+    private void handleError(Exception e, int attempt) {
+        if (attempt == MAX_RETRY - 1) {
+            throw new IllegalArgumentException();
+        }
+        outputView.showExceptionMessage((e.getMessage()));
     }
 
     public boolean tryWithReturn(Supplier<Boolean> action) {

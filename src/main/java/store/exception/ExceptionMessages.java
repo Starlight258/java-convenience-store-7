@@ -13,11 +13,12 @@ public enum ExceptionMessages {
     NOT_EXIST_PRODUCT("존재하지 않는 상품입니다. 다시 입력해 주세요."),
     OUT_OF_STOCK("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요."),
     NO_PROMOTION_PRODUCT("프로모션이 없는 상품을 찾을 수 없습니다."),
-    CANNOT_BUY_PRODUCT("상품을 구매할 수 없습니다.");
+    CANNOT_BUY_PRODUCT("상품을 구매할 수 없습니다."),
+    ONLY_YES_OR_NO("Y/N만 응답 가능합니다.");
 
     private final String content;
 
-    ExceptionMessages(final java.lang.String content) {
+    ExceptionMessages(final String content) {
         this.content = content;
     }
 

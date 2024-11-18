@@ -1,14 +1,29 @@
 package store.view;
 
-import static store.exception.ExceptionMessages.WRONG_INPUT;
+import static store.exception.ExceptionMessages.ONLY_YES_OR_NO;
 
+import java.util.Arrays;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionHandler;
 
 public class InteractionView {
 
-    private static final String YES = "Y";
-    private static final String NO = "N";
+    public enum Answer {
+        YES("Y"), NO("N");
+
+        private final String value;
+
+        Answer(final String value) {
+            this.value = value;
+        }
+
+        public static Answer from(String input) {
+            return Arrays.stream(values())
+                    .filter(answer -> answer.value.equals(input))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(ONLY_YES_OR_NO.getMessageWithPrefix()));
+        }
+    }
 
     private final InputView inputView;
     private final OutputView outputView;
@@ -23,26 +38,17 @@ public class InteractionView {
 
     public boolean askForBonus(String productName, Quantity quantity) {
         outputView.showFreeQuantity(productName, quantity.getQuantity());
-        return readYOrN();
+        return readAnswer();
     }
 
     public boolean askForNoPromotion(String productName, int quantity) {
         outputView.showPromotionDiscount(productName, quantity);
-        return readYOrN();
+        return readAnswer();
     }
 
-    public boolean readYOrN() {
-        return exceptionHandler.retryWithReturn(() -> {
-            String answer = inputView.readLine();
-            validateAnswer(answer);
-            return answer.equals(YES);
-        });
-    }
-
-    private void validateAnswer(String input) {
-        if (input.equals(YES) || input.equals(NO)) {
-            return;
-        }
-        throw new IllegalArgumentException(WRONG_INPUT.getMessageWithPrefix());
+    public boolean readAnswer() {
+        return exceptionHandler.retryWithReturn(() ->
+                        Answer.from(inputView.readLine()))
+                .equals(Answer.YES);
     }
 }

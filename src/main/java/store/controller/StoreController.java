@@ -115,7 +115,7 @@ public class StoreController {
 
     private Price checkMembership(final Membership membership) {
         outputView.showCommentOfMemberShip();
-        if (!interactionView.readYOrN()) {
+        if (!interactionView.readAnswer()) {
             return Price.zero();
         }
         return membership.calculateDiscount();
@@ -123,7 +123,7 @@ public class StoreController {
 
     private boolean continueTransaction() {
         outputView.showAdditionalPurchase();
-        return interactionView.readYOrN();
+        return interactionView.readAnswer();
     }
 
     private void showResults(Receipt receipt, Price membershipPrice) {
