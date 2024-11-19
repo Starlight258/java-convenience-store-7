@@ -9,6 +9,7 @@ import store.view.InputView;
 import store.view.InteractionView;
 import store.view.OutputView;
 import store.view.StoreFileReader;
+import store.view.StoreView;
 
 public class StoreConfig {
 
@@ -20,9 +21,9 @@ public class StoreConfig {
         OutputView outputView = new OutputView(formatter);
         ExceptionHandler exceptionHandler = new ExceptionHandler(outputView);
         InteractionView interactionView = new InteractionView(inputView, outputView, exceptionHandler);
+        StoreView storeView = new StoreView(inputView, outputView, interactionView, formatter);
         StoreService storeService = createService(interactionView);
-        return new StoreController(inputView, outputView, interactionView,
-                exceptionHandler, storeService, formatter);
+        return new StoreController(storeView, exceptionHandler, storeService);
     }
 
     private StoreService createService(final InteractionView interactionView) {

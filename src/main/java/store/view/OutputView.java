@@ -123,14 +123,24 @@ public class OutputView {
         System.out.println(INVENTORY_HEADER);
     }
 
-    public void showPurchaseProducts(final Receipt receipt) {
+    public void showMessage(final String message) {
+        System.out.println(message);
+    }
+
+    public void showResults(Receipt receipt, Price membershipPrice) {
+        showPurchaseProducts(receipt);
+        showBonusProducts(receipt);
+        showReceipt(receipt, membershipPrice);
+    }
+
+    private void showPurchaseProducts(final Receipt receipt) {
         showCommentOfInventory();
         for (Entry<Product, Quantity> entry : receipt.getPurchasedProducts().entrySet()) {
             showEachProduct(entry);
         }
     }
 
-    public void showReceipt(final Receipt receipt, final Price membershipPrice) {
+    private void showReceipt(final Receipt receipt, final Price membershipPrice) {
         showReceiptStartMark();
         Entry<Quantity, Price> totalPurchases = receipt.getTotalPurchase();
         Price priceToPay = receipt.getPriceToPay(totalPurchases.getValue(), membershipPrice);
@@ -141,7 +151,7 @@ public class OutputView {
         showMoneyToPay(priceToPay.getPrice());
     }
 
-    public void showBonusProducts(final Receipt receipt) {
+    private void showBonusProducts(final Receipt receipt) {
         showBonus();
         for (Entry<Product, Quantity> entry : receipt.getBonusProducts().entrySet()) {
             Product product = entry.getKey();
@@ -149,10 +159,6 @@ public class OutputView {
             int quantity = entry.getValue().getQuantity();
             showBonusProduct(name, quantity);
         }
-    }
-
-    public void showMessage(final String message) {
-        System.out.println(message);
     }
 
     private void showEachProduct(final Entry<Product, Quantity> entry) {
