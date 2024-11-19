@@ -6,7 +6,7 @@ import java.util.Objects;
 import store.domain.quantity.Quantity;
 import store.util.InputValidator;
 
-public class Inventory implements Comparable<Inventory> {
+public class Inventory {
 
     private static final String NULL = "null";
 
@@ -43,8 +43,16 @@ public class Inventory implements Comparable<Inventory> {
         return totalQuantity;
     }
 
+    public boolean hasSameProductName(Inventory inventory) {
+        return this.getProductName().equals(inventory.getProductName());
+    }
+
     public boolean hasNoPromotion() {
         return NULL.equals(promotionName);
+    }
+
+    public boolean hasPromotion() {
+        return !NULL.equals(promotionName);
     }
 
     public String getProductName() {
@@ -66,14 +74,6 @@ public class Inventory implements Comparable<Inventory> {
 
     public String getPromotionName() {
         return promotionName;
-    }
-
-    @Override
-    public int compareTo(final Inventory o) {
-        if (o.promotionName == null) {
-            return -1;
-        }
-        return 1;
     }
 
     @Override

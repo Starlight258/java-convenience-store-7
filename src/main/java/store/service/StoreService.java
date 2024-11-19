@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
@@ -38,6 +37,7 @@ public class StoreService {
     private static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
     private static final Pattern PATTERN = Pattern.compile(REGEX);
     public static final String NAME = "name";
+    public static final String NULL = "null";
 
     private final StoreSplitter splitter;
     private final StoreFileReader fileReader;
@@ -48,29 +48,6 @@ public class StoreService {
         this.splitter = splitter;
         this.fileReader = fileReader;
         this.interactionView = interactionView;
-    }
-
-    private static final String NULL = "null";
-
-    public Map<String, List<Inventory>> groupInventories(final Inventories inventories) {
-        return inventories.getInventories().stream()
-                .collect(Collectors.groupingBy(
-                        Inventory::getProductName,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-    }
-
-    public boolean isPromotionInventory(Inventory inventory) {
-        return !inventory.getPromotionName().equals(NULL);
-    }
-
-    public boolean isNormalInventory(Inventory inventory) {
-        return inventory.getPromotionName().equals(NULL);
-    }
-
-    public Inventory createNoStockInventory(Inventory original) {
-        return new Inventory(original.getProduct(), 0, "null");
     }
 
     public PaymentSystem initializePaymentSystem() {
@@ -122,6 +99,35 @@ public class StoreService {
     }
 
     private Inventories makeInventories() {
+        Inventories inventories = createInitialInventories();
+        addNoPromotionInventories(inventories);
+        return inventories;
+    }
+
+    private void addNoPromotionInventories(final Inventories inventories) {
+        List<Product> products = getUniqueProducts(inventories);
+
+        for (Product product : products) {
+            Inventories productInventories = inventories.findProducts(product.getName());
+            if (!hasNoPromotionInventory(productInventories)) {
+                inventories.add(new Inventory(product, 0, NULL));
+            }
+        }
+    }
+
+    private List<Product> getUniqueProducts(final Inventories inventories) {
+        return inventories.getInventories().stream()
+                .map(Inventory::getProduct)
+                .distinct()
+                .toList();
+    }
+
+    private boolean hasNoPromotionInventory(final Inventories inventories) {
+        return inventories.getInventories().stream()
+                .anyMatch(Inventory::hasNoPromotion);
+    }
+
+    private Inventories createInitialInventories() {
         List<String> inventoriesFromSource = fileReader.readFileFromSource(INVENTORY_FILENAME);
         return new Inventories(inventoriesFromSource.stream()
                 .filter(input -> !input.startsWith(NAME))

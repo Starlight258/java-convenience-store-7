@@ -4,39 +4,52 @@ import static store.exception.ExceptionMessages.NOT_EXIST_PRODUCT;
 import static store.exception.ExceptionMessages.NO_PROMOTION_PRODUCT;
 import static store.exception.ExceptionMessages.OUT_OF_STOCK;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import store.domain.Store;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessages;
 
 public class Inventories {
 
-    private final Set<Inventory> inventories;
+    private final List<Inventory> inventories;
 
     public Inventories(final List<Inventory> inventories) {
         validateInventories(inventories);
-        this.inventories = new LinkedHashSet<>();
-        Map<String, List<Inventory>> groups = groupByProductName(inventories);
-        for (List<Inventory> group : groups.values()) {
-            addInventory(group);
-        }
+        this.inventories = sort(inventories);
     }
 
-    private void addInventory(final List<Inventory> group) {
-        group.stream()
-                .filter(inventory -> inventory.getPromotionName() != null)
-                .forEach(this.inventories::add);
-        group.stream()
-                .filter(inv -> inv.getPromotionName() == null)
-                .forEach(this.inventories::add);
+    private List<Inventory> sort(final List<Inventory> inventories) {
+        return inventories.stream()
+                .sorted(this::compareInventory)
+                .collect(Collectors.toList());
+    }
+
+    private int compareInventory(final Inventory source, final Inventory target) {
+        if (!isSameProduct(source, target)) {
+            return 0;
+        }
+        return comparePromotion(source, target);
+    }
+
+    private int comparePromotion(final Inventory source, final Inventory target) {
+        if (source.hasPromotion() && target.hasNoPromotion()) {
+            return -1;
+        }
+        if (source.hasNoPromotion() && target.hasPromotion()) {
+            return 1;
+        }
+        return 0;
+    }
+
+    private boolean isSameProduct(final Inventory source, final Inventory target) {
+        return source.hasSameProductName(target);
     }
 
     public void getPurchasedItems(final Map<String, Quantity> purchasedItems) {
@@ -79,15 +92,6 @@ public class Inventories {
         return totalQuantity;
     }
 
-    private Map<String, List<Inventory>> groupByProductName(final List<Inventory> inventories) {
-        return inventories.stream()
-                .collect(Collectors.groupingBy(
-                        inventory -> inventory.getProduct().getName(),
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-    }
-
     private void totalOutOfStock(final Quantity quantity, final Quantity totalStock) {
         if (totalStock.isLessThan(quantity)) {
             throw new IllegalArgumentException(OUT_OF_STOCK.getMessageWithPrefix());
@@ -107,7 +111,7 @@ public class Inventories {
     }
 
     public Inventories findProducts(final String productName) {
-        Inventories sameProducts = new Inventories(Collections.emptyList());
+        Inventories sameProducts = new Inventories(new ArrayList<>());
         for (Inventory inventory : inventories) {
             if (inventory.isSameProductName(productName)) {
                 sameProducts.add(inventory);
@@ -117,7 +121,38 @@ public class Inventories {
     }
 
     public void add(final Inventory inventory) {
-        inventories.add(inventory);
+        addOrderly(inventory);
+    }
+
+    private void addOrderly(final Inventory inventory) {
+        int index = findIndex(inventory);
+        inventories.add(index, inventory);
+    }
+
+    private int findIndex(final Inventory newInventory) {
+        String productName = newInventory.getProductName();
+        if (newInventory.hasPromotion()) {
+            return findFirstIndexOfProduct(productName);
+        }
+        return findLastIndexOfProduct(productName);
+    }
+
+    private int findLastIndexOfProduct(final String productName) {
+        int index = inventories.size();
+        for (int i = 0; i < inventories.size(); i++) {
+            Inventory currentInventory = inventories.get(i);
+            if (currentInventory.getProductName().equals(productName)) {
+                index = i + 1;
+            }
+        }
+        return index;
+    }
+
+    private int findFirstIndexOfProduct(final String productName) {
+        return IntStream.range(0, inventories.size())
+                .filter(index -> inventories.get(index).getProductName().equals(productName))
+                .findFirst()
+                .orElse(inventories.size());
     }
 
     public Quantity getTotalStocks() {
@@ -128,8 +163,8 @@ public class Inventories {
         return total;
     }
 
-    public Set<Inventory> getInventories() {
-        return Collections.unmodifiableSet(inventories);
+    public List<Inventory> getInventories() {
+        return Collections.unmodifiableList(inventories);
     }
 
     @Override
