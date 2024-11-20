@@ -17,6 +17,7 @@ import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
+import store.domain.price.Price;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
@@ -70,6 +71,13 @@ public class StoreService {
         for (Entry<String, Quantity> entry : orders.entrySet()) {
             processEachProduct(orders, paymentSystem, store, entry.getKey(), entry.getValue());
         }
+    }
+    
+    public Price checkMembership(final boolean useMembership, final Membership membership) {
+        if (useMembership) {
+            return membership.calculateDiscount();
+        }
+        return Price.zero();
     }
 
     private void processEachProduct(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store,

@@ -72,10 +72,7 @@ public class StoreController {
 
     private Price checkMembership(final Membership membership) {
         storeView.showCommentOfMemberShip();
-        if (!storeView.readAnswer()) {
-            return Price.zero();
-        }
-        return membership.calculateDiscount();
+        return storeService.checkMembership(storeView.readAnswer(), membership);
     }
 
     private boolean continueTransaction() {
