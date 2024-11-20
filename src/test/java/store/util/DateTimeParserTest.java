@@ -8,10 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import store.util.Parser;
 
 @DisplayName("파서 테스트")
-public class ParserTest {
+public class DateTimeParserTest {
 
     @Test
     @DisplayName("파싱에 성공한다.")
@@ -19,7 +18,7 @@ public class ParserTest {
         // Given
         String input = "2024-12-31";
         // When
-        LocalDate date = Parser.parseToLocalDate(input);
+        LocalDate date = DateTimeParser.parseToLocalDate(input);
         // Then
         assertThat(date).isEqualTo(LocalDate.of(2024, 12, 31));
     }
@@ -29,7 +28,7 @@ public class ParserTest {
     @DisplayName("유효한 날짜 형식이 아닐 경우 예외가 발생한다.")
     void 실패_파싱(String input) {
         // When & Then
-        assertThatThrownBy(() -> Parser.parseToLocalDate(input))
+        assertThatThrownBy(() -> DateTimeParser.parseToLocalDate(input))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("유효한 날짜형식이 아닙니다.");

@@ -1,8 +1,9 @@
-package store.support;
+package store.util;
 
 import store.domain.inventory.Inventory;
 
 public class StoreFormatter {
+
     private static final String INVENTORY_MESSAGE_FORMAT = "- %s %,.0f원 %s%s";
     private static final String STRING_FORMAT = "%%-%ds";
 
@@ -15,7 +16,7 @@ public class StoreFormatter {
     private static final char KOREAN_FIRST = '가';
     private static final char KOREAN_LAST = '힣';
 
-    public String makeInventoryMessage(final Inventory inventory) {
+    public static String makeInventoryMessage(final Inventory inventory) {
         String quantityText = makeQuantityText(inventory.getQuantity().getQuantity());
         String promotionText = makePromotionText(inventory.getPromotionName());
         return String.format(INVENTORY_MESSAGE_FORMAT,
@@ -25,29 +26,29 @@ public class StoreFormatter {
                 promotionText).trim();
     }
 
-    public String format(String word, int formatSize) {
+    public static String format(String word, int formatSize) {
         String formatter = String.format(STRING_FORMAT, formatSize - countKoreanCharacters(word));
         return String.format(formatter, word);
     }
 
-    private int countKoreanCharacters(String text) {
+    private static int countKoreanCharacters(String text) {
         return (int) text.chars()
-                .filter(this::isKoreanCharacter)
+                .filter(StoreFormatter::isKoreanCharacter)
                 .count();
     }
 
-    private boolean isKoreanCharacter(int ch) {
+    private static boolean isKoreanCharacter(int ch) {
         return ch >= KOREAN_FIRST && ch <= KOREAN_LAST;
     }
 
-    private String makeQuantityText(final int quantity) {
+    private static String makeQuantityText(final int quantity) {
         if (quantity == 0) {
             return NO_STOCK;
         }
         return quantity + QUANTITY_UNIT;
     }
 
-    private String makePromotionText(final String promotionName) {
+    private static String makePromotionText(final String promotionName) {
         if (NULL.equals(promotionName)) {
             return EMPTY;
         }

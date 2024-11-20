@@ -1,4 +1,4 @@
-package store.support;
+package store.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,10 +13,9 @@ class StoreSplitterTest {
     @DisplayName("문자열을 구분자로 구분한다.")
     void 성공_문자열구분() {
         // Given
-        StoreSplitter splitter = new StoreSplitter(",");
         String text = "mint,dobby";
         // When
-        List<String> splittedText = splitter.split(text);
+        List<String> splittedText = StoreSplitter.split(text);
         // Then
         assertThat(splittedText).containsExactly("mint", "dobby");
     }

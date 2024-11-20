@@ -4,21 +4,18 @@ import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.price.Price;
 import store.domain.receipt.Receipt;
-import store.support.StoreFormatter;
+import store.util.StoreFormatter;
 
 public class StoreView {
 
     private final InputView inputView;
     private final OutputView outputView;
     private final InteractionView interactionView;
-    private final StoreFormatter storeFormatter;
 
-    public StoreView(final InputView inputView, final OutputView outputView, final InteractionView interactionView,
-                     final StoreFormatter storeFormatter) {
+    public StoreView(final InputView inputView, final OutputView outputView, final InteractionView interactionView) {
         this.inputView = inputView;
         this.outputView = outputView;
         this.interactionView = interactionView;
-        this.storeFormatter = storeFormatter;
     }
 
     public void showInventories(final Inventories inventories) {
@@ -28,7 +25,7 @@ public class StoreView {
     }
 
     private void showInventory(Inventory inventory) {
-        outputView.showMessage(storeFormatter.makeInventoryMessage(inventory));
+        outputView.showMessage(StoreFormatter.makeInventoryMessage(inventory));
     }
 
     public void showBlankLine() {

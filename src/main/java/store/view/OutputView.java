@@ -6,7 +6,7 @@ import store.domain.inventory.Product;
 import store.domain.price.Price;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
-import store.support.StoreFormatter;
+import store.util.StoreFormatter;
 
 public class OutputView {
 
@@ -42,10 +42,7 @@ public class OutputView {
     private static final String INVENTORY_FORMAT = "\t\t%d\t\t%,.0f" + NEW_LINE;
     private static final String BONUS_FORMAT = "\t\t%d\t\t" + NEW_LINE;
 
-    private final StoreFormatter storeFormatter;
-
-    public OutputView(final StoreFormatter storeFormatter) {
-        this.storeFormatter = storeFormatter;
+    public OutputView() {
     }
 
     public void showStartMessage() {
@@ -92,30 +89,30 @@ public class OutputView {
 
     public void showTotalPrice(final Integer quantity, final BigDecimal totalPurchaseValue) {
         System.out.printf(
-                storeFormatter.format(TOTAL_PURCHASE_LABEL, FORMAT_SIZE) + TOTAL_PRICE_FORMAT,
+                StoreFormatter.format(TOTAL_PURCHASE_LABEL, FORMAT_SIZE) + TOTAL_PRICE_FORMAT,
                 quantity, totalPurchaseValue);
     }
 
     public void showPromotionDiscountPrice(final BigDecimal promotionDiscountPrice) {
-        System.out.printf(storeFormatter.format(PROMOTION_DISCOUNT_LABEL, FORMAT_SIZE) + DISCOUNT_PRICE_FORMAT,
+        System.out.printf(StoreFormatter.format(PROMOTION_DISCOUNT_LABEL, FORMAT_SIZE) + DISCOUNT_PRICE_FORMAT,
                 promotionDiscountPrice);
     }
 
     public void showMemberShipDiscountPrice(final BigDecimal memberShipDiscountPrice) {
-        System.out.printf(storeFormatter.format(MEMBERSHIP_DISCOUNT_LABEL, FORMAT_SIZE) + DISCOUNT_PRICE_FORMAT,
+        System.out.printf(StoreFormatter.format(MEMBERSHIP_DISCOUNT_LABEL, FORMAT_SIZE) + DISCOUNT_PRICE_FORMAT,
                 memberShipDiscountPrice);
     }
 
     public void showMoneyToPay(final BigDecimal priceToPay) {
-        System.out.printf(storeFormatter.format(FINAL_PRICE_LABEL, FORMAT_SIZE) + FINAL_PRICE_FORMAT, priceToPay);
+        System.out.printf(StoreFormatter.format(FINAL_PRICE_LABEL, FORMAT_SIZE) + FINAL_PRICE_FORMAT, priceToPay);
     }
 
     public void showBonusProduct(final String name, final int quantity) {
-        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + BONUS_FORMAT, quantity);
+        System.out.printf(StoreFormatter.format(name, FORMAT_SIZE) + BONUS_FORMAT, quantity);
     }
 
     public void showInventory(final String name, final int quantity, final BigDecimal totalPrice) {
-        System.out.printf(storeFormatter.format(name, FORMAT_SIZE) + INVENTORY_FORMAT, quantity, totalPrice);
+        System.out.printf(StoreFormatter.format(name, FORMAT_SIZE) + INVENTORY_FORMAT, quantity, totalPrice);
     }
 
     public void showCommentOfInventory() {

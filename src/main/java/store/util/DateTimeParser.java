@@ -3,7 +3,10 @@ package store.util;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
-public class Parser {
+public class DateTimeParser {
+
+    private DateTimeParser() {
+    }
 
     public static LocalDate parseToLocalDate(final String date) {
         InputValidator.validateNotNullOrBlank(date);

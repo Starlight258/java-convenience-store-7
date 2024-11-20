@@ -1,8 +1,5 @@
 package store.service;
 
-import static store.exception.ExceptionMessages.INVALID_FORMAT;
-import static store.exception.ExceptionMessages.WRONG_INPUT;
-
 import camp.nextstep.edu.missionutils.DateTimes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,8 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
@@ -25,29 +20,21 @@ import store.domain.receipt.Receipt;
 import store.domain.system.PaymentSystem;
 import store.response.Response;
 import store.response.ResponseHandler;
-import store.support.StoreSplitter;
 import store.util.Converter;
-import store.util.Parser;
+import store.util.DateTimeParser;
+import store.util.FileContentParser;
+import store.util.OrderTextParser;
+import store.util.StoreFileReader;
+import store.util.StoreSplitter;
 import store.view.InteractionView;
-import store.view.StoreFileReader;
 
 public class StoreService {
 
-    private static final String INVENTORY_FILENAME = "src/main/resources/products.md";
-    private static final String PROMOTION_FILENAME = "src/main/resources/promotions.md";
-    private static final String REGEX = "^\\[((\\w*\\W*)-(\\d+))\\]$";
-    private static final Pattern PATTERN = Pattern.compile(REGEX);
-    public static final String NAME = "name";
-    public static final String NULL = "null";
+    private static final String NULL = "null";
 
-    private final StoreSplitter splitter;
-    private final StoreFileReader fileReader;
     private final InteractionView interactionView;
 
-    public StoreService(final StoreSplitter splitter, final StoreFileReader fileReader,
-                        final InteractionView interactionView) {
-        this.splitter = splitter;
-        this.fileReader = fileReader;
+    public StoreService(final InteractionView interactionView) {
         this.interactionView = interactionView;
     }
 
@@ -61,8 +48,8 @@ public class StoreService {
     }
 
     public Map<String, Quantity> createOrders(String input, Inventories inventories) {
-        List<String> splitText = splitter.split(input);
-        Map<String, Quantity> orders = parseOrders(splitText);
+        List<String> splitText = StoreSplitter.split(input);
+        Map<String, Quantity> orders = OrderTextParser.parseOrders(splitText);
         inventories.getPurchasedItems(orders);
         return orders;
     }
@@ -72,7 +59,7 @@ public class StoreService {
             processEachProduct(orders, paymentSystem, store, entry.getKey(), entry.getValue());
         }
     }
-    
+
     public Price checkMembership(final boolean useMembership, final Membership membership) {
         if (useMembership) {
             return membership.calculateDiscount();
@@ -88,22 +75,17 @@ public class StoreService {
         handler.handle(response);
     }
 
-    private Map<String, Quantity> parseOrders(List<String> splitText) {
-        Map<String, Quantity> orders = new LinkedHashMap<>();
-        for (String text : splitText) {
-            Matcher matcher = validateFormat(text);
-            addOrder(orders, matcher);
-        }
-        return orders;
-    }
-
     private Promotions makePromotions() {
-        List<String> promotionsFromSource = fileReader.readFileFromSource(PROMOTION_FILENAME);
+        List<String> promotionsFromSource = getPromotions();
         return new Promotions(promotionsFromSource.stream()
-                .filter(input -> !input.startsWith(NAME))
-                .map(splitter::split)
+                .map(StoreSplitter::split)
                 .map(this::createPromotion)
                 .toList());
+    }
+
+    private List<String> getPromotions() {
+        List<String> promotionsFromSource = StoreFileReader.readPromotions();
+        return FileContentParser.removeHeaders(promotionsFromSource);
     }
 
     private Inventories makeInventories() {
@@ -136,36 +118,23 @@ public class StoreService {
     }
 
     private Inventories createInitialInventories() {
-        List<String> inventoriesFromSource = fileReader.readFileFromSource(INVENTORY_FILENAME);
-        return new Inventories(inventoriesFromSource.stream()
-                .filter(input -> !input.startsWith(NAME))
-                .map(splitter::split)
+        List<String> inventories = getInventories();
+        return new Inventories(inventories.stream()
+                .map(StoreSplitter::split)
                 .map(this::createInventory)
                 .toList());
     }
 
-    private Matcher validateFormat(final String text) {
-        Matcher matcher = PATTERN.matcher(text);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException(INVALID_FORMAT.getMessageWithPrefix());
-        }
-        return matcher;
-    }
-
-    private void addOrder(final Map<String, Quantity> orders, final Matcher matcher) {
-        String productValue = matcher.group(2);
-        int quantityValue = Converter.convertToInteger((matcher.group(3)));
-        if (quantityValue == 0) {
-            throw new IllegalArgumentException(WRONG_INPUT.getMessageWithPrefix());
-        }
-        orders.put(productValue, orders.getOrDefault(productValue, Quantity.zero()).add(new Quantity(quantityValue)));
+    private List<String> getInventories() {
+        List<String> inventoriesFromSource = StoreFileReader.readInventories();
+        return FileContentParser.removeHeaders(inventoriesFromSource);
     }
 
     private Promotion createPromotion(final List<String> splittedText) {
         Quantity purchaseQuantity = new Quantity(Converter.convertToInteger(splittedText.get(1)));
         Quantity bonusQuantity = new Quantity(Converter.convertToInteger(splittedText.get(2)));
-        LocalDate startDate = Parser.parseToLocalDate(splittedText.get(3));
-        LocalDate endDate = Parser.parseToLocalDate(splittedText.get(4));
+        LocalDate startDate = DateTimeParser.parseToLocalDate(splittedText.get(3));
+        LocalDate endDate = DateTimeParser.parseToLocalDate(splittedText.get(4));
         return new Promotion(splittedText.get(0), purchaseQuantity, bonusQuantity, startDate, endDate);
     }
 

@@ -1,4 +1,4 @@
-package store.view;
+package store.util;
 
 import static store.exception.ExceptionMessages.INVALID_FILE_FORMAT;
 
@@ -10,7 +10,21 @@ import java.util.List;
 
 public class StoreFileReader {
 
-    public List<String> readFileFromSource(String fileName) {
+    private static final String INVENTORY_FILENAME = "src/main/resources/products.md";
+    private static final String PROMOTION_FILENAME = "src/main/resources/promotions.md";
+
+    private StoreFileReader() {
+    }
+
+    public static List<String> readInventories() {
+        return readFileFromSource(INVENTORY_FILENAME);
+    }
+
+    public static List<String> readPromotions() {
+        return readFileFromSource(PROMOTION_FILENAME);
+    }
+
+    private static List<String> readFileFromSource(String fileName) {
         try {
             return readFile(fileName);
         } catch (IOException exception) {
@@ -18,7 +32,7 @@ public class StoreFileReader {
         }
     }
 
-    private List<String> readFile(String fileName) throws IOException {
+    private static List<String> readFile(String fileName) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fileName));
         List<String> inputs = new ArrayList<>();
         makeInput(br, inputs);
@@ -26,7 +40,7 @@ public class StoreFileReader {
         return inputs;
     }
 
-    private void makeInput(final BufferedReader br, final List<String> inputs) throws IOException {
+    private static void makeInput(final BufferedReader br, final List<String> inputs) throws IOException {
         while (true) {
             String input = br.readLine();
             if (isTerminated(input)) {
@@ -36,7 +50,7 @@ public class StoreFileReader {
         }
     }
 
-    private boolean isTerminated(final String input) {
+    private static boolean isTerminated(final String input) {
         return input == null;
     }
 }
