@@ -1,12 +1,11 @@
 package store.controller;
 
-import java.util.Map;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.membership.Membership;
+import store.domain.order.Order;
 import store.domain.price.Price;
-import store.domain.quantity.Quantity;
-import store.domain.system.PaymentSystem;
+import store.domain.promotion.PromotionProcessor;
 import store.exception.ExceptionHandler;
 import store.service.StoreService;
 import store.view.StoreView;
@@ -25,24 +24,25 @@ public class StoreController {
     }
 
     public void process() {
-        PaymentSystem paymentSystem = exceptionHandler.actionOfFileRead(storeService::initializePaymentSystem);
-        processTransactions(paymentSystem);
+        PromotionProcessor promotionProcessor = exceptionHandler.actionOfFileRead(
+                storeService::initializePaymentSystem);
+        processTransactions(promotionProcessor);
     }
 
-    private void processTransactions(final PaymentSystem paymentSystem) {
+    private void processTransactions(final PromotionProcessor promotionProcessor) {
         while (true) {
-            if (exceptionHandler.tryWithReturn(() -> processTransaction(paymentSystem))) {
+            if (exceptionHandler.tryWithReturn(() -> processTransaction(promotionProcessor))) {
                 return;
             }
             storeView.showBlankLine();
         }
     }
 
-    private boolean processTransaction(final PaymentSystem paymentSystem) {
-        Inventories inventories = paymentSystem.getInventories();
+    private boolean processTransaction(final PromotionProcessor promotionProcessor) {
+        Inventories inventories = promotionProcessor.getInventories();
         showWelcomeMessage(inventories);
-        Map<String, Quantity> orders = getPurchasedItems(inventories);
-        processStore(orders, paymentSystem);
+        Order order = getPurchasedItems(inventories);
+        processStore(order, promotionProcessor);
         return !continueTransaction();
     }
 
@@ -51,7 +51,7 @@ public class StoreController {
         storeView.showInventories(inventories);
     }
 
-    private Map<String, Quantity> getPurchasedItems(final Inventories inventories) {
+    private Order getPurchasedItems(final Inventories inventories) {
         storeView.showCommentOfPurchase();
         return exceptionHandler.retryWithReturn(() -> {
             String input = storeView.readLine();
@@ -59,14 +59,15 @@ public class StoreController {
         });
     }
 
-    private void processStore(final Map<String, Quantity> orders, final PaymentSystem paymentSystem) {
+    private void processStore(final Order orders, final PromotionProcessor promotionProcessor) {
         Store store = storeService.initializeStore();
-        Price membershipPrice = processPurchaseAndMembership(orders, paymentSystem, store);
+        Price membershipPrice = processPurchaseAndMembership(orders, promotionProcessor, store);
         storeView.showResults(store.getReceipt(), membershipPrice);
     }
 
-    private Price processPurchaseAndMembership(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store) {
-        storeService.processPurchase(orders, paymentSystem, store);
+    private Price processPurchaseAndMembership(Order orders, PromotionProcessor promotionProcessor,
+                                               Store store) {
+        storeService.processPurchase(orders, promotionProcessor, store);
         return checkMembership(store.getMembership());
     }
 

@@ -7,12 +7,12 @@ import static store.exception.ExceptionMessages.OUT_OF_STOCK;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import store.domain.Store;
+import store.domain.order.Order;
 import store.domain.quantity.Quantity;
 import store.exception.ExceptionMessages;
 
@@ -52,8 +52,8 @@ public class Inventories {
         return source.hasSameProductName(target);
     }
 
-    public void getPurchasedItems(final Map<String, Quantity> purchasedItems) {
-        for (Entry<String, Quantity> entry : purchasedItems.entrySet()) {
+    public void checkStock(final Order purchasedItems) {
+        for (Entry<String, Quantity> entry : purchasedItems.getItems().entrySet()) {
             String productName = entry.getKey();
             Quantity quantity = entry.getValue();
             Inventories sameProductInventories = findProducts(productName);

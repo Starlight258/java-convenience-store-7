@@ -5,18 +5,19 @@ import java.util.function.Consumer;
 import store.domain.Store;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
+import store.domain.order.Order;
 import store.domain.quantity.Quantity;
 import store.view.InteractionView;
 
 public class ResponseHandler {
 
-    private final Map<String, Quantity> orders;
+    private final Order orders;
     private final Store store;
     private final String productName;
     private final Quantity quantity;
     private final InteractionView interactionView;
 
-    public ResponseHandler(final Map<String, Quantity> orders, final Store store, final String productName,
+    public ResponseHandler(final Order orders, final Store store, final String productName,
                            final Quantity quantity,
                            final InteractionView interactionView) {
         this.orders = orders;
@@ -94,7 +95,7 @@ public class ResponseHandler {
         Quantity subtractedQuantity = quantity.subtract(noPromotionQuantity);
         store.notePurchaseProduct(product, subtractedQuantity);
 
-        orders.put(productName, orders.getOrDefault(productName, Quantity.zero()).add(subtractedQuantity));
+        orders.putWithDefault(productName, subtractedQuantity);
         response.inventory().subtract(quantity.subtract(noPromotionQuantity));
     }
 
@@ -105,7 +106,7 @@ public class ResponseHandler {
     }
 
     private void processInitialOrder(final Product product) {
-        orders.put(productName, orders.getOrDefault(productName, Quantity.zero()).add(quantity));
+        orders.putWithDefault(productName, quantity);
         store.notePurchaseProduct(product, quantity);
     }
 
@@ -124,8 +125,7 @@ public class ResponseHandler {
                                            final Quantity canGetMoreQuantity,
                                            final Inventory inventory) {
         store.noteAddingMoreQuantity(product, bonusQuantity, canGetMoreQuantity);
-        orders.put(productName,
-                orders.getOrDefault(productName, Quantity.zero()).add(quantity.add(canGetMoreQuantity)));
+        orders.putWithDefault(productName, quantity.add(canGetMoreQuantity));
         inventory.subtract(quantity.add(canGetMoreQuantity));
     }
 

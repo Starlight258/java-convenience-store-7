@@ -5,25 +5,24 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.membership.Membership;
+import store.domain.order.Order;
 import store.domain.price.Price;
 import store.domain.promotion.Promotion;
+import store.domain.promotion.PromotionProcessor;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
-import store.domain.system.PaymentSystem;
 import store.response.Response;
 import store.response.ResponseHandler;
 import store.util.Converter;
 import store.util.DateTimeParser;
 import store.util.FileContentParser;
-import store.util.OrderTextParser;
 import store.util.StoreFileReader;
 import store.util.StoreSplitter;
 import store.view.InteractionView;
@@ -38,8 +37,8 @@ public class StoreService {
         this.interactionView = interactionView;
     }
 
-    public PaymentSystem initializePaymentSystem() {
-        return new PaymentSystem(makeInventories(), makePromotions());
+    public PromotionProcessor initializePaymentSystem() {
+        return new PromotionProcessor(makeInventories(), makePromotions());
     }
 
     public Store initializeStore() {
@@ -47,16 +46,15 @@ public class StoreService {
                 new Membership(new LinkedHashMap<>()));
     }
 
-    public Map<String, Quantity> createOrders(String input, Inventories inventories) {
-        List<String> splitText = StoreSplitter.split(input);
-        Map<String, Quantity> orders = OrderTextParser.parseOrders(splitText);
-        inventories.getPurchasedItems(orders);
-        return orders;
+    public Order createOrders(String input, Inventories inventories) {
+        Order order = new Order(input);
+        inventories.checkStock(order);
+        return order;
     }
 
-    public void processPurchase(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store) {
-        for (Entry<String, Quantity> entry : orders.entrySet()) {
-            processEachProduct(orders, paymentSystem, store, entry.getKey(), entry.getValue());
+    public void processPurchase(Order order, PromotionProcessor promotionProcessor, Store store) {
+        for (Entry<String, Quantity> entry : order.getItems().entrySet()) {
+            processEachProduct(order, promotionProcessor, store, entry.getKey(), entry.getValue());
         }
     }
 
@@ -67,11 +65,11 @@ public class StoreService {
         return Price.zero();
     }
 
-    private void processEachProduct(Map<String, Quantity> orders, PaymentSystem paymentSystem, Store store,
+    private void processEachProduct(Order order, PromotionProcessor promotionProcessor, Store store,
                                     String productName, Quantity quantity) {
         LocalDate now = DateTimes.now().toLocalDate();
-        Response response = paymentSystem.pay(productName, quantity, store, now);
-        ResponseHandler handler = new ResponseHandler(orders, store, productName, quantity, interactionView);
+        Response response = promotionProcessor.pay(productName, quantity, store, now);
+        ResponseHandler handler = new ResponseHandler(order, store, productName, quantity, interactionView);
         handler.handle(response);
     }
 
