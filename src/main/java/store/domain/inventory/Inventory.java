@@ -21,6 +21,10 @@ public class Inventory {
         this.promotionName = promotionName;
     }
 
+    public static Inventory createNoPromotionEmptyInventory(final Product product) {
+        return new Inventory(product, 0, NULL);
+    }
+
     public boolean isSameProductName(String productName) {
         return this.product.isSameProductName(productName);
     }

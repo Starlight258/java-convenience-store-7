@@ -23,6 +23,10 @@ public class InteractionView {
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(ONLY_YES_OR_NO.getMessageWithPrefix()));
         }
+
+        public boolean isYes() {
+            return this == YES;
+        }
     }
 
     private final InputView inputView;
@@ -38,17 +42,16 @@ public class InteractionView {
 
     public boolean askForBonus(String productName, Quantity quantity) {
         outputView.showFreeQuantity(productName, quantity.getQuantity());
-        return readAnswer();
+        return isYes();
     }
 
     public boolean askForNoPromotion(String productName, int quantity) {
         outputView.showPromotionDiscount(productName, quantity);
-        return readAnswer();
+        return isYes();
     }
 
-    public boolean readAnswer() {
-        return exceptionHandler.retryWithReturn(() ->
-                        Answer.from(inputView.readLine()))
-                .equals(Answer.YES);
+    public boolean isYes() {
+        return exceptionHandler.retryOn(() ->
+                Answer.from(inputView.readLine())).isYes();
     }
 }

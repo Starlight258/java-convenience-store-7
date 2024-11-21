@@ -32,26 +32,27 @@ public class StoreController {
     }
 
     public void process() {
-        Inventories inventories = exceptionHandler.actionOfFileReadWithReturn(storeInitializer::loadInventories);
-        Promotions promotions = exceptionHandler.actionOfFileReadWithReturn(storeInitializer::loadPromotions);
-        showWelcomeMessage(inventories);
-        storeService.initialize(new PromotionProcessor(inventories, promotions));
-        processTransactions();
+        Inventories inventories = exceptionHandler.tryWithThrow(storeInitializer::loadInventories);
+        Promotions promotions = exceptionHandler.tryWithThrow(storeInitializer::loadPromotions);
+        storeService.initializeProcessor(new PromotionProcessor(inventories, promotions));
+        processTransactions(inventories);
     }
 
-    private void processTransactions() {
+    private void processTransactions(final Inventories inventories) {
         while (true) {
-            if (exceptionHandler.tryWithReturn(this::processTransaction)) {
-                return;
+            if (exceptionHandler.tryWithoutThrow(() -> processTransaction(inventories))) {
+                storeView.showBlankLine();
+                continue;
             }
-            storeView.showBlankLine();
+            return;
         }
     }
 
-    private boolean processTransaction() {
-        Orders orders = createOrder();
-        processStore(orders);
-        return !continueTransaction();
+    private boolean processTransaction(final Inventories inventories) {
+        showWelcomeMessage(inventories);
+        Orders orders = createOrder(inventories);
+        processOrder(orders);
+        return continueTransaction();
     }
 
     private void showWelcomeMessage(final Inventories inventories) {
@@ -61,14 +62,14 @@ public class StoreController {
 
     private Orders createOrder() {
         storeView.showCommentOfPurchase();
-        return exceptionHandler.retryWithReturn(() -> {
+        return exceptionHandler.retryOn(() -> {
             String input = storeView.readLine();
             List<String> splitText = StoreSplitter.split(input);
             return new Orders(OrderTextParser.parseOrders(splitText));
         });
     }
 
-    private void processStore(final Orders orders) {
+    private void processOrder(final Orders orders) {
         Store store = storeService.initializeStore();
         Price membershipPrice = processPurchaseAndMembership(orders, store);
         storeView.showResults(store.getReceipt(), membershipPrice);
@@ -81,11 +82,11 @@ public class StoreController {
 
     private Price checkMembership(final Membership membership) {
         storeView.showCommentOfMemberShip();
-        return storeService.checkMembership(storeView.readAnswer(), membership);
+        return storeService.checkMembership(storeView.isYes(), membership);
     }
 
     private boolean continueTransaction() {
-        storeView.showAdditionalPurchase();
-        return storeView.readAnswer();
+        storeView.askAdditionalPurchase();
+        return storeView.isYes();
     }
 }

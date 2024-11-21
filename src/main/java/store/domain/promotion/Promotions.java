@@ -14,13 +14,13 @@ public class Promotions {
         this.promotions = promotions;
     }
 
-    private void validatePromotions(final List<Promotion> promotions) {
-        InputValidator.validateNotNull(promotions);
-    }
-
     public Optional<Promotion> find(final String promotionName, final LocalDate now) {
         return promotions.stream()
                 .filter(promotion -> promotion.isValid(promotionName, now))
                 .findFirst();
+    }
+
+    private void validatePromotions(final List<Promotion> promotions) {
+        InputValidator.validateNotNull(promotions);
     }
 }

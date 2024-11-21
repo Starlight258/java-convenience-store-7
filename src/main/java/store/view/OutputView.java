@@ -67,7 +67,7 @@ public class OutputView {
         System.out.println();
     }
 
-    public void showAdditionalPurchase() {
+    public void askAdditionalPurchase() {
         System.out.println(ADDITIONAL_PURCHASE_MESSAGE);
     }
 

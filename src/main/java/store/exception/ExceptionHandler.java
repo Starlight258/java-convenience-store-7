@@ -13,7 +13,7 @@ public class ExceptionHandler {
         this.outputView = outputView;
     }
 
-    public <T> T retryWithReturn(Supplier<T> action) {
+    public <T> T retryOn(Supplier<T> action) {
         for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
             try {
                 return action.get();
@@ -31,7 +31,7 @@ public class ExceptionHandler {
         outputView.showExceptionMessage((e.getMessage()));
     }
 
-    public boolean tryWithReturn(Supplier<Boolean> action) {
+    public boolean tryWithoutThrow(Supplier<Boolean> action) {
         try {
             return action.get();
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -40,9 +40,18 @@ public class ExceptionHandler {
         }
     }
 
-    public <T> T actionOfFileRead(Supplier<T> action) {
+    public <T> T tryWithThrow(Supplier<T> action) {
         try {
             return action.get();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            outputView.showExceptionMessage(e.getMessage());
+            throw e;
+        }
+    }
+
+    public void tryVoid(Runnable action) {
+        try {
+            action.run();
         } catch (IllegalArgumentException | IllegalStateException e) {
             outputView.showExceptionMessage(e.getMessage());
             throw e;

@@ -22,7 +22,7 @@ public class StoreService {
         this.interactionView = interactionView;
     }
 
-    public void initialize(final PromotionProcessor promotionProcessor) {
+    public void initializeProcessor(final PromotionProcessor promotionProcessor) {
         this.promotionProcessor = promotionProcessor;
     }
 
@@ -33,7 +33,6 @@ public class StoreService {
 
     public void processPurchase(Orders orders, Store store) {
         PurchaseContext context = new PurchaseContext();
-        promotionProcessor.getInventories().checkStock(orders);
         for (Order order : orders.getItems()) {
             Response response = promotionProcessor.pay(order, store, context);
             ResponseHandler handler = new ResponseHandler(orders, store, order, interactionView);

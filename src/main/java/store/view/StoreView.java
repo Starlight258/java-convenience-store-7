@@ -52,11 +52,11 @@ public class StoreView {
         outputView.showCommentOfMemberShip();
     }
 
-    public boolean readAnswer() {
-        return interactionView.readAnswer();
+    public boolean isYes() {
+        return interactionView.isYes();
     }
 
-    public void showAdditionalPurchase() {
-        outputView.showAdditionalPurchase();
+    public void askAdditionalPurchase() {
+        outputView.askAdditionalPurchase();
     }
 }
