@@ -13,7 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.Store;
 import store.domain.membership.Membership;
-import store.domain.order.Order;
+import store.domain.order.Orders;
 import store.domain.quantity.Quantity;
 import store.domain.receipt.Receipt;
 
@@ -52,7 +52,8 @@ public class InventoriesTest {
     @Test
     @DisplayName("상품이 없을 경우 예외가 발생한다")
     void 실패_안내_상품없음() {
-        assertCustomIllegalArgumentException(() -> inventories.checkStock(new Order("[invalid-3]")))
+        Map<String, Quantity> items = Map.of("invalid", new Quantity(3));
+        assertCustomIllegalArgumentException(() -> inventories.checkStock(new Orders(items)))
                 .hasMessageContaining("존재하지 않는 상품입니다.");
     }
 
@@ -60,7 +61,7 @@ public class InventoriesTest {
     @DisplayName("재고 수량 이상으로 구매할 경우 예외가 발생한다")
     void 실패_안내_재고없음() {
         Map<String, Quantity> items = Map.of("coke", new Quantity(33));
-        assertCustomIllegalArgumentException(() -> inventories.checkStock(new Order("[coke-33]")))
+        assertCustomIllegalArgumentException(() -> inventories.checkStock(new Orders(items)))
                 .hasMessageContaining("재고 수량을 초과하여 구매할 수 없습니다.");
     }
 

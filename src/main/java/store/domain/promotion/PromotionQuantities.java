@@ -1,6 +1,5 @@
-package store.domain.system;
+package store.domain.promotion;
 
-import store.domain.promotion.Promotion;
 import store.domain.quantity.Quantity;
 
 public record PromotionQuantities(

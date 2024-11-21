@@ -1,40 +1,39 @@
-package store.domain.system;
+package store.domain.promotion;
 
 import static store.exception.ExceptionMessages.CANNOT_BUY_PRODUCT;
 
+import camp.nextstep.edu.missionutils.DateTimes;
 import java.time.LocalDate;
 import java.util.Optional;
+import store.domain.PurchaseContext;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
-import store.domain.promotion.Promotion;
-import store.domain.promotion.Promotions;
+import store.domain.order.Orders.Order;
 import store.domain.quantity.Quantity;
 import store.response.Response;
 
-public class PaymentSystem {
+public class PromotionProcessor {
 
     private static final String NULL = "null";
 
     private final Inventories inventories;
     private final Promotions promotions;
 
-    public PaymentSystem(final Inventories inventories, final Promotions promotions) {
+    public PromotionProcessor(final Inventories inventories, final Promotions promotions) {
         this.inventories = inventories;
         this.promotions = promotions;
     }
 
-    public Response pay(final String productName, final Quantity quantity,
-                        final Store store, final LocalDate now) {
-        Inventories sameProductInventories = inventories.findProducts(productName);
-        return findPurchaseOptions(sameProductInventories, quantity, store, now);
+    public Response pay(final Order order, final Store store, final PurchaseContext context) {
+        Inventories sameProductInventories = inventories.findProducts(order.getProductName());
+        return findPurchaseOptions(sameProductInventories, order.getQuantity(), store);
     }
 
-    private Response findPurchaseOptions(Inventories sameProductInventories, Quantity quantity,
-                                         Store store, LocalDate now) {
+    private Response findPurchaseOptions(Inventories sameProductInventories, Quantity quantity, Store store) {
         for (Inventory inventory : sameProductInventories.getInventories()) {
-            Response response = determinePromotion(inventory, quantity, store, sameProductInventories, now);
+            Response response = determinePromotion(inventory, quantity, store, sameProductInventories);
             if (response != null) {
                 return response;
             }
@@ -43,11 +42,11 @@ public class PaymentSystem {
     }
 
     private Response determinePromotion(Inventory inventory, Quantity quantity,
-                                        Store store, Inventories sameProductInventories, LocalDate now) {
+                                        Store store, Inventories sameProductInventories) {
         if (hasNoPromotion(inventory)) {
             return payNormal(inventory, quantity, store);
         }
-        Optional<Promotion> optionalPromotion = findValidPromotion(inventory.getPromotionName(), now);
+        Optional<Promotion> optionalPromotion = findValidPromotion(inventory.getPromotionName());
         return optionalPromotion.map(
                         promotion -> purchaseWithPromotion(inventory, quantity, store, sameProductInventories, promotion))
                 .orElse(null);
@@ -101,7 +100,8 @@ public class PaymentSystem {
         return Response.purchaseWithNoPromotion(inventory);
     }
 
-    private Optional<Promotion> findValidPromotion(String promotionName, LocalDate now) {
+    private Optional<Promotion> findValidPromotion(String promotionName) {
+        LocalDate now = DateTimes.now().toLocalDate();
         return promotions.find(promotionName, now);
     }
 

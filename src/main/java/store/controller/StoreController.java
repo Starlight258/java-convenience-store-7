@@ -1,14 +1,18 @@
 package store.controller;
 
+import java.util.List;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.membership.Membership;
+import store.domain.order.Orders;
 import store.domain.price.Price;
 import store.domain.promotion.PromotionProcessor;
 import store.domain.promotion.Promotions;
 import store.exception.ExceptionHandler;
 import store.service.StoreService;
+import store.util.OrderTextParser;
 import store.util.StoreInitializer;
+import store.util.StoreSplitter;
 import store.view.StoreView;
 
 public class StoreController {
@@ -44,11 +48,9 @@ public class StoreController {
         }
     }
 
-    private boolean processTransaction(final PromotionProcessor promotionProcessor) {
-        Inventories inventories = promotionProcessor.getInventories();
-        showWelcomeMessage(inventories);
-        Order order = getPurchasedItems(inventories);
-        processStore(order, promotionProcessor);
+    private boolean processTransaction() {
+        Orders orders = createOrder();
+        processStore(orders);
         return !continueTransaction();
     }
 
@@ -57,23 +59,23 @@ public class StoreController {
         storeView.showInventories(inventories);
     }
 
-    private Order getPurchasedItems(final Inventories inventories) {
+    private Orders createOrder() {
         storeView.showCommentOfPurchase();
         return exceptionHandler.retryWithReturn(() -> {
             String input = storeView.readLine();
-            return storeService.createOrders(input, inventories);
+            List<String> splitText = StoreSplitter.split(input);
+            return new Orders(OrderTextParser.parseOrders(splitText));
         });
     }
 
-    private void processStore(final Order orders, final PromotionProcessor promotionProcessor) {
+    private void processStore(final Orders orders) {
         Store store = storeService.initializeStore();
-        Price membershipPrice = processPurchaseAndMembership(orders, promotionProcessor, store);
+        Price membershipPrice = processPurchaseAndMembership(orders, store);
         storeView.showResults(store.getReceipt(), membershipPrice);
     }
 
-    private Price processPurchaseAndMembership(Order orders, PromotionProcessor promotionProcessor,
-                                               Store store) {
-        storeService.processPurchase(orders, promotionProcessor, store);
+    private Price processPurchaseAndMembership(Orders orders, Store store) {
+        storeService.processPurchase(orders, store);
         return checkMembership(store.getMembership());
     }
 
