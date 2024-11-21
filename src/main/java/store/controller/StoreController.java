@@ -3,11 +3,12 @@ package store.controller;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.membership.Membership;
-import store.domain.order.Order;
 import store.domain.price.Price;
 import store.domain.promotion.PromotionProcessor;
+import store.domain.promotion.Promotions;
 import store.exception.ExceptionHandler;
 import store.service.StoreService;
+import store.util.StoreInitializer;
 import store.view.StoreView;
 
 public class StoreController {
@@ -15,23 +16,28 @@ public class StoreController {
     private final StoreView storeView;
     private final ExceptionHandler exceptionHandler;
     private final StoreService storeService;
+    private final StoreInitializer storeInitializer;
 
     public StoreController(final StoreView storeView, final ExceptionHandler exceptionHandler,
-                           final StoreService storeService) {
+                           final StoreService storeService,
+                           final StoreInitializer storeInitializer) {
         this.storeView = storeView;
         this.exceptionHandler = exceptionHandler;
         this.storeService = storeService;
+        this.storeInitializer = storeInitializer;
     }
 
     public void process() {
-        PromotionProcessor promotionProcessor = exceptionHandler.actionOfFileRead(
-                storeService::initializePaymentSystem);
-        processTransactions(promotionProcessor);
+        Inventories inventories = exceptionHandler.actionOfFileReadWithReturn(storeInitializer::loadInventories);
+        Promotions promotions = exceptionHandler.actionOfFileReadWithReturn(storeInitializer::loadPromotions);
+        showWelcomeMessage(inventories);
+        storeService.initialize(new PromotionProcessor(inventories, promotions));
+        processTransactions();
     }
 
-    private void processTransactions(final PromotionProcessor promotionProcessor) {
+    private void processTransactions() {
         while (true) {
-            if (exceptionHandler.tryWithReturn(() -> processTransaction(promotionProcessor))) {
+            if (exceptionHandler.tryWithReturn(this::processTransaction)) {
                 return;
             }
             storeView.showBlankLine();

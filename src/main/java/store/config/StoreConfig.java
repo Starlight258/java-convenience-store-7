@@ -3,6 +3,7 @@ package store.config;
 import store.controller.StoreController;
 import store.exception.ExceptionHandler;
 import store.service.StoreService;
+import store.util.StoreInitializer;
 import store.view.InputView;
 import store.view.InteractionView;
 import store.view.OutputView;
@@ -17,7 +18,8 @@ public class StoreConfig {
         InteractionView interactionView = new InteractionView(inputView, outputView, exceptionHandler);
         StoreView storeView = new StoreView(inputView, outputView, interactionView);
         StoreService storeService = createService(interactionView);
-        return new StoreController(storeView, exceptionHandler, storeService);
+        StoreInitializer storeInitializer = new StoreInitializer();
+        return new StoreController(storeView, exceptionHandler, storeService, storeInitializer);
     }
 
     private StoreService createService(final InteractionView interactionView) {
