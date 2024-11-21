@@ -18,7 +18,7 @@ class InputValidatorTest {
         @DisplayName("null이면 예외가 발생한다.")
         void 실패_검증_null() {
             assertCustomIllegalArgumentException(() -> InputValidator.validateNotNullOrBlank(null))
-                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("인자 값은 null이거나 공백일 수 없습니다");
         }
 
@@ -26,7 +26,7 @@ class InputValidatorTest {
         @DisplayName("비어있으면 예외가 발생한다.")
         void 실패_검증_empty() {
             assertCustomIllegalArgumentException(() -> InputValidator.validateNotNullOrBlank(""))
-                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("인자 값은 null이거나 공백일 수 없습니다");
         }
 
@@ -34,7 +34,7 @@ class InputValidatorTest {
         @DisplayName("공백이면 예외가 발생한다.")
         void 실패_검증_공백() {
             assertCustomIllegalArgumentException(() -> InputValidator.validateNotNullOrBlank(" "))
-                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("인자 값은 null이거나 공백일 수 없습니다");
         }
     }
@@ -47,7 +47,7 @@ class InputValidatorTest {
         @DisplayName("null이면 예외가 발생한다.")
         void 실패_검증_null() {
             assertCustomIllegalArgumentException(() -> InputValidator.validateNotNullOrEmpty(null))
-                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("인자 값은 null이거나 비어있을 수 없습니다");
         }
 
@@ -56,7 +56,7 @@ class InputValidatorTest {
         void 실패_검증_empty() {
             assertCustomIllegalArgumentException(
                     () -> InputValidator.validateNotNullOrEmpty(Collections.emptyList()))
-                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("인자 값은 null이거나 비어있을 수 없습니다");
         }
     }

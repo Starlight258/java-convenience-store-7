@@ -1,7 +1,5 @@
 package store.domain.promotion;
 
-import static store.exception.ExceptionMessages.CANNOT_BUY_PRODUCT;
-
 import camp.nextstep.edu.missionutils.DateTimes;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -12,10 +10,12 @@ import store.domain.inventory.Inventory;
 import store.domain.inventory.Product;
 import store.domain.order.Orders.Order;
 import store.domain.quantity.Quantity;
+import store.exception.CustomIllegalStateException;
 import store.response.Response;
 
 public class PromotionProcessor {
 
+    private static final String PRODUCT_NOT_PURCHASE = "상품을 구매할 수 없습니다.";
     private static final String NULL = "null";
 
     private final Inventories inventories;
@@ -38,7 +38,7 @@ public class PromotionProcessor {
                 return response;
             }
         }
-        throw new IllegalStateException(CANNOT_BUY_PRODUCT.getMessageWithPrefix());
+        throw new CustomIllegalStateException(PRODUCT_NOT_PURCHASE);
     }
 
     private Response determinePromotion(Inventory inventory, Quantity quantity,

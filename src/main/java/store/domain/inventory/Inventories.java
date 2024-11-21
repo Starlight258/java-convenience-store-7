@@ -1,8 +1,6 @@
 package store.domain.inventory;
 
-import static store.exception.ExceptionMessages.NOT_EXIST_PRODUCT;
-import static store.exception.ExceptionMessages.NO_PROMOTION_PRODUCT;
-import static store.exception.ExceptionMessages.OUT_OF_STOCK;
+import static store.exception.ErrorMessage.OUT_OF_STOCK;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,9 +12,14 @@ import store.domain.Store;
 import store.domain.order.Orders;
 import store.domain.order.Orders.Order;
 import store.domain.quantity.Quantity;
-import store.exception.ExceptionMessages;
+import store.exception.CustomIllegalArgumentException;
+import store.exception.CustomIllegalStateException;
+import store.exception.ErrorMessage;
 
 public class Inventories {
+
+    private static final String PROMOTION_NOT_FOUND = "프로모션이 없는 상품을 찾을 수 없습니다.";
+    private static final String PRODUCT_NOT_FOUND = "존재하지 않는 상품입니다. 다시 입력해 주세요.";
 
     private final List<Inventory> inventories;
 
@@ -79,7 +82,7 @@ public class Inventories {
                 return inventory;
             }
         }
-        throw new IllegalStateException(NO_PROMOTION_PRODUCT.getMessageWithPrefix());
+        throw new CustomIllegalStateException(PROMOTION_NOT_FOUND);
     }
 
     private Quantity processQuantity(final Store store, Quantity totalQuantity, final Inventory inventory) {
@@ -94,19 +97,19 @@ public class Inventories {
 
     private void totalOutOfStock(final Quantity quantity, final Quantity totalStock) {
         if (totalStock.isLessThan(quantity)) {
-            throw new IllegalArgumentException(OUT_OF_STOCK.getMessageWithPrefix());
+            throw new CustomIllegalArgumentException(OUT_OF_STOCK.getMessage());
         }
     }
 
     private void notExistProductName(final Inventories sameProductInventories) {
         if (sameProductInventories.getInventories().size() == 0) {
-            throw new IllegalArgumentException(NOT_EXIST_PRODUCT.getMessageWithPrefix());
+            throw new CustomIllegalArgumentException(PRODUCT_NOT_FOUND);
         }
     }
 
     private void validateInventories(final List<Inventory> inventories) {
         if (inventories == null) {
-            throw new IllegalArgumentException(ExceptionMessages.NOT_NULL_ARGUMENT.getMessageWithPrefix());
+            throw new CustomIllegalArgumentException(ErrorMessage.NULL.getMessage());
         }
     }
 

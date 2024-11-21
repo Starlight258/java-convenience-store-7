@@ -1,10 +1,10 @@
 package store.util;
 
-import store.exception.ExceptionMessage;
+import store.exception.CustomIllegalArgumentException;
 
 public class Converter {
 
-    private static final ExceptionMessage CANNOT_CONVERT_TO_INTEGER = new ExceptionMessage("정수로 변환할 수 없습니다.");
+    private static final String CANNOT_CONVERT_TO_INTEGER = "정수로 변환할 수 없습니다.";
 
     private Converter() {
     }
@@ -14,7 +14,7 @@ public class Converter {
         try {
             return Integer.parseInt(input.trim());
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(CANNOT_CONVERT_TO_INTEGER.getMessage());
+            throw new CustomIllegalArgumentException(CANNOT_CONVERT_TO_INTEGER);
         }
     }
 }

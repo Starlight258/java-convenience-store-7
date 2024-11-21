@@ -1,6 +1,6 @@
 package store.util;
 
-import static store.exception.ExceptionMessages.INVALID_FILE_FORMAT;
+import static store.exception.ErrorMessage.INVALID_FILE_FORMAT;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,7 +28,7 @@ public class StoreFileReader {
         try {
             return readFile(fileName);
         } catch (IOException exception) {
-            throw new IllegalStateException(INVALID_FILE_FORMAT.getMessageWithPrefix());
+            throw new IllegalStateException(INVALID_FILE_FORMAT.getMessage());
         }
     }
 

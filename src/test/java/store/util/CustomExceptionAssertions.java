@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.ThrowableAssert;
-import store.exception.ExceptionMessages;
+import store.exception.ErrorMessage;
 
 public class CustomExceptionAssertions {
 
@@ -12,6 +12,6 @@ public class CustomExceptionAssertions {
             ThrowableAssert.ThrowingCallable throwingCallable) {
         return assertThatThrownBy(throwingCallable)
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith(ExceptionMessages.ERROR_PREFIX.getMessage());
+                .hasMessageStartingWith(ErrorMessage.ERROR_PREFIX.getMessage());
     }
 }

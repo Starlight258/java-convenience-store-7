@@ -1,9 +1,10 @@
 package store.domain.inventory;
 
-import static store.exception.ExceptionMessages.OUT_OF_STOCK;
+import static store.exception.ErrorMessage.OUT_OF_STOCK;
 
 import java.util.Objects;
 import store.domain.quantity.Quantity;
+import store.exception.CustomIllegalArgumentException;
 import store.util.InputValidator;
 
 public class Inventory {
@@ -34,7 +35,7 @@ public class Inventory {
             quantity = quantity.subtract(purchaseQuantity);
             return quantity;
         }
-        throw new IllegalArgumentException(OUT_OF_STOCK.getMessageWithPrefix());
+        throw new CustomIllegalArgumentException(OUT_OF_STOCK.getMessage());
     }
 
     public Quantity subtractMaximum(final Quantity purchaseQuantity) {

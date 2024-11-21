@@ -2,12 +2,12 @@ package store.domain.promotion;
 
 import java.time.LocalDate;
 import store.domain.quantity.Quantity;
-import store.exception.ExceptionMessage;
+import store.exception.CustomIllegalArgumentException;
 import store.util.InputValidator;
 
 public class Promotion {
 
-    public static final ExceptionMessage INVALID_DATE = new ExceptionMessage("시작 날짜는 이후 날짜 이전일 수 없습니다.");
+    public static final String INVALID_DATE = "시작 날짜는 이후 날짜 이전일 수 없습니다.";
 
     private final String promotionName;
     private final Quantity purchaseQuantity;
@@ -45,7 +45,7 @@ public class Promotion {
 
     private void validateDate(final LocalDate startDate, final LocalDate endDate) {
         if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException(INVALID_DATE.getMessage());
+            throw new CustomIllegalArgumentException(INVALID_DATE);
         }
     }
 

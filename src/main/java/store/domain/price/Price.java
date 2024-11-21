@@ -2,14 +2,13 @@ package store.domain.price;
 
 import java.math.BigDecimal;
 import java.util.Objects;
-import store.exception.ExceptionMessage;
+import store.exception.CustomIllegalArgumentException;
 import store.util.InputValidator;
 
 public class Price {
 
-    private static final ExceptionMessage INVALID_PRICE_CONTAINS_NOT_NUMBER = new ExceptionMessage(
-            "가격은 숫자로만 이루어져야 합니다.");
-    private static final ExceptionMessage INVALID_PRICE_NOT_MINUS = new ExceptionMessage("가격은 음수일 수 없습니다.");
+    private static final String INVALID_PRICE_CONTAINS_NOT_NUMBER = "가격은 숫자로만 이루어져야 합니다.";
+    private static final String INVALID_PRICE_NOT_MINUS = "가격은 음수일 수 없습니다.";
 
     private final BigDecimal price;
 
@@ -49,10 +48,10 @@ public class Price {
 
     private void validateNumber(final BigDecimal price) {
         if (price.stripTrailingZeros().scale() > 0) {
-            throw new IllegalArgumentException(INVALID_PRICE_CONTAINS_NOT_NUMBER.getMessage());
+            throw new CustomIllegalArgumentException(INVALID_PRICE_CONTAINS_NOT_NUMBER);
         }
         if (price.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException(INVALID_PRICE_NOT_MINUS.getMessage());
+            throw new CustomIllegalArgumentException(INVALID_PRICE_NOT_MINUS);
         }
     }
 

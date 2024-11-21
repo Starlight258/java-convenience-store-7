@@ -18,7 +18,7 @@ public class DateTimeParserTest {
         // Given
         String input = "2024-12-31";
         // When
-        LocalDate date = DateTimeParser.parseToLocalDate(input);
+        LocalDate date = StringParser.parseToLocalDate(input);
         // Then
         assertThat(date).isEqualTo(LocalDate.of(2024, 12, 31));
     }
@@ -28,7 +28,7 @@ public class DateTimeParserTest {
     @DisplayName("유효한 날짜 형식이 아닐 경우 예외가 발생한다.")
     void 실패_파싱(String input) {
         // When & Then
-        assertThatThrownBy(() -> DateTimeParser.parseToLocalDate(input))
+        assertThatThrownBy(() -> StringParser.parseToLocalDate(input))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageStartingWith("[ERROR]")
                 .hasMessageContaining("유효한 날짜형식이 아닙니다.");

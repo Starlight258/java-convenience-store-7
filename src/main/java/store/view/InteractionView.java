@@ -1,9 +1,10 @@
 package store.view;
 
-import static store.exception.ExceptionMessages.ONLY_YES_OR_NO;
+import static store.exception.ErrorMessage.INVALID_ANSWER_FORMAT;
 
 import java.util.Arrays;
 import store.domain.quantity.Quantity;
+import store.exception.CustomIllegalArgumentException;
 import store.exception.ExceptionHandler;
 
 public class InteractionView {
@@ -21,7 +22,7 @@ public class InteractionView {
             return Arrays.stream(values())
                     .filter(answer -> answer.value.equals(input))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(ONLY_YES_OR_NO.getMessageWithPrefix()));
+                    .orElseThrow(() -> new CustomIllegalArgumentException(INVALID_ANSWER_FORMAT.getMessage()));
         }
 
         public boolean isYes() {
