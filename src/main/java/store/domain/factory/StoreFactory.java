@@ -10,8 +10,8 @@ import store.domain.promotion.Promotion;
 import store.domain.promotion.Promotions;
 import store.domain.quantity.Quantity;
 import store.util.Converter;
-import store.util.DateTimeParser;
 import store.util.StoreSplitter;
+import store.util.StringParser;
 
 public class StoreFactory {
 
@@ -62,8 +62,8 @@ public class StoreFactory {
     private Promotion createPromotion(final List<String> text) {
         Quantity purchaseQuantity = new Quantity(Converter.convertToInteger(text.get(1)));
         Quantity bonusQuantity = new Quantity(Converter.convertToInteger(text.get(2)));
-        LocalDate startDate = DateTimeParser.parseToLocalDate(text.get(3));
-        LocalDate endDate = DateTimeParser.parseToLocalDate(text.get(4));
+        LocalDate startDate = StringParser.parseToLocalDate(text.get(3));
+        LocalDate endDate = StringParser.parseToLocalDate(text.get(4));
         return new Promotion(text.get(0), purchaseQuantity, bonusQuantity, startDate, endDate);
     }
 }

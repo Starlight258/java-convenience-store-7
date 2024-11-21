@@ -10,9 +10,9 @@ import store.domain.promotion.PromotionProcessor;
 import store.domain.promotion.Promotions;
 import store.exception.ExceptionHandler;
 import store.service.StoreService;
-import store.util.OrderTextParser;
 import store.util.StoreInitializer;
 import store.util.StoreSplitter;
+import store.util.StringParser;
 import store.view.StoreView;
 
 public class StoreController {
@@ -65,7 +65,7 @@ public class StoreController {
         return exceptionHandler.retryOn(() -> {
             String input = storeView.readLine();
             List<String> splitText = StoreSplitter.split(input);
-            Orders orders = new Orders(OrderTextParser.parseOrders(splitText));
+            Orders orders = new Orders(StringParser.parseOrders(splitText));
             inventories.checkStock(orders);
             return orders;
         });
