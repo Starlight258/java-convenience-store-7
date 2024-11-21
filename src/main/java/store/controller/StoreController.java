@@ -60,12 +60,14 @@ public class StoreController {
         storeView.showInventories(inventories);
     }
 
-    private Orders createOrder() {
+    private Orders createOrder(final Inventories inventories) {
         storeView.showCommentOfPurchase();
         return exceptionHandler.retryOn(() -> {
             String input = storeView.readLine();
             List<String> splitText = StoreSplitter.split(input);
-            return new Orders(OrderTextParser.parseOrders(splitText));
+            Orders orders = new Orders(OrderTextParser.parseOrders(splitText));
+            inventories.checkStock(orders);
+            return orders;
         });
     }
 
