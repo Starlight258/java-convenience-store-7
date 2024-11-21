@@ -28,4 +28,15 @@ class PromotionsTest {
 
         assertThat(promotions.find("탄산2+1", date.plusMonths(2)).get()).isEqualTo(cokePromotion);
     }
+
+    @Test
+    @DisplayName("만료된 프로모션은 조회하지 않는다")
+    void 성공_프로모션이름조회_만료프로모션제외() {
+        LocalDate date = LocalDate.of(2024, 1, 1);
+        Promotion cokePromotion = new Promotion("탄산2+1", new Quantity(2), new Quantity(1), date, date.plusYears(1));
+        Promotions promotions = new Promotions(List.of(cokePromotion));
+        LocalDate now = LocalDate.of(2023, 1, 1);
+
+        assertThat(promotions.find("탄산2+1", now)).isEmpty();
+    }
 }
