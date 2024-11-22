@@ -3,11 +3,12 @@ package store.service;
 import java.util.LinkedHashMap;
 import store.domain.PurchaseContext;
 import store.domain.Store;
+import store.domain.inventory.InventoryManager;
 import store.domain.membership.Membership;
 import store.domain.order.Orders;
 import store.domain.order.Orders.Order;
+import store.domain.payment.PaymentProcessor;
 import store.domain.price.Price;
-import store.domain.promotion.PromotionProcessor;
 import store.domain.receipt.Receipt;
 import store.response.Response;
 import store.response.ResponseHandler;
@@ -16,14 +17,16 @@ import store.view.InteractionView;
 public class StoreService {
 
     private final InteractionView interactionView;
-    private PromotionProcessor promotionProcessor;
+    private InventoryManager inventoryManager;
+    private PaymentProcessor paymentProcessor;
 
     public StoreService(final InteractionView interactionView) {
         this.interactionView = interactionView;
     }
 
-    public void initializeProcessor(final PromotionProcessor promotionProcessor) {
-        this.promotionProcessor = promotionProcessor;
+    public void initializeProcessor(final InventoryManager inventoryManager, final PaymentProcessor paymentProcessor) {
+        this.inventoryManager = inventoryManager;
+        this.paymentProcessor = paymentProcessor;
     }
 
     public Store initializeStore() {
@@ -31,13 +34,10 @@ public class StoreService {
                 new Membership(new LinkedHashMap<>()));
     }
 
-    public void processPurchase(Orders orders, Store store) {
-        PurchaseContext context = new PurchaseContext();
-        for (Order order : orders.getItems()) {
-            Response response = promotionProcessor.pay(order, store, context);
-            ResponseHandler handler = new ResponseHandler(orders, store, order, interactionView);
-            handler.handle(response);
-        }
+    public void processOrder(final Orders orders, final Order order, final Store store, final PurchaseContext context) {
+        Response response = paymentProcessor.findPurchaseOptions(order, store);
+        ResponseHandler handler = new ResponseHandler(orders, store, order, interactionView, inventoryManager);
+        handler.handle(response);
     }
 
     public Price checkMembership(final boolean useMembership, final Membership membership) {

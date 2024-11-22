@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import store.domain.Store;
 import store.domain.inventory.Inventory;
+import store.domain.inventory.InventoryManager;
 import store.domain.inventory.Product;
 import store.domain.order.Orders;
 import store.domain.order.Orders.Order;
@@ -17,14 +18,16 @@ public class ResponseHandler {
     private final String productName;
     private final Quantity quantity;
     private final InteractionView interactionView;
+    private final InventoryManager inventoryManager;
 
     public ResponseHandler(final Orders orders, final Store store, final Order order,
-                           final InteractionView interactionView) {
+                           final InteractionView interactionView, final InventoryManager inventoryManager) {
         this.orders = orders;
         this.store = store;
         this.productName = order.getProductName();
         this.quantity = order.getQuantity();
         this.interactionView = interactionView;
+        this.inventoryManager = inventoryManager;
     }
 
     public void handle(final Response response) {
@@ -56,7 +59,7 @@ public class ResponseHandler {
 
     private void askNoPromotion(final Response response, final Product product) {
         Quantity noPromotionQuantity = response.noPromotionQuantity();
-        Inventory noPromotionInventory = response.sameProductInventories().findNoPromotionInventory();
+        Inventory noPromotionInventory = inventoryManager.findNoPromotionInventory(productName);
         if (interactionView.askForNoPromotion(productName, noPromotionQuantity.getQuantity())) {
             purchaseOnlyPromotionProduct(response, product, noPromotionInventory);
             return;

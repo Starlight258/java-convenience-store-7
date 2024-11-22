@@ -1,66 +1,57 @@
-package store.domain.promotion;
+package store.domain.payment;
 
-import camp.nextstep.edu.missionutils.DateTimes;
-import java.time.LocalDate;
-import java.util.Optional;
-import store.domain.PurchaseContext;
 import store.domain.Store;
 import store.domain.inventory.Inventories;
 import store.domain.inventory.Inventory;
+import store.domain.inventory.InventoryManager;
 import store.domain.inventory.Product;
 import store.domain.order.Orders.Order;
+import store.domain.promotion.Promotion;
+import store.domain.promotion.PromotionManager;
+import store.domain.promotion.PromotionQuantities;
 import store.domain.quantity.Quantity;
 import store.exception.CustomIllegalStateException;
 import store.response.Response;
 
-public class PromotionProcessor {
+public class PaymentProcessor {
 
     private static final String PRODUCT_NOT_PURCHASE = "상품을 구매할 수 없습니다.";
-    private static final String NULL = "null";
 
-    private final Inventories inventories;
-    private final Promotions promotions;
+    private final InventoryManager inventoryManager;
+    private final PromotionManager promotionManager;
 
-    public PromotionProcessor(final Inventories inventories, final Promotions promotions) {
-        this.inventories = inventories;
-        this.promotions = promotions;
+    public PaymentProcessor(final InventoryManager inventoryManager, final PromotionManager promotionManager) {
+        this.inventoryManager = inventoryManager;
+        this.promotionManager = promotionManager;
     }
 
-    public Response pay(final Order order, final Store store, final PurchaseContext context) {
-        Inventories sameProductInventories = inventories.findProducts(order.getProductName());
-        return findPurchaseOptions(sameProductInventories, order.getQuantity(), store);
+    public Response findPurchaseOptions(Order order, Store store) {
+        Inventory inventory = findPriorityInventory(order);
+        Quantity quantity = order.getQuantity();
+        if (inventory.hasNoPromotion()) {
+            return payNormal(inventory, quantity, store);
+        }
+        return purchaseWithPromotions(inventory, quantity, store);
     }
 
-    private Response findPurchaseOptions(Inventories sameProductInventories, Quantity quantity, Store store) {
-        for (Inventory inventory : sameProductInventories.getInventories()) {
-            Response response = determinePromotion(inventory, quantity, store, sameProductInventories);
-            if (response != null) {
-                return response;
+    private Inventory findPriorityInventory(final Order order) {
+        Inventories productInventories = inventoryManager.findProductsByName(order.getProductName());
+        for (Inventory inventory : productInventories.getInventories()) {
+            if (inventory.hasNoPromotion() || promotionManager.isValidPromotion(inventory.getPromotionName())) {
+                return inventory;
             }
         }
         throw new CustomIllegalStateException(PRODUCT_NOT_PURCHASE);
     }
 
-    private Response determinePromotion(Inventory inventory, Quantity quantity,
-                                        Store store, Inventories sameProductInventories) {
-        if (hasNoPromotion(inventory)) {
-            return payNormal(inventory, quantity, store);
-        }
-        Optional<Promotion> optionalPromotion = findValidPromotion(inventory.getPromotionName());
-        return optionalPromotion.map(
-                        promotion -> purchaseWithPromotion(inventory, quantity, store, sameProductInventories, promotion))
-                .orElse(null);
-    }
-
-    private Response purchaseWithPromotion(Inventory inventory, Quantity quantity,
-                                           Store store, Inventories sameProductInventories,
-                                           Promotion promotion) {
+    private Response purchaseWithPromotions(Inventory inventory, Quantity quantity, Store store) {
+        Promotion promotion = promotionManager.findByName(inventory.getPromotionName());
         PromotionQuantities promotionQuantities = calculatePromotionQuantities(promotion);
         if (isOutOfStock(inventory.getQuantity(), quantity)) {
-            return handleWithLack(inventory, quantity, promotionQuantities, store, sameProductInventories);
+            return handleWithLack(inventory, quantity, promotionQuantities, store);
         }
         if (exceedsPromotionLimit(quantity, promotionQuantities)) {
-            return handleMixedPurchase(inventory, quantity, promotionQuantities, sameProductInventories);
+            return handleMixedPurchase(inventory, quantity, promotionQuantities);
         }
         return applyPromotionRules(inventory, quantity, promotionQuantities, store);
     }
@@ -91,18 +82,9 @@ public class PromotionProcessor {
         return quantity.isMoreThan(promotionUnit) && !quantity.remainder(promotionUnit).equals(Quantity.zero());
     }
 
-    private boolean hasNoPromotion(Inventory inventory) {
-        return inventory.getPromotionName().equals(NULL);
-    }
-
     private Response payNormal(Inventory inventory, Quantity quantity, Store store) {
         purchaseWithoutPromotion(store, quantity, inventory);
         return Response.purchaseWithNoPromotion(inventory);
-    }
-
-    private Optional<Promotion> findValidPromotion(String promotionName) {
-        LocalDate now = DateTimes.now().toLocalDate();
-        return promotions.find(promotionName, now);
     }
 
     private PromotionQuantities calculatePromotionQuantities(Promotion promotion) {
@@ -115,12 +97,11 @@ public class PromotionProcessor {
 
     private Response handleWithLack(Inventory inventory, Quantity quantity,
                                     PromotionQuantities promotionQuantities,
-                                    Store store, Inventories sameProductInventories) {
+                                    Store store) {
         if (canApplyPartialPromotion(inventory.getQuantity(), promotionQuantities)) {
-            return createPartialPromotionResponseForOutOfStock(inventory, quantity, promotionQuantities,
-                    sameProductInventories);
+            return createPartialPromotionResponseForOutOfStock(inventory, quantity, promotionQuantities);
         }
-        return purchaseWithNoPromotion(inventory, quantity, store, sameProductInventories);
+        return purchaseWithNoPromotion(inventory, quantity, store);
     }
 
     private boolean canApplyPartialPromotion(Quantity stock, PromotionQuantities promotionQuantities) {
@@ -128,21 +109,19 @@ public class PromotionProcessor {
     }
 
     private Response handleMixedPurchase(Inventory inventory, Quantity quantity,
-                                         PromotionQuantities promotionQuantities,
-                                         final Inventories sameProductInventories) {
+                                         PromotionQuantities promotionQuantities) {
         Quantity setSize = calculateSetSize(quantity, promotionQuantities);
         Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
-        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);
+        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory);
     }
 
     private Response createPartialPromotionResponseForOutOfStock(Inventory inventory, Quantity quantity,
-                                                                 PromotionQuantities promotionQuantities,
-                                                                 final Inventories sameProductInventories) {
+                                                                 PromotionQuantities promotionQuantities) {
         Quantity setSize = calculateSetSize(inventory.getQuantity(), promotionQuantities);
         Quantity totalBonusQuantity = calculateTotalBonus(setSize, promotionQuantities);
         Quantity noPromotionQuantity = calculateNoPromotionQuantity(quantity, setSize, promotionQuantities);
-        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory, sameProductInventories);
+        return Response.outOfStock(totalBonusQuantity, noPromotionQuantity, inventory);
     }
 
     private Quantity calculateSetSize(Quantity stock, PromotionQuantities promotionQuantities) {
@@ -158,9 +137,8 @@ public class PromotionProcessor {
         return quantity.subtract(setSize.multiply(promotionQuantities.totalQuantity()));
     }
 
-    private Response purchaseWithNoPromotion(Inventory inventory, Quantity quantity,
-                                             Store store, Inventories sameProductInventories) {
-        sameProductInventories.buyProductWithoutPromotion(quantity, store);
+    private Response purchaseWithNoPromotion(Inventory inventory, Quantity quantity, Store store) {
+        inventoryManager.buyProductWithoutPromotion(inventory.getProductName(), quantity, store);
         return Response.purchaseWithNoPromotion(inventory);
     }
 
@@ -202,9 +180,5 @@ public class PromotionProcessor {
         inventory.subtract(totalQuantity);
         Product product = inventory.getProduct();
         store.noteNoPromotionProduct(product, totalQuantity);
-    }
-
-    public Inventories getInventories() {
-        return inventories;
     }
 }
