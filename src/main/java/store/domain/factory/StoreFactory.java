@@ -40,7 +40,7 @@ public class StoreFactory {
         List<Product> products = getUniqueProducts(inventories);
 
         for (Product product : products) {
-            Inventories productInventories = inventories.findProducts(product.getName());
+            Inventories productInventories = inventories.findProductsByName(product.getName());
             if (!hasNoPromotionInventory(productInventories)) {
                 inventories.add(Inventory.createNoPromotionEmptyInventory(product));
             }

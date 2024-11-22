@@ -104,7 +104,7 @@ public class InventoriesTest {
         Inventories inventories = new Inventories(List.of(
                 new Inventory(new Product("coke", BigDecimal.valueOf(1000)), 10, "null")
         ));
-        assertThatCode(() -> inventories.findProducts("coke"))
+        assertThatCode(() -> inventories.findProductsByName("coke"))
                 .doesNotThrowAnyException();
     }
 }

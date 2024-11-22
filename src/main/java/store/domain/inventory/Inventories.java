@@ -2,7 +2,6 @@ package store.domain.inventory;
 
 import static store.exception.ErrorMessage.OUT_OF_STOCK;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -59,7 +58,7 @@ public class Inventories {
         for (Order order : purchasedItems.getItems()) {
             String productName = order.getProductName();
             Quantity quantity = order.getQuantity();
-            Inventories sameProductInventories = findProducts(productName);
+            Inventories sameProductInventories = findProductsByName(productName);
             Quantity totalStock = sameProductInventories.getTotalStocks();
             notExistProductName(sameProductInventories);
             totalOutOfStock(quantity, totalStock);
@@ -113,14 +112,10 @@ public class Inventories {
         }
     }
 
-    public Inventories findProducts(final String productName) {
-        Inventories sameProducts = new Inventories(new ArrayList<>());
-        for (Inventory inventory : inventories) {
-            if (inventory.isSameProductName(productName)) {
-                sameProducts.add(inventory);
-            }
-        }
-        return sameProducts;
+    public Inventories findProductsByName(final String productName) {
+        return new Inventories(inventories.stream()
+                .filter(inventory -> inventory.isSameProductName(productName))
+                .toList());
     }
 
     public void add(final Inventory inventory) {

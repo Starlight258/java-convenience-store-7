@@ -7,7 +7,8 @@ import store.util.InputValidator;
 
 public class Promotion {
 
-    public static final String INVALID_DATE = "시작 날짜는 이후 날짜 이전일 수 없습니다.";
+    private static final String INVALID_DATE = "시작 날짜는 이후 날짜 이전일 수 없습니다.";
+    private static final String NULL = "null";
 
     private final String promotionName;
     private final Quantity purchaseQuantity;
@@ -33,9 +34,16 @@ public class Promotion {
     }
 
     public boolean isValid(final String promotionName, final LocalDate now) {
+        if (promotionName.equals(NULL)) {
+            return false;
+        }
         return this.promotionName.equals(promotionName)
                 && (now.isEqual(startDate) || now.isAfter(startDate))
                 && (now.isEqual(endDate) || now.isBefore(endDate));
+    }
+
+    public boolean hasName(final String promotionName) {
+        return this.promotionName.equals(promotionName);
     }
 
     private void validate(final String promotionName, final LocalDate startDate, final LocalDate endDate) {
