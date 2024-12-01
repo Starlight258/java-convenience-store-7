@@ -30,10 +30,21 @@ public class Stock {
             this.regularQuantity += quantity;
             return;
         }
-        if (promotionQuantity == NOT_EXIST) {
+        if (isPromotionInitialValue()) {
             promotionQuantity = 0;
         }
         promotionQuantity += quantity;
+    }
+
+    public int getTotalQuantity() {
+        if (isPromotionInitialValue()) {
+            return regularQuantity;
+        }
+        return promotionQuantity + regularQuantity;
+    }
+
+    private boolean isPromotionInitialValue() {
+        return promotionQuantity == NOT_EXIST;
     }
 
     public int getPromotionQuantity() {

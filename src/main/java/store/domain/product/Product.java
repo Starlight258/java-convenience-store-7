@@ -17,4 +17,8 @@ public class Product {
     public int getPrice() {
         return price;
     }
+
+    public boolean hasName(final String name) {
+        return this.name.equals(name);
+    }
 }
