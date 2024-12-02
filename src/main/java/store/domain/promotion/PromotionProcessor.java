@@ -44,6 +44,11 @@ public class PromotionProcessor {
                     giftQuantity);
         }
         // 할인 적용
+        return purchaseWithPromotion(purchaseQuantity, giftQuantity);
+    }
+
+    private PromotionResult purchaseWithPromotion(final int purchaseQuantity, final int giftQuantity) {
+        productStock.subtractPromotionQuantity(purchaseQuantity);
         return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, 0, giftQuantity);
     }
 

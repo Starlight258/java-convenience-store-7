@@ -109,5 +109,13 @@ public class ProductStock {
     public boolean cannotPurchaseWithinPromotion(final int purchaseQuantity) {
         return promotionQuantity < purchaseQuantity;
     }
+
+    public void subtractPromotionQuantity(final int purchaseQuantity) {
+        if (promotionQuantity >= purchaseQuantity) {
+            promotionQuantity -= purchaseQuantity;
+            return;
+        }
+        throw new CustomIllegalArgumentException(ErrorMessage.OUT_OF_STOCK);
+    }
 }
 

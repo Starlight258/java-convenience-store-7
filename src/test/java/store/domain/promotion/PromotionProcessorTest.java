@@ -27,7 +27,8 @@ class PromotionProcessorTest {
         // Then
         assertAll(
                 () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.REGULAR_ONLY),
-                () -> assertThat(result.regularPriceQuantity()).isEqualTo(3)
+                () -> assertThat(result.totalQuantity()).isEqualTo(3),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0)
         );
     }
 
@@ -47,7 +48,7 @@ class PromotionProcessorTest {
         // Then
         assertAll(
                 () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.REGULAR_ONLY),
-                () -> assertThat(result.regularPriceQuantity()).isEqualTo(3)
+                () -> assertThat(result.totalQuantity()).isEqualTo(3)
         );
     }
 
@@ -91,6 +92,7 @@ class PromotionProcessorTest {
         assertAll(
                 () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.PROMOTIONAL_ONLY),
                 () -> assertThat(result.totalQuantity()).isEqualTo(5),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
                 () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(1),
                 () -> assertThat(result.giftQuantity()).isEqualTo(1) // 추가 혜택 수량 뺀 값
         );
@@ -113,6 +115,7 @@ class PromotionProcessorTest {
         assertAll(
                 () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.PROMOTIONAL_ONLY),
                 () -> assertThat(result.totalQuantity()).isEqualTo(5),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
                 () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
                 () -> assertThat(result.giftQuantity()).isEqualTo(1) // 추가 혜택 수량 뺀 값
         );
@@ -133,6 +136,32 @@ class PromotionProcessorTest {
 
         // Then
         assertAll(
+                () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.PROMOTIONAL_ONLY),
+                () -> assertThat(result.totalQuantity()).isEqualTo(4),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(1) // 추가 혜택 수량 뺀 값
+        );
+    }
+
+    @Test
+    @DisplayName("프로모션 기간이라면 프로모션 재고를 일반 재고보다 먼저 차감한다.")
+    void 프로모션_기간이라면_프로모션_재고를_일반_재고보다_먼저_차감한다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(10);
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        LocalDate now = makeLocalDate(2024, 12, 13);
+
+        // When
+        PromotionResult result = promotionProcessor.process(4, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(6),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10),
                 () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.PROMOTIONAL_ONLY),
                 () -> assertThat(result.totalQuantity()).isEqualTo(4),
                 () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
