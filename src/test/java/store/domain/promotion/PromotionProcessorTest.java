@@ -77,6 +77,28 @@ class PromotionProcessorTest {
     }
 
     @Test
+    @DisplayName("추가 혜택 수량이지만 재고가 부족할 경우 혜택을 안내하지 않는다.")
+    void 추가_혜택_수량이지만_재고가_부족할_경우_혜택을_안내하지_않는다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(5);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        LocalDate now = makeLocalDate(2024, 12, 13);
+
+        // When
+        PromotionResult result = promotionProcessor.process(5, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.PROMOTIONAL_ONLY),
+                () -> assertThat(result.totalQuantity()).isEqualTo(5),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(1) // 추가 혜택 수량 뺀 값
+        );
+    }
+
+    @Test
     @DisplayName("할인을 적용한다.")
     void 할인을_적용한다() {
         // Given

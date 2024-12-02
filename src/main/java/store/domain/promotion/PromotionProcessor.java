@@ -32,12 +32,12 @@ public class PromotionProcessor {
         if (needRegularPricePayment(purchaseQuantity)) {
             return processPartialPromotionPurchase(promotion, purchaseQuantity);
         }
-        // 프로모션 적용이 가능한 상품에 대해 해당 수량보다 적게 가져온 경우 추가 혜택 안내
         return calculatePromotionBenefit(promotion, purchaseQuantity);
     }
 
     private PromotionResult calculatePromotionBenefit(final Promotion promotion, final int purchaseQuantity) {
         int giftQuantity = calculateGiftQuantity(promotion, purchaseQuantity);
+        // 프로모션 적용이 가능한 상품에 대해 해당 수량보다 적게 가져온 경우 추가 혜택 안내
         if (checkAdditionalPromotionBenefit(promotion, purchaseQuantity)) {
             return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, promotion.getGetQuantity(), giftQuantity);
         }
@@ -46,7 +46,10 @@ public class PromotionProcessor {
     }
 
     private boolean checkAdditionalPromotionBenefit(final Promotion promotion, final int purchaseQuantity) {
-        return (purchaseQuantity % promotion.getUnitQuantity()) == promotion.getBuyQuantity();
+        // 추가 혜택 안내시 구매 후 남은 재고 수량이 getQuantity 이상이어야한다.
+        boolean isBenefitQuantity = (purchaseQuantity % promotion.getUnitQuantity()) == promotion.getBuyQuantity();
+        boolean isAvailable = productStock.getPromotionQuantity() - purchaseQuantity >= promotion.getGetQuantity();
+        return isBenefitQuantity && isAvailable;
     }
 
     private PromotionResult processPartialPromotionPurchase(final Promotion promotion, final int purchaseQuantity) {
