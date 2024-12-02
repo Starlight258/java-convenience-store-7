@@ -1,10 +1,12 @@
 package store.view;
 
+import static store.domain.product.stock.StockStatus.NOT_EXIST;
+
 import java.util.Map.Entry;
 import store.domain.product.Product;
 import store.domain.product.stock.Inventory;
 import store.domain.product.stock.QuantityEnum;
-import store.domain.product.stock.Stock;
+import store.domain.product.stock.ProductStock;
 import store.domain.promotion.Promotion;
 
 public class OutputView {
@@ -28,20 +30,18 @@ public class OutputView {
 
     public void showInventory(final Inventory inventory) {
         String promotionFormat = "- %s %,d원 ";
-        for (Entry<Product, Stock> entry : inventory.getInventory().entrySet()) {
-            Product product = entry.getKey();
-            Stock stock = entry.getValue();
-            Promotion promotion = stock.getPromotion();
-            String name = product.getName();
+        for (Entry<String, ProductStock> entry : inventory.getInventory().entrySet()) {
+            ProductStock productStock = entry.getValue();
+            Product product = productStock.getProduct();
+            Promotion promotion = product.getPromotion();
+            String name = entry.getKey();
             int price = product.getPrice();
-            int promotionQuantity = stock.getPromotionQuantity();
-            int regularQuantity = stock.getRegularQuantity();
-            // 일반 재고만 있는 경우
-            if (promotionQuantity != -1) {
+            int promotionQuantity = productStock.getPromotionQuantity();
+            int regularQuantity = productStock.getRegularQuantity();
+            if (promotionQuantity != NOT_EXIST.getValue()) {
                 String quantityName = QuantityEnum.findByStock(promotionQuantity);
                 showln(String.format(promotionFormat, name, price) + quantityName + " " + promotion.getName());
             }
-            // 프로모션 재고만 있는 경우
             String quantityName = QuantityEnum.findByStock(regularQuantity);
             showln(String.format(promotionFormat, name, price) + quantityName);
         }

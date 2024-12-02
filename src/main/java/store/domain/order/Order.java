@@ -7,12 +7,12 @@ import store.exception.CustomIllegalArgumentException;
 
 public class Order {
 
-    private final String name;
+    private final String productName;
     private final int quantity;
 
-    public Order(final String name, final int quantity) {
+    public Order(final String productName, final int quantity) {
         validate(quantity);
-        this.name = name;
+        this.productName = productName;
         this.quantity = quantity;
     }
 
@@ -39,7 +39,7 @@ public class Order {
     }
 
     public String getName() {
-        return name;
+        return productName;
     }
 
     public int getQuantity() {
