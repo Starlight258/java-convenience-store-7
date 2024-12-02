@@ -16,6 +16,10 @@ public class Inventory {
         return inventory;
     }
 
+    public ProductStock getProductStock(final String productName) {
+        return inventory.get(productName);
+    }
+
     public void addProductStock(final Product product, final int quantity) {
         String productName = product.getName();
         ProductStock productStock = inventory.getOrDefault(productName, new ProductStock(product));

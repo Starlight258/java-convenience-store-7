@@ -43,4 +43,20 @@ public class Promotion {
     public String getName() {
         return name;
     }
+
+    public boolean isValidPromotion(final LocalDate now) {
+        return (now.isBefore(endDate) || now.isEqual(endDate)) && (now.isAfter(startDate) || now.isEqual(startDate));
+    }
+
+    public int getUnitQuantity() {
+        return buyQuantity + getQuantity;
+    }
+
+    public int getBuyQuantity() {
+        return buyQuantity;
+    }
+
+    public int getGetQuantity() {
+        return getQuantity;
+    }
 }

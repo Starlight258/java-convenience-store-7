@@ -1,5 +1,6 @@
 package store.domain.product;
 
+import java.time.LocalDate;
 import store.domain.promotion.Promotion;
 
 public class Product {
@@ -24,6 +25,10 @@ public class Product {
 
     public boolean hasPromotion() {
         return this.promotion != null;
+    }
+
+    public boolean hasValidPromotion(LocalDate now) {
+        return hasPromotion() && promotion.isValidPromotion(now);
     }
 
     public void setPromotion(final Promotion promotion) {

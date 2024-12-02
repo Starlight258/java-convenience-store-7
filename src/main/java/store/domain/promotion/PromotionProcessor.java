@@ -1,0 +1,82 @@
+package store.domain.promotion;
+
+import java.time.LocalDate;
+import store.domain.product.Product;
+import store.domain.product.stock.ProductStock;
+
+// 프로모션을 고려하여 상품의 재고 관리
+public class PromotionProcessor {
+
+    private final ProductStock productStock;
+
+    public PromotionProcessor(final ProductStock productStock) {
+        this.productStock = productStock;
+    }
+
+    public PromotionResult process(int purchaseQuantity, LocalDate now) {
+        Product product = productStock.getProduct();
+        if (hasValidPromotion(product, now)) {
+            return purchasePromotion(product.getPromotion(), purchaseQuantity);
+        }
+        return purchaseRegular(purchaseQuantity);
+    }
+
+    private boolean hasValidPromotion(final Product product, LocalDate now) {
+        return product.hasValidPromotion(now);
+    }
+
+    private PromotionResult purchasePromotion(final Promotion promotion, final int purchaseQuantity) {
+        // 재고 확인
+        validateStock(purchaseQuantity);
+        // 프로모션 재고로 모두 구매하지 못할 경우 정가 결제를 안내
+        if (needRegularPricePayment(purchaseQuantity)) {
+            return processPartialPromotionPurchase(promotion, purchaseQuantity);
+        }
+        // 프로모션 적용이 가능한 상품에 대해 해당 수량보다 적게 가져온 경우 추가 혜택 안내
+        return calculatePromotionBenefit(promotion, purchaseQuantity);
+    }
+
+    private PromotionResult calculatePromotionBenefit(final Promotion promotion, final int purchaseQuantity) {
+        int giftQuantity = calculateGiftQuantity(promotion, purchaseQuantity);
+        if (checkAdditionalPromotionBenefit(promotion, purchaseQuantity)) {
+            return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, promotion.getGetQuantity(), giftQuantity);
+        }
+        // 할인 적용
+        return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, 0, giftQuantity);
+    }
+
+    private boolean checkAdditionalPromotionBenefit(final Promotion promotion, final int purchaseQuantity) {
+        return (purchaseQuantity % promotion.getUnitQuantity()) == promotion.getBuyQuantity();
+    }
+
+    private PromotionResult processPartialPromotionPurchase(final Promotion promotion, final int purchaseQuantity) {
+        int promotionQuantity = productStock.getPromotionQuantity();
+        int unitQuantity = promotion.getUnitQuantity();
+        int regularPriceQuantity = calculateRegularPriceQuantity(purchaseQuantity, promotionQuantity, unitQuantity);
+        int giftQuantity = calculateGiftQuantity(promotion, purchaseQuantity);
+        return PromotionResult.makeMixedPurchaseResult(regularPriceQuantity, purchaseQuantity, 0, giftQuantity);
+    }
+
+    private int calculateGiftQuantity(final Promotion promotion, final int purchaseQuantity) {
+        // 프로모션 재고 내에서 증정 수량을 계산
+        int quantity = Math.min(purchaseQuantity, productStock.getPromotionQuantity());
+        return quantity / promotion.getUnitQuantity() * promotion.getGetQuantity();
+    }
+
+    private boolean needRegularPricePayment(final int purchaseQuantity) {
+        return productStock.cannotPurchaseWithinPromotion(purchaseQuantity);
+    }
+
+    private void validateStock(final int purchaseQuantity) {
+        productStock.checkTotalStock(purchaseQuantity);
+    }
+
+    private int calculateRegularPriceQuantity(int purchaseQuantity, int promotionQuantity, int unitQuantity) {
+        return purchaseQuantity - (promotionQuantity / unitQuantity * unitQuantity);
+    }
+
+    private PromotionResult purchaseRegular(final int purchaseQuantity) {
+        productStock.subtractRegularQuantity(purchaseQuantity);
+        return PromotionResult.makeRegularPurchaseResult(purchaseQuantity);
+    }
+}

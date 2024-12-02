@@ -5,6 +5,8 @@ import static store.domain.product.stock.StockStatus.NOT_EXIST;
 
 import store.domain.product.Product;
 import store.domain.promotion.Promotion;
+import store.exception.CustomIllegalArgumentException;
+import store.exception.ErrorMessage;
 
 public class ProductStock {
 
@@ -32,6 +34,10 @@ public class ProductStock {
             return;
         }
         addPromotionQuantity(quantity);
+    }
+
+    public Promotion getPromotion() {
+        return product.getPromotion();
     }
 
     public int getTotalQuantity() {
@@ -73,12 +79,31 @@ public class ProductStock {
         productStock.addRegularQuantity(quantity);
     }
 
+    public void subtractRegularQuantity(int purchaseQuantity) {
+        if (regularQuantity >= purchaseQuantity) {
+            regularQuantity -= purchaseQuantity;
+            return;
+        }
+        throw new CustomIllegalArgumentException(ErrorMessage.OUT_OF_STOCK);
+    }
+
     private void setPromotion(final Promotion promotion) {
         product.setPromotion(promotion);
     }
 
     public Product getProduct() {
         return product;
+    }
+
+    public void checkTotalStock(final int purchaseQuantity) {
+        int totalQuantity = purchaseQuantity + regularQuantity;
+        if (totalQuantity < purchaseQuantity) {
+            throw new CustomIllegalArgumentException(ErrorMessage.OUT_OF_STOCK);
+        }
+    }
+
+    public boolean cannotPurchaseWithinPromotion(final int purchaseQuantity) {
+        return promotionQuantity < purchaseQuantity;
     }
 }
 

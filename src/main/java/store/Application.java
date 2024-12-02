@@ -2,6 +2,7 @@ package store;
 
 import camp.nextstep.edu.missionutils.Console;
 import store.controller.StoreController;
+import store.service.StoreService;
 import store.util.ExceptionHandler;
 import store.view.InputView;
 import store.view.OutputView;
@@ -11,7 +12,8 @@ public class Application {
         InputView inputView = new InputView();
         OutputView outputView = new OutputView();
         ExceptionHandler exceptionHandler = new ExceptionHandler(outputView);
-        StoreController controller = new StoreController(inputView, outputView, exceptionHandler);
+        StoreService service = new StoreService();
+        StoreController controller = new StoreController(inputView, outputView, exceptionHandler, service);
         try {
             controller.process();
         } finally {
