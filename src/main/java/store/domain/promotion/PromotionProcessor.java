@@ -15,7 +15,8 @@ public class PromotionProcessor {
 
     public PromotionResult process(int purchaseQuantity, LocalDate now) {
         Product product = productStock.getProduct();
-        if (hasValidPromotion(product, now)) {
+        // 유효한 프로모션이 존재하고, 프로모션 수량이 존재할 경우
+        if (hasValidPromotion(product, now) && !productStock.doesNotExistPromotionQuantity()) {
             return purchasePromotion(product.getPromotion(), purchaseQuantity);
         }
         return purchaseRegular(purchaseQuantity);
@@ -28,7 +29,7 @@ public class PromotionProcessor {
     private PromotionResult purchasePromotion(final Promotion promotion, final int purchaseQuantity) {
         // 재고 확인
         validateStock(purchaseQuantity);
-        // 프로모션 재고로 모두 구매하지 못할 경우 정가 결제를 안내
+        // 프로모션 재고로 모두 구매하지 못할 경우 프로모션 적용 + 정가 결제 수량을 안내
         if (needRegularPricePayment(purchaseQuantity)) {
             return processPartialPromotionPurchase(promotion, purchaseQuantity);
         }
@@ -39,7 +40,8 @@ public class PromotionProcessor {
         int giftQuantity = calculateGiftQuantity(promotion, purchaseQuantity);
         // 프로모션 적용이 가능한 상품에 대해 해당 수량보다 적게 가져온 경우 추가 혜택 안내
         if (checkAdditionalPromotionBenefit(promotion, purchaseQuantity)) {
-            return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, promotion.getGetQuantity(), giftQuantity);
+            return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, promotion.getGetQuantity(),
+                    giftQuantity);
         }
         // 할인 적용
         return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, 0, giftQuantity);

@@ -28,6 +28,10 @@ public class ProductStock {
         return NOT_EXIST.getValue();
     }
 
+    public boolean doesNotExistPromotionQuantity() {
+        return promotionQuantity == NOT_EXIST.getValue() || promotionQuantity == 0;
+    }
+
     public void add(final int quantity, final Promotion promotion) {
         if (promotion == null) {
             addRegularQuantity(quantity);

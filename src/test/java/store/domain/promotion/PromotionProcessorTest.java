@@ -32,6 +32,26 @@ class PromotionProcessorTest {
     }
 
     @Test
+    @DisplayName("프로모션 재고가 없을 경우 프로모션 적용을 하지 않는다.")
+    void 프로모션_재고가_없을_경우_프로모션_적용을_하지_않는다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        LocalDate now = makeLocalDate(2024, 12, 13);
+
+        // When
+        PromotionResult result = promotionProcessor.process(3, now);
+
+        // Then
+        assertAll(
+                () -> assertThat(result.purchaseType()).isEqualTo(PurchaseType.REGULAR_ONLY),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(3)
+        );
+    }
+
+    @Test
     @DisplayName("프로모션 재고가 부족할 경우 일부 수량에 대해 정가 결제를 안내한다.")
     void 프로모션_재고가_부족할_경우_일부_수량에_대해_정가_결제를_안내한다() {
         // Given
