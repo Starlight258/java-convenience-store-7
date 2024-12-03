@@ -115,6 +115,10 @@ public class OutputView {
         return String.format(format, args);
     }
 
+    public void showLine() {
+        showln("");
+    }
+
     private void showln(String message) {
         System.out.println(message);
     }

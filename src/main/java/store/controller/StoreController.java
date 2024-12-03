@@ -48,9 +48,17 @@ public class StoreController {
     public void process() {
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
-        do {
-            processEach(inventory);
-        } while (wantRetry());
+        while (true) {
+            try {
+                processEach(inventory);
+                if (!wantRetry()) {
+                    break;
+                }
+            } catch (IllegalArgumentException e) {
+                outputView.showException(e);
+            }
+            outputView.showLine();
+        }
     }
 
     private void processEach(final Inventory inventory) {

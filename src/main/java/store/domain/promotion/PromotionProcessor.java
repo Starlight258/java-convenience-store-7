@@ -14,6 +14,7 @@ public class PromotionProcessor {
     }
 
     public PromotionResult processOrder(int purchaseQuantity, LocalDate now) {
+        productStock.validateWithinTotalQuantity(purchaseQuantity);
         Product product = productStock.getProduct();
         // 유효한 프로모션이 존재하고, 프로모션 수량이 존재할 경우
         if (hasValidPromotion(product, now) && !productStock.doesNotExistPromotionQuantity()) {
@@ -27,8 +28,6 @@ public class PromotionProcessor {
     }
 
     private PromotionResult purchasePromotion(final Promotion promotion, final int purchaseQuantity) {
-        // 재고 확인
-        validateStock(purchaseQuantity);
         // 프로모션 재고로 모두 구매하지 못할 경우 프로모션 적용 + 정가 결제 수량을 안내
         if (needRegularPricePayment(purchaseQuantity)) {
             return processPartialPromotionPurchase(promotion, purchaseQuantity);
@@ -76,10 +75,6 @@ public class PromotionProcessor {
 
     private boolean needRegularPricePayment(final int purchaseQuantity) {
         return productStock.cannotPurchaseWithinPromotion(purchaseQuantity);
-    }
-
-    private void validateStock(final int purchaseQuantity) {
-        productStock.checkTotalStock(purchaseQuantity);
     }
 
     private int calculateRegularPriceQuantity(int purchaseQuantity, int promotionQuantity, int unitQuantity) {

@@ -58,6 +58,7 @@ class PromotionProcessorTest {
         // Given
         Promotion promotion = makePromotion();
         ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addRegularQuantity(7);
         productStock.addPromotionQuantity(7);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
         LocalDate now = makeLocalDate(2024, 12, 13);

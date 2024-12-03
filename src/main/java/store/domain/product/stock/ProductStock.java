@@ -28,6 +28,19 @@ public class ProductStock {
         return NOT_EXIST.getValue();
     }
 
+    public void validateWithinTotalQuantity(final int purchaseQuantity) {
+        if (calculateTotalQuantity() < purchaseQuantity) {
+            throw new CustomIllegalArgumentException(ErrorMessage.OUT_OF_STOCK);
+        }
+    }
+    private int calculateTotalQuantity() {
+        int totalQuantity = regularQuantity;
+        if (promotionQuantity == NOT_EXIST.getValue()) {
+            return totalQuantity;
+        }
+        return totalQuantity + promotionQuantity;
+    }
+
     public boolean doesNotExistPromotionQuantity() {
         return promotionQuantity == NOT_EXIST.getValue() || promotionQuantity == 0;
     }
@@ -98,13 +111,6 @@ public class ProductStock {
 
     public Product getProduct() {
         return product;
-    }
-
-    public void checkTotalStock(final int purchaseQuantity) {
-        int totalQuantity = purchaseQuantity + regularQuantity;
-        if (totalQuantity < purchaseQuantity) {
-            throw new CustomIllegalArgumentException(ErrorMessage.OUT_OF_STOCK);
-        }
     }
 
     public boolean cannotPurchaseWithinPromotion(final int purchaseQuantity) {
