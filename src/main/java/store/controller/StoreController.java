@@ -58,11 +58,22 @@ public class StoreController {
             PromotionResult promotionResult = storeService.processOrder(inventory, order);
             promotionResult = processPaymentOption(inventory, order, promotionResult);
             promotionResult = processBenefitOption(inventory, order, promotionResult);
+            int membershipDiscount = processMembership(inventory, order, promotionResult);
         }
     }
 
+    private int processMembership(final Inventory inventory, final Order order, final PromotionResult promotionResult) {
+        outputView.requestMembership();
+        boolean wantMembership = Answer.from(inputView.readMembershipAnswer()).isYes();
+        if (wantMembership) {
+            return storeService.processMembership(
+                    inventory.getProductStock(order.getName()).getProductPrice(), promotionResult);
+        }
+        return 0;
+    }
+
     private PromotionResult processPaymentOption(final Inventory inventory, final Order order,
-                                      final PromotionResult promotionResult) {
+                                                 final PromotionResult promotionResult) {
         if (!promotionResult.askRegularPayment()) {
             return promotionResult;
         }

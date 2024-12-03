@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import store.domain.order.Order;
 import store.domain.product.stock.Inventory;
 import store.domain.product.stock.ProductStock;
+import store.domain.promotion.MembershipCalculator;
 import store.domain.promotion.PromotionProcessor;
 import store.domain.promotion.PromotionResult;
 
@@ -44,5 +45,10 @@ public class StoreService {
                                                   final PromotionResult promotionResult) {
         ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
         return processingContext.getPromotionProcessor().processNoBenefitOption(promotionResult);
+    }
+
+    public int processMembership(final int productPrice, final PromotionResult promotionResult) {
+        MembershipCalculator membershipCalculator = new MembershipCalculator();
+        return membershipCalculator.calculate(productPrice, promotionResult);
     }
 }

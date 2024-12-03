@@ -20,4 +20,8 @@ public class InputView {
     public String readBenefitAnswer() {
         return readLine();
     }
+
+    public String readMembershipAnswer() {
+        return readLine();
+    }
 }

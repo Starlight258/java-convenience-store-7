@@ -1,7 +1,5 @@
 package store.domain.promotion;
 
-import java.util.Objects;
-
 /*
     regularPriceQuantity : 정가 결제 수량 -> 안내, Y일 경우 멤버십 비용 계산에 포함
     totalQuantity : 구매 총 수량 -> 영수증
@@ -37,5 +35,9 @@ public record PromotionResult(PurchaseType purchaseType, int regularPriceQuantit
     // 추가 혜택 안내
     public boolean askBenefit() {
         return additionalBenefitQuantity > 0;
+    }
+
+    public boolean isRegularOnlyPurchase() {
+        return this.purchaseType == PurchaseType.REGULAR_ONLY;
     }
 }

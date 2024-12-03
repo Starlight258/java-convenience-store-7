@@ -44,11 +44,8 @@ public class ProductStock {
         return product.getPromotion();
     }
 
-    public int getTotalQuantity() {
-        if (isPromotionInitialValue()) {
-            return regularQuantity;
-        }
-        return promotionQuantity + regularQuantity;
+    public int getProductPrice() {
+        return product.getPrice();
     }
 
     private boolean isPromotionInitialValue() {
