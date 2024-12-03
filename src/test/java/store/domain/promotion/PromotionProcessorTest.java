@@ -22,7 +22,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 31);
 
         // When
-        PromotionResult result = promotionProcessor.process(3, now);
+        PromotionResult result = promotionProcessor.processOrder(3, now);
 
         // Then
         assertAll(
@@ -43,7 +43,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(3, now);
+        PromotionResult result = promotionProcessor.processOrder(3, now);
 
         // Then
         assertAll(
@@ -63,7 +63,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(10, now);
+        PromotionResult result = promotionProcessor.processOrder(10, now);
 
         // Then
         assertAll(
@@ -86,7 +86,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(5, now);
+        PromotionResult result = promotionProcessor.processOrder(5, now);
 
         // Then
         assertAll(
@@ -109,7 +109,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(5, now);
+        PromotionResult result = promotionProcessor.processOrder(5, now);
 
         // Then
         assertAll(
@@ -132,7 +132,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(4, now);
+        PromotionResult result = promotionProcessor.processOrder(4, now);
 
         // Then
         assertAll(
@@ -156,7 +156,7 @@ class PromotionProcessorTest {
         LocalDate now = makeLocalDate(2024, 12, 13);
 
         // When
-        PromotionResult result = promotionProcessor.process(4, now);
+        PromotionResult result = promotionProcessor.processOrder(4, now);
 
         // Then
         assertAll(
@@ -167,6 +167,91 @@ class PromotionProcessorTest {
                 () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
                 () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
                 () -> assertThat(result.giftQuantity()).isEqualTo(1) // 추가 혜택 수량 뺀 값
+        );
+    }
+
+    @Test
+    @DisplayName("일부 수량에 대해 정가 결제를 수행한다.")
+    void 일부_수량에_대해_정가_결제를_수행한다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(7);
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        PromotionResult result = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+
+        // When
+        promotionProcessor.processWithRegularPayment(result);
+
+        // Then
+        assertAll(
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(0),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(7)
+        );
+    }
+
+    @Test
+    @DisplayName("프로모션 수량에 대해서만 결제한다.")
+    void 프로모션_수량에_대해서만_결제한다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(7);
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        PromotionResult result = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+
+        // When
+        promotionProcessor.processOnlyPromotionPayment(result);
+
+        // Then
+        assertAll(
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(0),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
+        );
+    }
+
+
+    @Test
+    @DisplayName("무료 수량 혜택을 받는다.")
+    void 무료_수량_혜택을_받는다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(10);
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        PromotionResult result = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
+
+        // When
+        promotionProcessor.processBenefitOption(result);
+
+        // Then
+        assertAll(
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(4),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
+        );
+    }
+
+    @Test
+    @DisplayName("무료 수량 혜택을 받지 않는다.")
+    void 무료_수량_혜택을_받지_않는다() {
+        // Given
+        Promotion promotion = makePromotion();
+        ProductStock productStock = new ProductStock(makeProduct(promotion));
+        productStock.addPromotionQuantity(10);
+        productStock.addRegularQuantity(10);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        PromotionResult result = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
+
+        // When
+        promotionProcessor.processNoBenefitOption(result);
+
+        // Then
+        assertAll(
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(5),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
         );
     }
 

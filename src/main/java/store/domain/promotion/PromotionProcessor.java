@@ -13,7 +13,7 @@ public class PromotionProcessor {
         this.productStock = productStock;
     }
 
-    public PromotionResult process(int purchaseQuantity, LocalDate now) {
+    public PromotionResult processOrder(int purchaseQuantity, LocalDate now) {
         Product product = productStock.getProduct();
         // 유효한 프로모션이 존재하고, 프로모션 수량이 존재할 경우
         if (hasValidPromotion(product, now) && !productStock.doesNotExistPromotionQuantity()) {
@@ -88,5 +88,31 @@ public class PromotionProcessor {
     private PromotionResult purchaseRegular(final int purchaseQuantity) {
         productStock.subtractRegularQuantity(purchaseQuantity);
         return PromotionResult.makeRegularPurchaseResult(purchaseQuantity);
+    }
+
+    public void processWithRegularPayment(final PromotionResult promotionResult) {
+        int purchaseQuantity = promotionResult.totalQuantity();
+        int regularPriceQuantity = promotionResult.regularPriceQuantity();
+        int promotionQuantity = productStock.getPromotionQuantity();
+        productStock.subtractPromotionQuantity(promotionQuantity);
+        productStock.subtractRegularQuantity(purchaseQuantity - promotionQuantity);
+    }
+
+    public void processOnlyPromotionPayment(final PromotionResult promotionResult) {
+        int purchaseQuantity = promotionResult.totalQuantity();
+        int regularPriceQuantity = promotionResult.regularPriceQuantity();
+        int promotionQuantity = productStock.getPromotionQuantity();
+        productStock.subtractPromotionQuantity(promotionQuantity);
+    }
+
+    public void processBenefitOption(final PromotionResult promotionResult) {
+        int totalQuantity = promotionResult.totalQuantity();
+        int additionalBenefitQuantity = promotionResult.additionalBenefitQuantity();
+        productStock.subtractPromotionQuantity(totalQuantity + additionalBenefitQuantity);
+    }
+
+    public void processNoBenefitOption(final PromotionResult promotionResult) {
+        int totalQuantity = promotionResult.totalQuantity();
+        productStock.subtractPromotionQuantity(totalQuantity);
     }
 }

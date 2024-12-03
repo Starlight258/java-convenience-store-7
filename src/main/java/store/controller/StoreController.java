@@ -7,11 +7,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import store.domain.command.Answer;
 import store.domain.order.Order;
 import store.domain.order.Orders;
 import store.domain.product.Product;
 import store.domain.product.stock.Inventory;
 import store.domain.promotion.Promotion;
+import store.domain.promotion.PromotionResult;
 import store.service.StoreService;
 import store.util.ExceptionHandler;
 import store.util.FileContentParser;
@@ -53,8 +55,38 @@ public class StoreController {
         outputView.requestOrder();
         Orders orders = createOrders();
         for (Order order : orders.getOrders()) {
-            storeService.processOrder(inventory, order);
+            PromotionResult promotionResult = storeService.processOrder(inventory, order);
+            processPaymentOption(inventory, order, promotionResult);
+            processBenefitOption(inventory, order, promotionResult);
         }
+    }
+
+    private void processPaymentOption(final Inventory inventory, final Order order,
+                                      final PromotionResult promotionResult) {
+        if (!promotionResult.askRegularPayment()) {
+            return;
+        }
+        outputView.requestRegularPayment(order.getName(), promotionResult.regularPriceQuantity());
+        boolean wantRegularPayment = Answer.from(inputView.readRegularPayment()).isYes();
+        if (wantRegularPayment) {
+            storeService.processRegularPayment(inventory, order, promotionResult);
+            return;
+        }
+        storeService.processOnlyPromotionPayment(inventory, order, promotionResult);
+    }
+
+    private void processBenefitOption(final Inventory inventory, final Order order,
+                                      final PromotionResult promotionResult) {
+        if (!promotionResult.askBenefit()) {
+            return;
+        }
+        outputView.requestBenefit(order.getName());
+        boolean wantBenefit = Answer.from(inputView.readBenefitAnswer()).isYes();
+        if (wantBenefit) {
+            storeService.processBenefitOption(inventory, order, promotionResult);
+            return;
+        }
+        storeService.processNoBenefitOption(inventory, order, promotionResult);
     }
 
     private Orders createOrders() {

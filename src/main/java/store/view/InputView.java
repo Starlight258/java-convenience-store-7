@@ -12,4 +12,12 @@ public class InputView {
     private String readLine() {
         return Console.readLine();
     }
+
+    public String readRegularPayment() {
+        return readLine();
+    }
+
+    public String readBenefitAnswer() {
+        return readLine();
+    }
 }

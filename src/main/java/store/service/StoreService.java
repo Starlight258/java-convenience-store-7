@@ -10,11 +10,39 @@ import store.domain.promotion.PromotionResult;
 
 public class StoreService {
 
-    public void processOrder(final Inventory inventory, final Order order) {
-        ProductStock productStock = inventory.getProductStock(order.getName());
-        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+    public PromotionResult processOrder(final Inventory inventory, final Order order) {
+        ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
         LocalDate now = DateTimes.now().toLocalDate();
-        PromotionResult promotionResult = promotionProcessor.process(order.getQuantity(), now);
+        return processingContext.getPromotionProcessor().processOrder(order.getQuantity(), now);
     }
 
+    public void processRegularPayment(final Inventory inventory, final Order order,
+                                      final PromotionResult promotionResult) {
+        ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
+        processingContext.getPromotionProcessor().processWithRegularPayment(promotionResult);
+    }
+
+    public ProcessingContext createProcessingContext(final Inventory inventory, final String productName) {
+        ProductStock productStock = inventory.getProductStock(productName);
+        PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
+        return new ProcessingContext(productStock, promotionProcessor);
+    }
+
+    public void processOnlyPromotionPayment(final Inventory inventory, final Order order,
+                                            final PromotionResult promotionResult) {
+        ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
+        processingContext.getPromotionProcessor().processOnlyPromotionPayment(promotionResult);
+    }
+
+    public void processBenefitOption(final Inventory inventory, final Order order,
+                                     final PromotionResult promotionResult) {
+        ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
+        processingContext.getPromotionProcessor().processBenefitOption(promotionResult);
+    }
+
+    public void processNoBenefitOption(final Inventory inventory, final Order order,
+                                       final PromotionResult promotionResult) {
+        ProcessingContext processingContext = createProcessingContext(inventory, order.getName());
+        processingContext.getPromotionProcessor().processNoBenefitOption(promotionResult);
+    }
 }
