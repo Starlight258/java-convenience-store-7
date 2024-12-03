@@ -56,37 +56,35 @@ public class StoreController {
         Orders orders = createOrders();
         for (Order order : orders.getOrders()) {
             PromotionResult promotionResult = storeService.processOrder(inventory, order);
-            processPaymentOption(inventory, order, promotionResult);
-            processBenefitOption(inventory, order, promotionResult);
+            promotionResult = processPaymentOption(inventory, order, promotionResult);
+            promotionResult = processBenefitOption(inventory, order, promotionResult);
         }
     }
 
-    private void processPaymentOption(final Inventory inventory, final Order order,
+    private PromotionResult processPaymentOption(final Inventory inventory, final Order order,
                                       final PromotionResult promotionResult) {
         if (!promotionResult.askRegularPayment()) {
-            return;
+            return promotionResult;
         }
         outputView.requestRegularPayment(order.getName(), promotionResult.regularPriceQuantity());
         boolean wantRegularPayment = Answer.from(inputView.readRegularPayment()).isYes();
         if (wantRegularPayment) {
-            storeService.processRegularPayment(inventory, order, promotionResult);
-            return;
+            return storeService.processRegularPayment(inventory, order, promotionResult);
         }
-        storeService.processOnlyPromotionPayment(inventory, order, promotionResult);
+        return storeService.processOnlyPromotionPayment(inventory, order, promotionResult);
     }
 
-    private void processBenefitOption(final Inventory inventory, final Order order,
-                                      final PromotionResult promotionResult) {
+    private PromotionResult processBenefitOption(final Inventory inventory, final Order order,
+                                                 final PromotionResult promotionResult) {
         if (!promotionResult.askBenefit()) {
-            return;
+            return promotionResult;
         }
         outputView.requestBenefit(order.getName());
         boolean wantBenefit = Answer.from(inputView.readBenefitAnswer()).isYes();
         if (wantBenefit) {
-            storeService.processBenefitOption(inventory, order, promotionResult);
-            return;
+            return storeService.processBenefitOption(inventory, order, promotionResult);
         }
-        storeService.processNoBenefitOption(inventory, order, promotionResult);
+        return storeService.processNoBenefitOption(inventory, order, promotionResult);
     }
 
     private Orders createOrders() {

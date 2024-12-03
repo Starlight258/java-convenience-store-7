@@ -90,29 +90,35 @@ public class PromotionProcessor {
         return PromotionResult.makeRegularPurchaseResult(purchaseQuantity);
     }
 
-    public void processWithRegularPayment(final PromotionResult promotionResult) {
+    public PromotionResult processWithRegularPayment(final PromotionResult promotionResult) {
         int purchaseQuantity = promotionResult.totalQuantity();
-        int regularPriceQuantity = promotionResult.regularPriceQuantity();
         int promotionQuantity = productStock.getPromotionQuantity();
         productStock.subtractPromotionQuantity(promotionQuantity);
         productStock.subtractRegularQuantity(purchaseQuantity - promotionQuantity);
+        return promotionResult;
     }
 
-    public void processOnlyPromotionPayment(final PromotionResult promotionResult) {
-        int purchaseQuantity = promotionResult.totalQuantity();
+    public PromotionResult processOnlyPromotionPayment(final PromotionResult promotionResult) {
+        int totalQuantity = promotionResult.totalQuantity();
         int regularPriceQuantity = promotionResult.regularPriceQuantity();
-        int promotionQuantity = productStock.getPromotionQuantity();
-        productStock.subtractPromotionQuantity(promotionQuantity);
+        int purchaseQuantity = totalQuantity - regularPriceQuantity;
+        productStock.subtractPromotionQuantity(purchaseQuantity);
+        return PromotionResult.makePromotionPurchaseResult(purchaseQuantity,
+                promotionResult.additionalBenefitQuantity(), promotionResult.giftQuantity());
     }
 
-    public void processBenefitOption(final PromotionResult promotionResult) {
+    public PromotionResult processBenefitOption(final PromotionResult promotionResult) {
         int totalQuantity = promotionResult.totalQuantity();
         int additionalBenefitQuantity = promotionResult.additionalBenefitQuantity();
-        productStock.subtractPromotionQuantity(totalQuantity + additionalBenefitQuantity);
+        int purchaseQuantity = totalQuantity + additionalBenefitQuantity;
+        productStock.subtractPromotionQuantity(purchaseQuantity);
+        return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, 0,
+                promotionResult.giftQuantity() + additionalBenefitQuantity);
     }
 
-    public void processNoBenefitOption(final PromotionResult promotionResult) {
+    public PromotionResult processNoBenefitOption(final PromotionResult promotionResult) {
         int totalQuantity = promotionResult.totalQuantity();
         productStock.subtractPromotionQuantity(totalQuantity);
+        return PromotionResult.makePromotionPurchaseResult(totalQuantity, 0, promotionResult.giftQuantity());
     }
 }

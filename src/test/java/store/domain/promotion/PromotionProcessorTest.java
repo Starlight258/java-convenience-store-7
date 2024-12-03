@@ -179,15 +179,19 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(7);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult result = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
 
         // When
-        promotionProcessor.processWithRegularPayment(result);
+        PromotionResult result = promotionProcessor.processWithRegularPayment(inputResult);
 
         // Then
         assertAll(
                 () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(0),
-                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(7)
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(7),
+                () -> assertThat(result.totalQuantity()).isEqualTo(10),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(4),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(2)
         );
     }
 
@@ -200,15 +204,19 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(7);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult result = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
 
         // When
-        promotionProcessor.processOnlyPromotionPayment(result);
+        PromotionResult result = promotionProcessor.processOnlyPromotionPayment(inputResult);
 
         // Then
         assertAll(
-                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(0),
-                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
+                () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(1),
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10),
+                () -> assertThat(result.totalQuantity()).isEqualTo(6),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(2)
         );
     }
 
@@ -222,15 +230,19 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(10);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult result = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
+        PromotionResult inputResult = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
 
         // When
-        promotionProcessor.processBenefitOption(result);
+        PromotionResult result = promotionProcessor.processBenefitOption(inputResult);
 
         // Then
         assertAll(
                 () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(4),
-                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10),
+                () -> assertThat(result.totalQuantity()).isEqualTo(6),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(2)
         );
     }
 
@@ -243,15 +255,19 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(10);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult result = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
+        PromotionResult inputResult = PromotionResult.makePromotionPurchaseResult(5, 1, 1);
 
         // When
-        promotionProcessor.processNoBenefitOption(result);
+        PromotionResult result = promotionProcessor.processNoBenefitOption(inputResult);
 
         // Then
         assertAll(
                 () -> assertThat(productStock.getPromotionQuantity()).isEqualTo(5),
-                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10)
+                () -> assertThat(productStock.getRegularQuantity()).isEqualTo(10),
+                () -> assertThat(result.totalQuantity()).isEqualTo(5),
+                () -> assertThat(result.regularPriceQuantity()).isEqualTo(0),
+                () -> assertThat(result.additionalBenefitQuantity()).isEqualTo(0),
+                () -> assertThat(result.giftQuantity()).isEqualTo(1)
         );
     }
 
