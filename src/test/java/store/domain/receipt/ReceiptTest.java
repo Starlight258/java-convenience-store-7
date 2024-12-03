@@ -19,13 +19,13 @@ class ReceiptTest {
     private static final String CIDER = "사이다";
 
     @Test
-    @DisplayName("영수증을 생성한다.")
-    void test() {
+    @DisplayName("멤버십 적용된 상황에서 영수증을 생성한다.")
+    void 멤버십_적용된_상황에서_영수증을_생성한다() {
         // Given
         List<OrderResult> orderResults = List.of(createCokeOrderResult(), createCiderOrderResult());
 
         // When
-        Receipt receipt = Receipt.from(orderResults);
+        Receipt receipt = Receipt.from(orderResults, true);
 
         // Then
         assertAll(
@@ -35,6 +35,26 @@ class ReceiptTest {
                 () -> assertThat(receipt.getTotalGiftDiscountAmount()).isEqualTo(3000),
                 () -> assertThat(receipt.getTotalMembershipDiscountAmount()).isEqualTo(2400),
                 () -> assertThat(receipt.getTotalPayAmount()).isEqualTo(9600)
+        );
+    }
+
+    @Test
+    @DisplayName("멤버십이 적용되지 않은 상황에서 영수증을 생성한다.")
+    void 멤버십이_적용되지_않은_상황에서_영수증을_생성한다() {
+        // Given
+        List<OrderResult> orderResults = List.of(createCokeOrderResult(), createCiderOrderResult());
+
+        // When
+        Receipt receipt = Receipt.from(orderResults, false);
+
+        // Then
+        assertAll(
+                () -> assertThat(receipt.getPurchaseResults()).hasSize(2),
+                () -> assertThat(receipt.getGiftResults()).hasSize(2),
+                () -> assertThat(receipt.getTotalPurchaseAmount()).isEqualTo(15000),
+                () -> assertThat(receipt.getTotalGiftDiscountAmount()).isEqualTo(3000),
+                () -> assertThat(receipt.getTotalMembershipDiscountAmount()).isEqualTo(0),
+                () -> assertThat(receipt.getTotalPayAmount()).isEqualTo(12000)
         );
     }
 

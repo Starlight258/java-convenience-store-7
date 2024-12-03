@@ -37,7 +37,8 @@ public class OutputView {
         showln(LINE + TITLE);
         showln(PURCHASE_TITLE_FORMAT);
         for (PurchaseResult result : receipt.getPurchaseResults()) {
-            showln(format(formatKorean(result.productName(), 12) + PURCHASE_FORMAT, result.quantity(), result.price()));
+            showln(format(formatKorean(result.productName(), 12) + PURCHASE_FORMAT, result.quantity(),
+                    result.quantity() * result.price()));
         }
     }
 

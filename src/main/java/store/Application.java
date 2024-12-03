@@ -3,7 +3,7 @@ package store;
 import camp.nextstep.edu.missionutils.Console;
 import store.controller.StoreController;
 import store.service.StoreService;
-import store.util.ExceptionHandler;
+import store.exception.ExceptionHandler;
 import store.view.InputView;
 import store.view.OutputView;
 

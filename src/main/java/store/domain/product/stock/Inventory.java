@@ -3,6 +3,8 @@ package store.domain.product.stock;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import store.domain.product.Product;
+import store.exception.CustomIllegalArgumentException;
+import store.exception.ErrorMessage;
 
 public class Inventory {
 
@@ -16,7 +18,14 @@ public class Inventory {
         return inventory;
     }
 
+    public void validateProduct(final String productName) {
+        if (!inventory.containsKey(productName)) {
+            throw new CustomIllegalArgumentException(ErrorMessage.INVALID_PRODUCT);
+        }
+    }
+
     public ProductStock getProductStock(final String productName) {
+        validateProduct(productName);
         return inventory.get(productName);
     }
 

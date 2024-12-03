@@ -17,8 +17,8 @@ import store.domain.product.stock.ProductStock;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.PromotionResult;
 import store.domain.receipt.Receipt;
+import store.exception.ExceptionHandler;
 import store.service.StoreService;
-import store.util.ExceptionHandler;
 import store.util.FileContentParser;
 import store.util.InputValidator;
 import store.util.StoreFileReader;
@@ -47,12 +47,12 @@ public class StoreController {
 
     public void process() {
         outputView.showWelcome();
-        // 프로모션 -> 인벤토리
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
         outputView.showInventory(inventory);
-        Orders orders = makeOrders();
+        Orders orders = makeOrders(inventory);
         Receipt receipt = processOrders(inventory, orders);
+        outputView.showReceipt(receipt);
     }
 
     private Receipt processOrders(final Inventory inventory, final Orders orders) {
@@ -61,7 +61,7 @@ public class StoreController {
             OrderResult orderResult = processOrder(inventory, order);
             orderResults.add(orderResult);
         }
-        return Receipt.from(orderResults);
+        return Receipt.from(orderResults, requestMembership());
     }
 
     private OrderResult processOrder(final Inventory inventory, final Order order) {
@@ -73,18 +73,18 @@ public class StoreController {
         return OrderResult.of(productStock, promotionResult, membershipDiscount);
     }
 
-    private Orders makeOrders() {
+    private Orders makeOrders(final Inventory inventory) {
         outputView.requestOrder();
-        return createOrders();
+        return createOrders(inventory);
     }
 
     private int processMembership(final ProductStock productStock, final PromotionResult promotionResult) {
+        return storeService.processMembership(productStock.getProductPrice(), promotionResult);
+    }
+
+    private boolean requestMembership() {
         outputView.requestMembership();
-        boolean wantMembership = Answer.from(inputView.readMembershipAnswer()).isYes();
-        if (wantMembership) {
-            return storeService.processMembership(productStock.getProductPrice(), promotionResult);
-        }
-        return 0;
+        return exceptionHandler.retryOn(() -> Answer.from(inputView.readMembershipAnswer()).isYes());
     }
 
     private PromotionResult processPaymentOption(final ProductStock productStock,
@@ -113,23 +113,25 @@ public class StoreController {
         return storeService.processNoBenefitOption(productStock, promotionResult);
     }
 
-    private Orders createOrders() {
+    private Orders createOrders(final Inventory inventory) {
         List<Order> orders = new ArrayList<>();
         return exceptionHandler.retryOn(() -> {
             List<String> inputs = inputView.readOrder();
             for (String input : inputs) {
-                Order order = createOrder(input);
+                Order order = createOrder(input, inventory);
                 orders.add(order);
             }
             return new Orders(orders);
         });
     }
 
-    private Order createOrder(final String input) {
+    private Order createOrder(final String input, final Inventory inventory) {
         InputValidator.isInvalidPattern(input, PATTERN, INVALID_ORDER_FORMAT);
         List<String> groups = StringParser.findMatchingGroups(input, PATTERN);
         int quantity = StringParser.parseToInteger(groups.get(1), INVALID_ORDER_FORMAT);
-        return new Order(groups.get(0), quantity);
+        Order order = new Order(groups.get(0), quantity);
+        inventory.validateProduct(order.getName());
+        return order;
     }
 
     private List<Promotion> makePromotions() {

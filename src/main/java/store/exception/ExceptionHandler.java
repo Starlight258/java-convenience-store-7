@@ -1,4 +1,4 @@
-package store.util;
+package store.exception;
 
 import java.util.function.Supplier;
 import store.view.OutputView;

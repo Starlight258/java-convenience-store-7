@@ -24,10 +24,10 @@ public class Receipt {
         this.totalPayAmount = totalPurchaseAmount - totalGiftDiscountAmount - totalMembershipDiscountAmount;
     }
 
-    public static Receipt from(final List<OrderResult> orderResults) {
+    public static Receipt from(final List<OrderResult> orderResults, final boolean wantMembership) {
         List<PurchaseResult> purchaseResults = makePurchaseResults(orderResults);
         List<GiftResult> giftResults = makeGiftResults(orderResults);
-        int totalMembershipDiscountAmount = addMembershipDiscountAmount(orderResults);
+        int totalMembershipDiscountAmount = addMembershipDiscountAmount(orderResults, wantMembership);
         return new Receipt(purchaseResults, giftResults, totalMembershipDiscountAmount);
     }
 
@@ -44,10 +44,13 @@ public class Receipt {
                 .toList();
     }
 
-    private static int addMembershipDiscountAmount(final List<OrderResult> orderResults) {
-        return orderResults.stream()
-                .mapToInt(OrderResult::membershipDiscountAmount)
-                .sum();
+    private static int addMembershipDiscountAmount(final List<OrderResult> orderResults, final boolean wantMembership) {
+        if (wantMembership) {
+            return orderResults.stream()
+                    .mapToInt(OrderResult::membershipDiscountAmount)
+                    .sum();
+        }
+        return 0;
     }
 
     public record PurchaseResult(String productName, int quantity, int price) {
