@@ -40,6 +40,7 @@ public class Receipt {
     private static List<GiftResult> makeGiftResults(final List<OrderResult> orderResults) {
         return orderResults.stream()
                 .map(OrderResult::giftResult)
+                .filter(result -> result.quantity > 0)
                 .toList();
     }
 
@@ -79,6 +80,12 @@ public class Receipt {
 
     public List<GiftResult> getGiftResults() {
         return giftResults;
+    }
+
+    public int getTotalPurchaseQuantity() {
+        return purchaseResults.stream()
+                .mapToInt(PurchaseResult::quantity)
+                .sum();
     }
 
     public int getTotalPurchaseAmount() {
