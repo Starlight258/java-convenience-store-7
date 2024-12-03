@@ -46,13 +46,24 @@ public class StoreController {
     }
 
     public void process() {
-        outputView.showWelcome();
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
+        do {
+            processEach(inventory);
+        } while (wantRetry());
+    }
+
+    private void processEach(final Inventory inventory) {
+        outputView.showWelcome();
         outputView.showInventory(inventory);
         Orders orders = makeOrders(inventory);
         Receipt receipt = processOrders(inventory, orders);
         outputView.showReceipt(receipt);
+    }
+
+    private boolean wantRetry() {
+        outputView.requestRetry();
+        return exceptionHandler.retryOn(() -> Answer.from(inputView.readRetryAnswer()).isYes());
     }
 
     private Receipt processOrders(final Inventory inventory, final Orders orders) {

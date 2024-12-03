@@ -24,4 +24,8 @@ public class InputView {
     public String readMembershipAnswer() {
         return readLine();
     }
+
+    public String readRetryAnswer() {
+        return readLine();
+    }
 }

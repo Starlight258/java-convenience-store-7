@@ -26,12 +26,17 @@ public class OutputView {
     private static final String PURCHASE_TITLE_FORMAT = "상품명\t\t\t\t수량\t\t금액";
     private static final String PURCHASE_FORMAT = "\t\t\t%d\t\t%,d";
     private static final String GIFT_TITLE = "=============증\t\t정===============";
-    private static final String GIFT_FORMAT = "%s\t\t\t\t\t%d";
+    private static final String GIFT_FORMAT = "\t\t\t%d";
     private static final String TOTAL_TILE = "====================================";
     private static final String TOTAL_PURCHASE_AMOUNT_FORMAT = "총구매액\t\t\t\t%d\t\t%,d";
     private static final String PROMOTION_DISCOUNT_FORMAT = "행사할인\t\t\t\t\t\t-%,d";
     private static final String MEMBERSHIP_DISCOUNT_FORMAT = "멤버십할인\t\t\t\t\t\t-%,d";
     private static final String MONEY_TO_PAY_DISCOUNT_FORMAT = "내실돈\t\t\t\t\t\t %,d";
+    private static final String REQUEST_RETRY = "감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)";
+
+    public void requestRetry() {
+        showln(LINE + REQUEST_RETRY);
+    }
 
     private void showPurchaseResult(final Receipt receipt) {
         showln(LINE + TITLE);
@@ -45,7 +50,7 @@ public class OutputView {
     private void showGiftResult(final Receipt receipt) {
         showln(GIFT_TITLE);
         for (GiftResult result : receipt.getGiftResults()) {
-            showln(format(GIFT_FORMAT, result.productName(), result.quantity()));
+            showln(format(formatKorean(result.productName(), 12) + GIFT_FORMAT, result.quantity()));
         }
     }
 
@@ -62,7 +67,7 @@ public class OutputView {
     }
 
     public void requestRegularPayment(final String name, final int quantity) {
-        showln(format(REQUEST_REGULAR_PAYMENT, name, quantity));
+        showln(LINE + format(REQUEST_REGULAR_PAYMENT, name, quantity));
     }
 
     public void showInventory(final Inventory inventory) {
@@ -88,7 +93,7 @@ public class OutputView {
     }
 
     public void requestBenefit(final String name) {
-        showln(format(REQUEST_BENEFIT, name));
+        showln(format(LINE + REQUEST_BENEFIT, name));
     }
 
     public void showReceipt(final Receipt receipt) {
