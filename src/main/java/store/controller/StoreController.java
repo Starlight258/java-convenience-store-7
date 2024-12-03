@@ -9,11 +9,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 import store.domain.command.Answer;
 import store.domain.order.Order;
+import store.domain.order.OrderResult;
 import store.domain.order.Orders;
 import store.domain.product.Product;
 import store.domain.product.stock.Inventory;
+import store.domain.product.stock.ProductStock;
 import store.domain.promotion.Promotion;
 import store.domain.promotion.PromotionResult;
+import store.domain.receipt.Receipt;
 import store.service.StoreService;
 import store.util.ExceptionHandler;
 import store.util.FileContentParser;
@@ -48,54 +51,66 @@ public class StoreController {
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
         outputView.showInventory(inventory);
-        order(inventory);
+        Orders orders = makeOrders();
+        Receipt receipt = processOrders(inventory, orders);
     }
 
-    private void order(final Inventory inventory) {
-        outputView.requestOrder();
-        Orders orders = createOrders();
+    private Receipt processOrders(final Inventory inventory, final Orders orders) {
+        List<OrderResult> orderResults = new ArrayList<>();
         for (Order order : orders.getOrders()) {
-            PromotionResult promotionResult = storeService.processOrder(inventory, order);
-            promotionResult = processPaymentOption(inventory, order, promotionResult);
-            promotionResult = processBenefitOption(inventory, order, promotionResult);
-            int membershipDiscount = processMembership(inventory, order, promotionResult);
+            OrderResult orderResult = processOrder(inventory, order);
+            orderResults.add(orderResult);
         }
+        return Receipt.from(orderResults);
     }
 
-    private int processMembership(final Inventory inventory, final Order order, final PromotionResult promotionResult) {
+    private OrderResult processOrder(final Inventory inventory, final Order order) {
+        ProductStock productStock = inventory.getProductStock(order.getName());
+        PromotionResult promotionResult = storeService.processOrder(order.getQuantity(), productStock);
+        promotionResult = processPaymentOption(productStock, promotionResult);
+        promotionResult = processBenefitOption(productStock, promotionResult);
+        int membershipDiscount = processMembership(productStock, promotionResult);
+        return OrderResult.of(productStock, promotionResult, membershipDiscount);
+    }
+
+    private Orders makeOrders() {
+        outputView.requestOrder();
+        return createOrders();
+    }
+
+    private int processMembership(final ProductStock productStock, final PromotionResult promotionResult) {
         outputView.requestMembership();
         boolean wantMembership = Answer.from(inputView.readMembershipAnswer()).isYes();
         if (wantMembership) {
-            return storeService.processMembership(
-                    inventory.getProductStock(order.getName()).getProductPrice(), promotionResult);
+            return storeService.processMembership(productStock.getProductPrice(), promotionResult);
         }
         return 0;
     }
 
-    private PromotionResult processPaymentOption(final Inventory inventory, final Order order,
+    private PromotionResult processPaymentOption(final ProductStock productStock,
                                                  final PromotionResult promotionResult) {
         if (!promotionResult.askRegularPayment()) {
             return promotionResult;
         }
-        outputView.requestRegularPayment(order.getName(), promotionResult.regularPriceQuantity());
+        outputView.requestRegularPayment(productStock.getProductName(), promotionResult.regularPriceQuantity());
         boolean wantRegularPayment = Answer.from(inputView.readRegularPayment()).isYes();
         if (wantRegularPayment) {
-            return storeService.processRegularPayment(inventory, order, promotionResult);
+            return storeService.processRegularPayment(productStock, promotionResult);
         }
-        return storeService.processOnlyPromotionPayment(inventory, order, promotionResult);
+        return storeService.processOnlyPromotionPayment(productStock, promotionResult);
     }
 
-    private PromotionResult processBenefitOption(final Inventory inventory, final Order order,
+    private PromotionResult processBenefitOption(final ProductStock productStock,
                                                  final PromotionResult promotionResult) {
         if (!promotionResult.askBenefit()) {
             return promotionResult;
         }
-        outputView.requestBenefit(order.getName());
+        outputView.requestBenefit(productStock.getProductName());
         boolean wantBenefit = Answer.from(inputView.readBenefitAnswer()).isYes();
         if (wantBenefit) {
-            return storeService.processBenefitOption(inventory, order, promotionResult);
+            return storeService.processBenefitOption(productStock, promotionResult);
         }
-        return storeService.processNoBenefitOption(inventory, order, promotionResult);
+        return storeService.processNoBenefitOption(productStock, promotionResult);
     }
 
     private Orders createOrders() {

@@ -48,6 +48,10 @@ public class ProductStock {
         return product.getPrice();
     }
 
+    public String getProductName() {
+        return product.getName();
+    }
+
     private boolean isPromotionInitialValue() {
         return promotionQuantity == NOT_EXIST.getValue();
     }

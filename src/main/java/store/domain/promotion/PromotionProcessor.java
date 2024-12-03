@@ -40,7 +40,8 @@ public class PromotionProcessor {
         int giftQuantity = calculateGiftQuantity(promotion, purchaseQuantity);
         // 프로모션 적용이 가능한 상품에 대해 해당 수량보다 적게 가져온 경우 추가 혜택 안내
         if (checkAdditionalPromotionBenefit(promotion, purchaseQuantity)) {
-            return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, giftQuantity, promotion.getGetQuantity()
+            return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, giftQuantity,
+                    promotion.getGetQuantity()
             );
         }
         // 할인 적용
@@ -104,17 +105,16 @@ public class PromotionProcessor {
         int purchaseQuantity = totalQuantity - regularPriceQuantity;
         productStock.subtractPromotionQuantity(purchaseQuantity);
         return PromotionResult.makePromotionPurchaseResult(purchaseQuantity,
-                promotionResult.giftQuantity(), promotionResult.additionalBenefitQuantity());
+                promotionResult.giftQuantity(), 0);
     }
 
     public PromotionResult processBenefitOption(final PromotionResult promotionResult) {
         int totalQuantity = promotionResult.totalQuantity();
         int additionalBenefitQuantity = promotionResult.additionalBenefitQuantity();
         int purchaseQuantity = totalQuantity + additionalBenefitQuantity;
+        int totalGiftQuantity = promotionResult.giftQuantity() + additionalBenefitQuantity;
         productStock.subtractPromotionQuantity(purchaseQuantity);
-        return PromotionResult.makePromotionPurchaseResult(purchaseQuantity,
-                promotionResult.giftQuantity() + additionalBenefitQuantity, 0
-        );
+        return PromotionResult.makePromotionPurchaseResult(purchaseQuantity, totalGiftQuantity, 0);
     }
 
     public PromotionResult processNoBenefitOption(final PromotionResult promotionResult) {

@@ -1,10 +1,12 @@
 package store.domain.promotion;
 
 /*
-    totalQuantity : 구매 총 수량 -> 영수증
-    giftQuantity : 증정 수량 -> 영수증
-    regularPriceQuantity : 정가 결제 안내 수량 -> Y일 경우 멤버십 비용 계산에 포함
-    additionalBenefitQuantity : 추가 혜택 안내 수량 -> Y일 경우 총 수량과 증정 수량에 포함
+    <영수증>
+    totalQuantity : 구매 총 수량
+    giftQuantity : 증정 수량
+    <안내>
+    regularPriceQuantity : 구매 총 수량 중 정가 결제 안내 수량 -> Y일 경우 멤버십 비용 계산에 포함, N일 경우 구매 총 수량에서 제외
+    additionalBenefitQuantity : 추가 혜택 안내 수량 -> Y일 경우 구매 총 수량과 증정 수량에 포함, N일 경우 작업 X
  */
 public record PromotionResult(PurchaseType purchaseType, int totalQuantity, int giftQuantity, int regularPriceQuantity,
                               int additionalBenefitQuantity) {
