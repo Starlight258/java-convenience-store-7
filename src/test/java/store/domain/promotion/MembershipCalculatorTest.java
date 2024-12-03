@@ -23,7 +23,7 @@ class MembershipCalculatorTest {
     void 정가_결제와_프로모션_결제가_함께_수행된_결제에_대해_멤버십_비용을_계산한다() {
         // Given
         MembershipCalculator membershipCalculator = new MembershipCalculator();
-        PromotionResult result = PromotionResult.makeMixedPurchaseResult(1, 4, 0, 1);
+        PromotionResult result = PromotionResult.makeMixedPurchaseResult(4, 1, 1, 0);
 
         // When & Then
         assertThat(membershipCalculator.calculate(1000, result)).isEqualTo(300);
@@ -34,7 +34,7 @@ class MembershipCalculatorTest {
     void 프로모션_적용된_결제에_대해_멤버십_비용을_계산한다() {
         // Given
         MembershipCalculator membershipCalculator = new MembershipCalculator();
-        PromotionResult result = PromotionResult.makePromotionPurchaseResult(3, 0, 1);
+        PromotionResult result = PromotionResult.makePromotionPurchaseResult(3, 1, 0);
 
         // When & Then
         assertThat(membershipCalculator.calculate(1000, result)).isEqualTo(0);

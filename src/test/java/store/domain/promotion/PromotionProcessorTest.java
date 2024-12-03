@@ -179,7 +179,7 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(7);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(10, 2, 4, 0);
 
         // When
         PromotionResult result = promotionProcessor.processWithRegularPayment(inputResult);
@@ -204,7 +204,7 @@ class PromotionProcessorTest {
         productStock.addPromotionQuantity(7);
         productStock.addRegularQuantity(10);
         PromotionProcessor promotionProcessor = new PromotionProcessor(productStock);
-        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(4, 10, 0, 2);
+        PromotionResult inputResult = PromotionResult.makeMixedPurchaseResult(10, 2, 4, 0);
 
         // When
         PromotionResult result = promotionProcessor.processOnlyPromotionPayment(inputResult);

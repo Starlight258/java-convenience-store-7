@@ -1,30 +1,32 @@
 package store.domain.promotion;
 
 /*
-    regularPriceQuantity : 정가 결제 수량 -> 안내, Y일 경우 멤버십 비용 계산에 포함
     totalQuantity : 구매 총 수량 -> 영수증
-    additionalBenefitQuantity : 추가 혜택 수량 -> 안내 (Y일 경우 총 수량과 증정 수량에 포함시키기)
     giftQuantity : 증정 수량 -> 영수증
+    regularPriceQuantity : 정가 결제 안내 수량 -> Y일 경우 멤버십 비용 계산에 포함
+    additionalBenefitQuantity : 추가 혜택 안내 수량 -> Y일 경우 총 수량과 증정 수량에 포함
  */
-public record PromotionResult(PurchaseType purchaseType, int regularPriceQuantity, int totalQuantity,
-                              int additionalBenefitQuantity, int giftQuantity) {
+public record PromotionResult(PurchaseType purchaseType, int totalQuantity, int giftQuantity, int regularPriceQuantity,
+                              int additionalBenefitQuantity) {
     // 멤버십 비용 계산 : totalQuantity
     public static PromotionResult makeRegularPurchaseResult(int totalQuantity) {
-        return new PromotionResult(PurchaseType.REGULAR_ONLY, 0, totalQuantity, 0, 0);
+        return new PromotionResult(PurchaseType.REGULAR_ONLY, totalQuantity, 0, 0, 0);
     }
 
     // 멤버십 비용 계산 : Y일 경우 regularPriceQuantity만
-    public static PromotionResult makeMixedPurchaseResult(int regularPriceQuantity, int totalQuantity,
-                                                          int additionalBenefitQuantity, int giftQuantity) {
-        return new PromotionResult(PurchaseType.MIXED, regularPriceQuantity, totalQuantity, additionalBenefitQuantity,
-                giftQuantity);
+    public static PromotionResult makeMixedPurchaseResult(int totalQuantity, int giftQuantity, int regularPriceQuantity,
+                                                          int additionalBenefitQuantity) {
+        return new PromotionResult(PurchaseType.MIXED, totalQuantity, giftQuantity, regularPriceQuantity,
+                additionalBenefitQuantity
+        );
     }
 
     // 멤버십 비용 계산 : X
-    public static PromotionResult makePromotionPurchaseResult(int totalQuantity, int additionalBenefitQuantity,
-                                                              int giftQuantity) {
-        return new PromotionResult(PurchaseType.PROMOTIONAL_ONLY, 0, totalQuantity, additionalBenefitQuantity,
-                giftQuantity);
+    public static PromotionResult makePromotionPurchaseResult(int totalQuantity, int giftQuantity,
+                                                              int additionalBenefitQuantity) {
+        return new PromotionResult(PurchaseType.PROMOTIONAL_ONLY, totalQuantity, giftQuantity, 0,
+                additionalBenefitQuantity
+        );
     }
 
     // 일부 수량에 대해 정가 결제 안내 필요
