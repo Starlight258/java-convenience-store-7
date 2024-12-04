@@ -48,20 +48,20 @@ public class StoreController {
     public void process() {
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
+        processOrders(inventory);
+    }
+
+    private void processOrders(final Inventory inventory) {
         while (true) {
-            try {
-                processEach(inventory);
-                if (!wantRetry()) {
-                    break;
-                }
-            } catch (IllegalArgumentException e) {
-                outputView.showException(e);
+            processOrder(inventory);
+            if (!shouldContinue()) {
+                break;
             }
             outputView.showLine();
         }
     }
 
-    private void processEach(final Inventory inventory) {
+    private void processOrder(final Inventory inventory) {
         outputView.showWelcome();
         outputView.showInventory(inventory);
         Orders orders = makeOrders(inventory);
@@ -69,7 +69,7 @@ public class StoreController {
         outputView.showReceipt(receipt);
     }
 
-    private boolean wantRetry() {
+    private boolean shouldContinue() {
         outputView.requestRetry();
         return exceptionHandler.retryOn(() -> Answer.from(inputView.readRetryAnswer()).isYes());
     }
@@ -111,12 +111,15 @@ public class StoreController {
         if (!promotionResult.askRegularPayment()) {
             return promotionResult;
         }
-        outputView.requestRegularPayment(productStock.getProductName(), promotionResult.regularPriceQuantity());
-        boolean wantRegularPayment = Answer.from(inputView.readRegularPayment()).isYes();
-        if (wantRegularPayment) {
+        if (wantRegularPayment(productStock, promotionResult)) {
             return storeService.processRegularPayment(productStock, promotionResult);
         }
         return storeService.processOnlyPromotionPayment(productStock, promotionResult);
+    }
+
+    private boolean wantRegularPayment(final ProductStock productStock, final PromotionResult promotionResult) {
+        outputView.requestRegularPayment(productStock.getProductName(), promotionResult.regularPriceQuantity());
+        return exceptionHandler.retryOn(() -> Answer.from(inputView.readRegularPayment()).isYes());
     }
 
     private PromotionResult processBenefitOption(final ProductStock productStock,
@@ -124,12 +127,15 @@ public class StoreController {
         if (!promotionResult.askBenefit()) {
             return promotionResult;
         }
-        outputView.requestBenefit(productStock.getProductName());
-        boolean wantBenefit = Answer.from(inputView.readBenefitAnswer()).isYes();
-        if (wantBenefit) {
+        if (wantBenefit(productStock)) {
             return storeService.processBenefitOption(productStock, promotionResult);
         }
         return storeService.processNoBenefitOption(productStock, promotionResult);
+    }
+
+    private boolean wantBenefit(final ProductStock productStock) {
+        outputView.requestBenefit(productStock.getProductName());
+        return exceptionHandler.retryOn(() -> Answer.from(inputView.readBenefitAnswer()).isYes());
     }
 
     private Orders createOrders(final Inventory inventory) {
