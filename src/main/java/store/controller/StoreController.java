@@ -4,7 +4,6 @@ import static store.exception.ErrorMessage.INVALID_FILE_FORMAT;
 import static store.exception.ErrorMessage.INVALID_ORDER_FORMAT;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import store.domain.command.Answer;
@@ -30,6 +29,7 @@ public class StoreController {
 
     private static final String ORDER_REGEX = "^\\[([가-힣a-zA-Z]+)-([1-9]\\d*)\\]$";
     private static final Pattern PATTERN = Pattern.compile(ORDER_REGEX);
+    private static final String DELIMITER = ",";
 
     private final InputView inputView;
     private final OutputView outputView;
@@ -48,12 +48,12 @@ public class StoreController {
     public void process() {
         List<Promotion> promotions = makePromotions();
         Inventory inventory = makeInventory(promotions);
-        processOrders(inventory);
+        processOrderLoop(inventory);
     }
 
-    private void processOrders(final Inventory inventory) {
+    private void processOrderLoop(final Inventory inventory) {
         while (true) {
-            processOrder(inventory);
+            processOrderSession(inventory);
             if (!shouldContinue()) {
                 break;
             }
@@ -61,12 +61,14 @@ public class StoreController {
         }
     }
 
-    private void processOrder(final Inventory inventory) {
+    private void processOrderSession(final Inventory inventory) {
         outputView.showWelcome();
         outputView.showInventory(inventory);
-        Orders orders = makeOrders(inventory);
-        Receipt receipt = processOrders(inventory, orders);
-        outputView.showReceipt(receipt);
+        exceptionHandler.retryOn(() -> {
+            Orders orders = makeOrders(inventory);
+            Receipt receipt = makeReceipt(inventory, orders);
+            outputView.showReceipt(receipt);
+        });
     }
 
     private boolean shouldContinue() {
@@ -74,16 +76,17 @@ public class StoreController {
         return exceptionHandler.retryOn(() -> Answer.from(inputView.readRetryAnswer()).isYes());
     }
 
-    private Receipt processOrders(final Inventory inventory, final Orders orders) {
-        List<OrderResult> orderResults = new ArrayList<>();
-        for (Order order : orders.getOrders()) {
-            OrderResult orderResult = processOrder(inventory, order);
-            orderResults.add(orderResult);
-        }
-        return Receipt.from(orderResults, requestMembership());
+    private Receipt makeReceipt(final Inventory inventory, final Orders orders) {
+        return Receipt.from(processOrders(inventory, orders), requestMembership());
     }
 
-    private OrderResult processOrder(final Inventory inventory, final Order order) {
+    private List<OrderResult> processOrders(final Inventory inventory, final Orders orders) {
+        return orders.getOrders().stream()
+                .map(order -> processOrderSession(inventory, order))
+                .toList();
+    }
+
+    private OrderResult processOrderSession(final Inventory inventory, final Order order) {
         ProductStock productStock = inventory.getProductStock(order.getName());
         PromotionResult promotionResult = storeService.processOrder(order.getQuantity(), productStock);
         promotionResult = processPaymentOption(productStock, promotionResult);
@@ -139,14 +142,11 @@ public class StoreController {
     }
 
     private Orders createOrders(final Inventory inventory) {
-        List<Order> orders = new ArrayList<>();
         return exceptionHandler.retryOn(() -> {
             List<String> inputs = inputView.readOrder();
-            for (String input : inputs) {
-                Order order = createOrder(input, inventory);
-                orders.add(order);
-            }
-            return new Orders(orders);
+            return new Orders(inputs.stream()
+                    .map(input -> createOrder(input, inventory))
+                    .toList());
         });
     }
 
@@ -161,32 +161,38 @@ public class StoreController {
 
     private List<Promotion> makePromotions() {
         List<String> inputs = FileContentParser.removeHeaders(StoreFileReader.readPromotions());
-        List<Promotion> promotions = new ArrayList<>();
-        for (String input : inputs) {
-            List<String> tokens = StringParser.parseByDelimiter(input, ",");
-            String name = tokens.get(0);
-            int buyQuantity = StringParser.parseToInteger(tokens.get(1), INVALID_FILE_FORMAT);
-            int getQuantity = StringParser.parseToInteger(tokens.get(2), INVALID_FILE_FORMAT);
-            LocalDate startDate = LocalDate.parse(tokens.get(3));
-            LocalDate endDate = LocalDate.parse(tokens.get(4));
-            promotions.add(new Promotion(name, buyQuantity, getQuantity, startDate, endDate));
-        }
-        return promotions;
+        return inputs.stream()
+                .map(this::makePromotion)
+                .toList();
+    }
+
+    private Promotion makePromotion(final String input) {
+        List<String> tokens = StringParser.parseByDelimiter(input, DELIMITER);
+        String name = tokens.get(0);
+        int buyQuantity = StringParser.parseToInteger(tokens.get(1), INVALID_FILE_FORMAT);
+        int getQuantity = StringParser.parseToInteger(tokens.get(2), INVALID_FILE_FORMAT);
+        LocalDate startDate = LocalDate.parse(tokens.get(3));
+        LocalDate endDate = LocalDate.parse(tokens.get(4));
+        return new Promotion(name, buyQuantity, getQuantity, startDate, endDate);
     }
 
     private Inventory makeInventory(final List<Promotion> promotions) {
         List<String> inputs = FileContentParser.removeHeaders(StoreFileReader.readInventories());
         Inventory inventory = new Inventory();
         for (String input : inputs) {
-            List<String> tokens = StringParser.parseByDelimiter(input, ",");
-            String productName = tokens.get(0);
-            int price = StringParser.parseToInteger(tokens.get(1), INVALID_FILE_FORMAT);
-            int quantity = StringParser.parseToInteger(tokens.get(2), INVALID_FILE_FORMAT);
-            Promotion promotion = findPromotion(promotions, tokens.get(3));
-            Product product = new Product(productName, price, promotion);
-            inventory.addProductStock(product, quantity);
+            addStock(promotions, inventory, input);
         }
         return inventory;
+    }
+
+    private void addStock(final List<Promotion> promotions, final Inventory inventory, final String input) {
+        List<String> tokens = StringParser.parseByDelimiter(input, DELIMITER);
+        String productName = tokens.get(0);
+        int price = StringParser.parseToInteger(tokens.get(1), INVALID_FILE_FORMAT);
+        int quantity = StringParser.parseToInteger(tokens.get(2), INVALID_FILE_FORMAT);
+        Promotion promotion = findPromotion(promotions, tokens.get(3));
+        Product product = new Product(productName, price, promotion);
+        inventory.addProductStock(product, quantity);
     }
 
     private Promotion findPromotion(final List<Promotion> promotions, final String name) {
