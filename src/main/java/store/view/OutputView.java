@@ -1,14 +1,10 @@
 package store.view;
 
-import static store.domain.product.stock.StockStatus.NOT_EXIST;
 import static store.view.ResultFormatter.formatKorean;
 
-import java.util.Map.Entry;
-import store.domain.product.Product;
-import store.domain.product.stock.Inventory;
-import store.domain.product.stock.ProductStock;
+import java.util.List;
+import store.domain.dto.InventoryDto;
 import store.domain.product.stock.QuantityEnum;
-import store.domain.promotion.Promotion;
 import store.domain.receipt.Receipt;
 import store.domain.receipt.Receipt.GiftResult;
 import store.domain.receipt.Receipt.PurchaseResult;
@@ -70,22 +66,15 @@ public class OutputView {
         showln(LINE + format(REQUEST_REGULAR_PAYMENT, name, quantity));
     }
 
-    public void showInventory(final Inventory inventory) {
-        for (Entry<String, ProductStock> entry : inventory.getInventory().entrySet()) {
-            ProductStock productStock = entry.getValue();
-            Product product = productStock.getProduct();
-            Promotion promotion = product.getPromotion();
-            String name = entry.getKey();
-            int price = product.getPrice();
-            int promotionQuantity = productStock.getPromotionQuantity();
-            int regularQuantity = productStock.getRegularQuantity();
-            if (promotionQuantity != NOT_EXIST.getValue()) {
-                String quantityName = QuantityEnum.findByStock(promotionQuantity);
-                showln(String.format(PROMOTION_FORMAT, name, price) + quantityName + " " + promotion.getName());
-            }
-            String quantityName = QuantityEnum.findByStock(regularQuantity);
-            showln(String.format(PROMOTION_FORMAT, name, price) + quantityName);
-        }
+    public void showInventory(final List<InventoryDto> dtos) {
+        dtos.stream()
+                .map(this::makeStockMessage)
+                .forEach(this::showln);
+    }
+
+    public String makeStockMessage(InventoryDto dto) {
+        String message = format(PROMOTION_FORMAT, dto.name(), dto.price());
+        return message + QuantityEnum.findByStock(dto.quantity()) + dto.promotionName();
     }
 
     public void showException(final RuntimeException e) {

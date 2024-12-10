@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.regex.Pattern;
 import store.domain.command.Answer;
+import store.domain.dto.InventoryDto;
 import store.domain.order.Order;
 import store.domain.order.OrderResult;
 import store.domain.order.Orders;
@@ -52,28 +53,32 @@ public class StoreController {
     }
 
     private void processOrderLoop(final Inventory inventory) {
-        while (true) {
+        do {
             processOrderSession(inventory);
-            if (!shouldContinue()) {
-                break;
-            }
-            outputView.showLine();
-        }
+        } while (shouldContinue());
     }
 
     private void processOrderSession(final Inventory inventory) {
         outputView.showWelcome();
-        outputView.showInventory(inventory);
+        showInventory(inventory);
+        outputView.requestOrder();
         exceptionHandler.retryOn(() -> {
-            Orders orders = makeOrders(inventory);
+            Orders orders = createOrders(inventory);
             Receipt receipt = makeReceipt(inventory, orders);
             outputView.showReceipt(receipt);
         });
     }
 
+    private void showInventory(final Inventory inventory) {
+        List<InventoryDto> dtos = storeService.processInventory(inventory);
+        outputView.showInventory(dtos);
+    }
+
     private boolean shouldContinue() {
         outputView.requestRetry();
-        return exceptionHandler.retryOn(() -> Answer.from(inputView.readRetryAnswer()).isYes());
+        Answer answer = exceptionHandler.retryOn(() -> Answer.from(inputView.readRetryAnswer()));
+        outputView.showLine();
+        return answer.isYes();
     }
 
     private Receipt makeReceipt(final Inventory inventory, final Orders orders) {
@@ -93,11 +98,6 @@ public class StoreController {
         promotionResult = processBenefitOption(productStock, promotionResult);
         int membershipDiscount = processMembership(productStock, promotionResult);
         return OrderResult.of(productStock, promotionResult, membershipDiscount);
-    }
-
-    private Orders makeOrders(final Inventory inventory) {
-        outputView.requestOrder();
-        return createOrders(inventory);
     }
 
     private int processMembership(final ProductStock productStock, final PromotionResult promotionResult) {

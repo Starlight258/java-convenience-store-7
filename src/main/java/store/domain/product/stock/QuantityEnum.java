@@ -2,7 +2,7 @@ package store.domain.product.stock;
 
 public enum QuantityEnum {
 
-    QUANTITY("%s개"),
+    QUANTITY("%d개 "),
     OUT_OF_STOCK("재고 없음");
 
     private final String name;

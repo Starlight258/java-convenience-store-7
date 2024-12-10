@@ -43,7 +43,6 @@ public class PromotionProcessor {
                     promotion.getGetQuantity()
             );
         }
-        // 할인 적용
         return purchaseWithPromotion(purchaseQuantity, giftQuantity);
     }
 
